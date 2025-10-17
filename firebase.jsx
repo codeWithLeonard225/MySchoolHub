@@ -5,13 +5,13 @@ import { getAnalytics } from "firebase/analytics";
 
 
 const firebaseConfig = {
-  apiKey: "AIzaSyAcVNYoHRo9H336sOWvPV22fP-KSSHGKaU",
-  authDomain: "zadet-a4354.firebaseapp.com",
-  projectId: "zadet-a4354",
-  storageBucket: "zadet-a4354.firebasestorage.app",
-  messagingSenderId: "19581889077",
-  appId: "1:19581889077:web:ea5a72fa29204c1c199f7c",
-  measurementId: "G-9SS4ZR15ZE"
+  apiKey: "AIzaSyCzmYnFl_Q8n7VWTWD2xdMlzJvrul_8xDo",
+  authDomain: "myschoolhub-sl.firebaseapp.com",
+  projectId: "myschoolhub-sl",
+  storageBucket: "myschoolhub-sl.firebasestorage.app",
+  messagingSenderId: "828034353905",
+  appId: "1:828034353905:web:7b54db7c539786871c3750",
+  measurementId: "G-8B8SSPZ1V1"
 };
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);

@@ -14,6 +14,8 @@ import {
     where
 } from "firebase/firestore";
 import { v4 as uuidv4 } from "uuid";
+import { useLocation } from "react-router-dom";
+// 🚨 IMPORTANT: Make sure you import your custom useAuth hook
 import { useAuth } from "../Security/AuthContext";
 
 // Cloudinary config
@@ -38,9 +40,14 @@ const calculateAge = (dob) => {
 };
 
 
-const Registration = ({ schoolId: propSchoolId }) => {
-    // TEMPORARY: Hardcode or replace with actual auth context/prop
-    const userName = "Unknown";
+const Registration = () => {
+    const location = useLocation();
+    // 1. Get user and auth state from context
+    const { user } = useAuth();
+
+    // ✅ CONSOLIDATED SCHOOL ID LOGIC: 
+    // Prioritize ID from route state, then fall back to the authenticated user's ID.
+    const currentSchoolId = location.state?.schoolId || user?.schoolId || "N/A";
 
     const [formData, setFormData] = useState({
         id: null,
@@ -59,7 +66,8 @@ const Registration = ({ schoolId: propSchoolId }) => {
         registeredBy: "",
         userPhoto: null,
         userPublicId: null,
-        schoolId: propSchoolId || "",
+        // Use the consolidated ID here
+        schoolId: currentSchoolId,
     });
 
     const [searchTerm, setSearchTerm] = useState("");
@@ -67,26 +75,23 @@ const Registration = ({ schoolId: propSchoolId }) => {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
     const [uploadProgress, setUploadProgress] = useState(0);
+    // This state will ONLY hold the students for the current school due to the Firestore query below
     const [users, setUsers] = useState([]);
     const [originalAcademicInfo, setOriginalAcademicInfo] = useState(null);
-     const { user } = useAuth(); 
-
-    // 🌟 NEW STATE: To store class options fetched from Firestore
     const [classOptions, setClassOptions] = useState([]);
 
-    // ✅ NEW: Ensure the formData always gets the schoolId from the logged-in user
-useEffect(() => {
-    // Use the schoolId from the authenticated user object
-    const currentSchoolId = user?.schoolId || propSchoolId || "";
-    
-    setFormData(prev => ({ 
-        ...prev, 
-        schoolId: currentSchoolId,
-        // Also auto-fill the registeredBy field if the user is a staff/admin
-        registeredBy: user?.data?.adminID || user?.data?.teacherID || "" 
-    }));
-    
-}, [user, propSchoolId]); // Dependency on the entire user object
+    // ✅ EFFECT 1: Set form data defaults (schoolId, registeredBy)
+    useEffect(() => {
+        const idToUse = currentSchoolId === "N/A" ? "" : currentSchoolId;
+
+        setFormData(prev => ({
+            ...prev,
+            schoolId: idToUse,
+            // Auto-fill the registeredBy field 
+            registeredBy: user?.data?.adminID || user?.data?.teacherID || ""
+        }));
+
+    }, [user, currentSchoolId]);
 
     // Calculate age whenever DOB changes
     useEffect(() => {
@@ -97,114 +102,90 @@ useEffect(() => {
     }, [formData.dob]);
 
 
-    // 🛑 MODIFIED: Real-Time LISTENER for Students (PupilsReg collection)
-useEffect(() => {
-    const currentSchoolId = user?.schoolId || propSchoolId;
-
-    // Only set up the listener if we have a school ID
-    if (!currentSchoolId) {
-        setUsers([]); // Clear users if no schoolId is found
-        return; 
-    }
-
-    const collectionRef = collection(db, "PupilsReg");
-    
-    // ✅ Apply the filter here: only get pupils with the current schoolId
-    const q = query(collectionRef, where("schoolId", "==", currentSchoolId));
-
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-        const usersList = snapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data(),
-        }));
-        setUsers(usersList);
-    }, (error) => {
-        console.error("Firestore 'PupilsReg' onSnapshot failed:", error);
-        toast.error("Failed to stream student data.");
-    });
-
-    // Clean up the listener when the component unmounts or schoolId changes
-    return () => unsubscribe();
-    
-}, [user?.schoolId, propSchoolId]); // Re-run when user or propSchoolId changes
-
-    // 🛑 REAL-TIME LISTENER for Students (Voters collection)
+    // ✅ EFFECT 2: Real-Time LISTENER for Students (PupilsReg collection)
     useEffect(() => {
+        // Only set up the listener if we have a valid school ID
+        if (!currentSchoolId || currentSchoolId === "N/A") {
+            setUsers([]);
+            return;
+        }
+
         const collectionRef = collection(db, "PupilsReg");
-        const q = query(collectionRef);
+
+        // This query FILTERS the data by schoolId on the Firestore server
+        const q = query(collectionRef, where("schoolId", "==", currentSchoolId));
 
         const unsubscribe = onSnapshot(q, (snapshot) => {
             const usersList = snapshot.docs.map(doc => ({
                 id: doc.id,
                 ...doc.data(),
             }));
+            // 'users' now only contains students belonging to the currentSchoolId.
             setUsers(usersList);
         }, (error) => {
-            console.error("Firestore 'Voters' onSnapshot failed:", error);
+            console.error("Firestore 'PupilsReg' onSnapshot failed:", error);
             toast.error("Failed to stream student data.");
         });
 
         return () => unsubscribe();
-    }, []);
 
-   
-   // 🌟 UPDATED EFFECT: Fetch classes based on schoolId
-useEffect(() => {
-    // Determine which schoolId to use (from logged-in user or prop)
-    const currentSchoolId = user?.schoolId || propSchoolId;
+    }, [currentSchoolId]);
+    // 🛑 The redundant useEffect that fetched all users is now removed.
 
-    // If no schoolId yet, clear and skip fetching
-    if (!currentSchoolId) {
-        setClassOptions([]);
-        return;
-    }
 
-    // Reference the "Classes" collection
-    const classRef = collection(db, "Classes");
+    // ✅ EFFECT 3: Fetch classes based on schoolId
+    useEffect(() => {
+        if (!currentSchoolId || currentSchoolId === "N/A") {
+            setClassOptions([]);
+            return;
+        }
 
-    // ✅ Only fetch classes that belong to this school
-    const q = query(classRef, where("schoolId", "==", currentSchoolId));
+        const classRef = collection(db, "Classes");
+        // Filter classes by schoolId
+        const q = query(classRef, where("schoolId", "==", currentSchoolId));
 
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-        const options = snapshot.docs
-            .map(doc => doc.data().className)
-            .filter(Boolean) // ensure no undefined values
-            .sort((a, b) => a.localeCompare(b)); // sort alphabetically
-        setClassOptions(options);
-    }, (error) => {
-        console.error("Firestore 'Classes' onSnapshot failed:", error);
-        toast.error("Failed to fetch class data.");
-    });
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+            const options = snapshot.docs
+                .map(doc => doc.data().className)
+                .filter(Boolean)
+                .sort((a, b) => a.localeCompare(b));
+            setClassOptions(options);
+        }, (error) => {
+            console.error("Firestore 'Classes' onSnapshot failed:", error);
+            toast.error("Failed to fetch class data.");
+        });
 
-    return () => unsubscribe();
-}, [user?.schoolId, propSchoolId]); // Re-run if schoolId changes
+        return () => unsubscribe();
+    }, [currentSchoolId]);
 
-// 🔎 FILTER LOGIC using useMemo for efficiency
-const filteredUsers = useMemo(() => {
-    const currentSchoolId = user?.schoolId || propSchoolId;
+    // 🔎 FILTER LOGIC: Simplified, as 'users' is already school-filtered
+    // 🔎 FILTER & SORT LOGIC
+    const filteredUsers = useMemo(() => {
+        let filtered = users;
 
-    if (!currentSchoolId) return [];
+        if (searchTerm.trim() !== "") {
+            const lowerCaseSearchTerm = searchTerm.toLowerCase();
+            filtered = users.filter(user => {
+                return (
+                    (user.studentName && user.studentName.toLowerCase().includes(lowerCaseSearchTerm)) ||
+                    (user.class && user.class.toLowerCase().includes(lowerCaseSearchTerm)) ||
+                    (user.studentID && user.studentID.toLowerCase().includes(lowerCaseSearchTerm)) ||
+                    (user.gender && user.gender.toLowerCase().includes(lowerCaseSearchTerm)) ||
+                    (user.academicYear && user.academicYear.toLowerCase().includes(lowerCaseSearchTerm))
+                );
+            });
+        }
 
-    return users.filter(user => {
-        // Only show users from the same school
-        const sameSchool = user.schoolId === currentSchoolId;
+        // Sort by studentName ASC
+        return filtered.sort((a, b) => {
+            if (!a.studentName) return 1;
+            if (!b.studentName) return -1;
+            return a.studentName.localeCompare(b.studentName);
+        });
+    }, [users, searchTerm]);
 
-        // Apply search filter
-        if (searchTerm.trim() === "") return sameSchool;
 
-        const lowerCaseSearchTerm = searchTerm.toLowerCase();
-
-        const matches =
-            (user.studentName && user.studentName.toLowerCase().includes(lowerCaseSearchTerm)) ||
-            (user.class && user.class.toLowerCase().includes(lowerCaseSearchTerm)) ||
-            (user.studentID && user.studentID.toLowerCase().includes(lowerCaseSearchTerm)) ||
-            (user.gender && user.gender.toLowerCase().includes(lowerCaseSearchTerm)) ||
-            (user.academicYear && user.academicYear.toLowerCase().includes(lowerCaseSearchTerm));
-
-        return sameSchool && matches;
-    });
-}, [users, searchTerm, user?.schoolId, propSchoolId]);
-
+    // ... (rest of helper functions: generateUniqueId, handleInputChange, etc.)
 
     const generateUniqueId = () => {
         let newId;
@@ -297,10 +278,6 @@ const filteredUsers = useMemo(() => {
             toast.error("Academic year is required.");
             return;
         }
-        // if (!formData.userPhoto) {
-        //     toast.error("Please upload a photo before submitting.");
-        //     return;
-        // }
 
         setIsSubmitting(true);
         try {
@@ -320,7 +297,7 @@ const filteredUsers = useMemo(() => {
                 registeredBy: formData.registeredBy,
                 userPhotoUrl: formData.userPhoto,
                 userPublicId: formData.userPublicId,
-                schoolId: formData.schoolId, // ✅ Added
+                schoolId: formData.schoolId,
             };
 
             if (formData.id) {
@@ -352,12 +329,12 @@ const filteredUsers = useMemo(() => {
                 class: "",
                 academicYear: "",
                 registrationDate: new Date().toISOString().slice(0, 10),
-                registeredBy: "",
+                registeredBy: user?.data?.adminID || user?.data?.teacherID || "",
                 userPhoto: null,
                 userPublicId: null,
-                schoolId: propSchoolId || "",
+                schoolId: currentSchoolId, // Use the current consolidated schoolId
             });
-            // 🛑 FIX: Clear original academic info state on form reset
+            // Clear original academic info state on form reset
             setOriginalAcademicInfo(null);
         } catch (err) {
             console.error(err);
@@ -391,7 +368,7 @@ const filteredUsers = useMemo(() => {
             registeredBy: user.registeredBy,
             userPhoto: user.userPhotoUrl,
             userPublicId: user.userPublicId,
-            schoolId: user.schoolId || "", // ✅ Added
+            schoolId: user.schoolId || "",
         });
         toast.info(`Editing student: ${user.studentName}`);
     };
@@ -420,6 +397,19 @@ const filteredUsers = useMemo(() => {
 
                 {/* --- STUDENT CORE INFO --- */}
                 <h3 className="text-lg font-semibold mt-4 mb-2">Student Core Information</h3>
+
+                {/* School ID Display */}
+                {/* <div className="mb-4">
+                    <label className="block mb-2 font-medium text-sm text-gray-700">School ID</label>
+                    <input
+                        type="text"
+                        // Display the consolidated schoolId
+                        value={currentSchoolId === "N/A" ? "Loading..." : currentSchoolId}
+                        readOnly
+                        className="w-full p-2 border rounded-lg bg-gray-100 text-gray-600"
+                    />
+                </div> */}
+
                 <div className="flex flex-col md:flex-row md:space-x-4">
                     <div className="flex-1">
                         <label className="block mb-2 font-medium text-sm">Student ID</label>
@@ -540,7 +530,7 @@ const filteredUsers = useMemo(() => {
                         <label className="block mb-2 font-medium text-sm">Class</label>
                         <select name="class" value={formData.class} onChange={handleInputChange} className="w-full p-2 border rounded-lg" required >
                             <option value="">Select Class</option>
-                            {/* 🌟 MODIFIED: Use the fetched classOptions state */}
+                            {/* Use the fetched classOptions state */}
                             {classOptions.map(c => (
                                 <option key={c} value={c}>{c}</option>
                             ))}
@@ -580,7 +570,6 @@ const filteredUsers = useMemo(() => {
 
                         />
                     </div>
-                
 
 
 
@@ -593,7 +582,7 @@ const filteredUsers = useMemo(() => {
                             onChange={handleInputChange}
                             className="w-full p-2 mb-4 border rounded-lg"
                             placeholder="Enter staff ID"
-
+                        // Note: We removed the 'user' prop and now use 'user' from useAuth
                         />
                     </div>
                 </div>
@@ -628,9 +617,13 @@ const filteredUsers = useMemo(() => {
             {showCamera && <CameraCapture setPhoto={handleCameraCapture} onClose={() => setShowCamera(false)} initialFacingMode="user" />}
 
             {/* ---------------------------------------------------- */}
-            {/* --- REGISTERED STUDENTS TABLE WITH SINGLE OR FILTER --- */}
+            {/* --- REGISTERED STUDENTS TABLE --- */}
             {/* ---------------------------------------------------- */}
             <div className="bg-white shadow-lg rounded-2xl p-6 w-full max-w-full lg:max-w-4xl">
+                {/* ✅ Student count is now correct! 
+                    It shows the number of students displayed (filteredUsers) 
+                    out of the total students fetched for the school (users).
+                */}
                 <h2 className="text-2xl font-bold text-center mb-4">Registered Students ({filteredUsers.length} of {users.length})</h2>
 
                 <div className="mb-6">

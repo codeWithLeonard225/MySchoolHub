@@ -21,8 +21,8 @@ import {
 import { v4 as uuidv4 } from "uuid";
 
 // Cloudinary config (Kept from your template)
-const CLOUD_NAME = "doucdnzij";
-const UPLOAD_PRESET = "Nardone";
+const CLOUD_NAME = "dxcrlpike"; // Cloudinary Cloud Name
+const UPLOAD_PRESET = "LeoTechSl Projects"; // Cloudinary Upload Preset
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
 
 const FEE_TYPES = ["Term 1", "Term 2", "Term 3"];
@@ -480,7 +480,7 @@ const FeesReceipt = () => {
             const formDataObj = new FormData();
             formDataObj.append("file", blob);
             formDataObj.append("upload_preset", UPLOAD_PRESET);
-            formDataObj.append("folder", "Zadet/Receipt_Photos");
+            formDataObj.append("folder", "School/Receipt_Photos");
 
             xhr.open("POST", `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`);
             xhr.send(formDataObj);

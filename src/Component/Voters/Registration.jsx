@@ -19,8 +19,8 @@ import { useLocation } from "react-router-dom";
 import { useAuth } from "../Security/AuthContext";
 
 // Cloudinary config
-const CLOUD_NAME = "doucdnzij";
-const UPLOAD_PRESET = "Nardone";
+const CLOUD_NAME = "dxcrlpike"; // Cloudinary Cloud Name
+const UPLOAD_PRESET = "LeoTechSl Projects"; // Cloudinary Upload Preset
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
 
 // Define your admin password. For a real app, this should be in an environment variable.
@@ -251,7 +251,7 @@ const Registration = () => {
             const formDataObj = new FormData();
             formDataObj.append("file", blob);
             formDataObj.append("upload_preset", UPLOAD_PRESET);
-            formDataObj.append("folder", "Zadet/Uploads");
+            formDataObj.append("folder", "SchoolAppPupils/Uploads");
 
             xhr.open("POST", `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`);
             xhr.send(formDataObj);
@@ -283,7 +283,7 @@ const Registration = () => {
         try {
             const studentData = {
                 studentID: formData.studentID,
-                studentName: formData.studentName.toLowerCase().trim(),
+                studentName: formData.studentName.toUpperCase().trim(),
                 dob: formData.dob,
                 age: formData.age,
                 gender: formData.gender,

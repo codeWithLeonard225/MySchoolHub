@@ -49,7 +49,6 @@ const SubjectPage = () => {
     }
   };
 
-  // ✅ Save or update class + subjects (include schoolId)
   const handleSave = async () => {
     if (!className.trim() || subjects.length === 0) {
       alert("Please select a class and enter at least one subject.");
@@ -61,12 +60,15 @@ const SubjectPage = () => {
       return;
     }
 
+    // 🔠 Sort subjects alphabetically before saving
+    const sortedSubjects = [...subjects].sort((a, b) => a.localeCompare(b));
+
     if (editingId) {
       // Update existing record
       const docRef = doc(db, "ClassesAndSubjects", editingId);
       await updateDoc(docRef, {
         className,
-        subjects,
+        subjects: sortedSubjects,
         schoolId,
         updatedAt: new Date(),
       });
@@ -75,7 +77,7 @@ const SubjectPage = () => {
       // Add new record
       await addDoc(collection(db, "ClassesAndSubjects"), {
         className,
-        subjects,
+        subjects: sortedSubjects,
         schoolId,
         createdAt: new Date(),
       });
@@ -84,6 +86,7 @@ const SubjectPage = () => {
     setClassName("");
     setSubjects([]);
   };
+
 
   // ✅ Fetch ClassesAndSubjects filtered by schoolId
   useEffect(() => {
@@ -212,8 +215,12 @@ const SubjectPage = () => {
                   <td className="border px-3 py-2">{index + 1}</td>
                   <td className="border px-3 py-2">{cls.className}</td>
                   <td className="border px-3 py-2">
-                    {cls.subjects?.join(", ") || "—"}
+                    {cls.subjects
+                      ?.slice() // make a shallow copy so we don’t modify Firestore data directly
+                      .sort((a, b) => a.localeCompare(b))
+                      .join(", ") || "—"}
                   </td>
+
                   <td className="border px-3 py-2 space-x-2">
                     <button
                       onClick={() => handleEdit(cls)}

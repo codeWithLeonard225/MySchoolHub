@@ -17,8 +17,8 @@ import { v4 as uuidv4 } from "uuid";
 import { useLocation } from "react-router-dom";
 
 // Cloudinary config
-const CLOUD_NAME = "doucdnzij";
-const UPLOAD_PRESET = "Nardone";
+const CLOUD_NAME = "dxcrlpike"; // Cloudinary Cloud Name
+const UPLOAD_PRESET = "LeoTechSl Projects"; // Cloudinary Upload Preset
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
 const ADMIN_PASSWORD = "1234";
 
@@ -147,7 +147,7 @@ const TeacherRegistration = () => {
     try {
       const teacherData = {
         teacherID: formData.teacherID,
-        teacherName: formData.teacherName.trim().toLowerCase(),
+        teacherName: formData.teacherName.trim().toUpperCase(),
         gender: formData.gender,
         phone: formData.phone,
         email: formData.email,

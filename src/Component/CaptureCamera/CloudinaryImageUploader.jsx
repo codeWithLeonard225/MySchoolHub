@@ -3,8 +3,8 @@ import React, { useState } from 'react';
 import { toast } from 'react-toastify';
 import imageCompression from 'browser-image-compression';
 
-const CLOUD_NAME = "doucdnzij"; // Cloudinary Cloud Name
-const UPLOAD_PRESET = "Nardone"; // Cloudinary Upload Preset
+const CLOUD_NAME = "dxcrlpike"; // Cloudinary Cloud Name
+const UPLOAD_PRESET = "LeoTechSl Projects"; // Cloudinary Upload Preset
 const MAX_FILE_SIZE_MB = 2;
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/gif"];
 
@@ -71,7 +71,7 @@ const CloudinaryImageUploader = ({ onUploadSuccess }) => {
       const formData = new FormData();
       formData.append("file", fileOrBlob);
       formData.append("upload_preset", UPLOAD_PRESET);
-      formData.append("folder", "Zadet/Uploads");
+      formData.append("folder", "SchoolsApp/Uploads");
 
       const xhr = new XMLHttpRequest();
 

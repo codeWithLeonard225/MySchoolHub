@@ -32,6 +32,7 @@ import GeneralReportCard from "../PupilsPage/GeneralReportCard";
 import SchoolRegistration from "../CeoPanel/SchoolRegistration"
 import AdminForm from "../CeoPanel/AdminForm"
 import RegDashboard from "../Dashboard/RegDashboard"
+import StudentFilterPage from "../Voters/StudentFilterPage";
 
 
 // --- Navigation Items ---
@@ -42,7 +43,8 @@ const NAV_ITEMS = [
     icon: <MdEdit />,
     children: [
       { key: "Form", label: " Pupils", icon: <MdPerson /> },
-      { key: "class", label: " Class", icon: <MdPerson /> },
+      { key: "class", label: "Class", icon: <MdPerson /> },
+      { key: "classList", label: "Class List", icon: <MdPerson /> },
     ],
   },
   {
@@ -140,6 +142,7 @@ function AdminPanel() {
       case "dashboard": return <RegDashboard />;
       case "Form": return <Registration />;
       case "class": return <ClassRegistration />;
+      case "classList": return <StudentFilterPage />;
       case "fees": return <FeeReceipt />;
       case "feesCost": return <FeesCostPage />;
       case "TeacherRegistration": return <TeacherRegistration />;

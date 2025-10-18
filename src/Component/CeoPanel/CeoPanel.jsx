@@ -19,7 +19,7 @@ import {
   MdRemoveCircle,
 } from "react-icons/md";
 import Registration from "../Voters/Registration";
-import ClassRegistration from "./ClassRegistration";
+import ClassRegistration from "../Admin/ClassRegistration";
 import FeeReceipt from "../FeeReceipt.jsx/FeeReceipt";
 import FeesCostPage from "../FeeReceipt.jsx/FeesCostPage";
 import FeesDashboard from "../Dashboard/FeesDsahboard";
@@ -29,20 +29,23 @@ import TeacherRegistration from "../Voters/TeacherRegistration";
 import TeacherPupilsPage from "../TeacherAssignment/TeacherPupilsPage";
 import GradeSheetPage from "../TeacherAssignment/GradeSheetPage";
 import GeneralReportCard from "../PupilsPage/GeneralReportCard";
+import SchoolRegistration from "./SchoolRegistration"
+import AdminForm from "./AdminForm"
+import UpdateNamesToUppercase from "./UpdateNamesToUppercase"
+import RegDashboard from "../Dashboard/RegDashboard"
 
 
 // --- Navigation Items ---
 const NAV_ITEMS = [
   {
-      key: "forms",
-      label: "Registeration",
-      icon: <MdEdit />,
-      children: [
-        { key: "Form", label: " Pupils", icon: <MdPerson /> },
-        { key: "class", label: " Class", icon: <MdPerson /> },
-      ],
-    },
-
+    key: "forms",
+    label: "Registeration",
+    icon: <MdEdit />,
+    children: [
+      { key: "Form", label: " Pupils", icon: <MdPerson /> },
+      { key: "class", label: " Class", icon: <MdPerson /> },
+    ],
+  },
   {
     key: "fees",
     label: "Fees",
@@ -52,26 +55,35 @@ const NAV_ITEMS = [
       { key: "feesCost", label: " feesUpdate", icon: <MdPerson /> },
     ],
   },
-  // {
-  //   key: "Staff",
-  //   label: "staff",
-  //   icon: <MdBarChart />,
-  //   children: [
-  //   { key: "TeacherRegistration", label: "Teacher Regis", icon: <MdPerson /> },
-  //   { key: "subjects", label: "Subjects", icon: <MdPerson /> },
-  //   { key: "TeacherAssignment", label: "Teacher Assignment", icon: <MdPerson /> },
-  //   { key: "TeacherPupilsPage", label: "TeacherPupilsPage", icon: <MdPerson /> },
-  //   { key: "GradeSheetPage", label: "Grade Sheet", icon: <MdPerson /> },
-  //   { key: "GeneralReportCard", label: "ReportCard", icon: <MdPerson /> },
+  {
+    key: "Staff",
+    label: "staff",
+    icon: <MdBarChart />,
+    children: [
+    { key: "TeacherRegistration", label: "Teacher Regis", icon: <MdPerson /> },
+    { key: "subjects", label: "Subjects", icon: <MdPerson /> },
+    { key: "TeacherAssignment", label: "Teacher Assignment", icon: <MdPerson /> },
+    { key: "GradeSheetPage", label: "Grade Sheet", icon: <MdPerson /> },
+    { key: "GeneralReportCard", label: "ReportCard", icon: <MdPerson /> },
      
-  //   ],
-  // },
+    ],
+  },
+   {
+    key: "ceo",
+    label: "CEO",
+    icon: <MdEdit />,
+    children: [
+      { key: "schoolreg", label: " School Reg", icon: <MdPerson /> },
+      { key: "AdminForm", label: " Admin Form", icon: <MdPerson /> },
+      { key: "UpdateNamesToUppercase", label: " UpdateNamesToUppercase", icon: <MdPerson /> },
+    ],
+  },
 ];
 
 // --- Button component ---
 const Button = ({ variant = "default", onClick, className = "", children }) => {
   let baseStyles =
-    "inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-indigo-950 disabled:pointer-events-none disabled:opacity-50";
+    "inline-flex items-center justify-start whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-indigo-950 disabled:pointer-events-none disabled:opacity-50";
   let variantStyles =
     variant === "default"
       ? "bg-indigo-600 text-white shadow hover:bg-indigo-700"
@@ -93,7 +105,7 @@ const Dashboard = () => (
 );
 
 // --- Main Admin Panel ---
-function FeesPanel() {
+function CeoPanel() {
   const [activeTab, setActiveTab] = useState("dashboard");
   const [openDropdown, setOpenDropdown] = useState(null);
   const [openNestedDropdowns, setOpenNestedDropdowns] = useState({});
@@ -135,7 +147,7 @@ function FeesPanel() {
 
    const renderContent = () => {
     switch (activeTab) {
-      case "dashboard": return <FeesDashboard />;
+      case "dashboard": return <RegDashboard />;
       case "Form": return <Registration />;
       case "class": return <ClassRegistration />;
       case "fees": return <FeeReceipt />;
@@ -146,6 +158,10 @@ function FeesPanel() {
       case "TeacherPupilsPage": return <TeacherPupilsPage />;
       case "GradeSheetPage": return <GradeSheetPage />;
       case "GeneralReportCard": return <GeneralReportCard />;
+      case "AdminForm": return <AdminForm />;
+      case "UpdateNamesToUppercase": return <UpdateNamesToUppercase />;
+    
+      case "schoolreg": return <SchoolRegistration />;
 
       default: return <Placeholder title={activeTab} />;
     }
@@ -194,4 +210,4 @@ function FeesPanel() {
   );
 }
 
-export default FeesPanel;
+export default CeoPanel;

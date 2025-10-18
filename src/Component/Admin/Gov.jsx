@@ -29,49 +29,45 @@ import TeacherRegistration from "../Voters/TeacherRegistration";
 import TeacherPupilsPage from "../TeacherAssignment/TeacherPupilsPage";
 import GradeSheetPage from "../TeacherAssignment/GradeSheetPage";
 import GeneralReportCard from "../PupilsPage/GeneralReportCard";
+import SchoolRegistration from "../CeoPanel/SchoolRegistration"
+import AdminForm from "../CeoPanel/AdminForm"
+import RegDashboard from "../Dashboard/RegDashboard"
+import StudentFilterPage from "../Voters/StudentFilterPage";
 
 
 // --- Navigation Items ---
 const NAV_ITEMS = [
   {
-      key: "forms",
-      label: "Registeration",
-      icon: <MdEdit />,
-      children: [
-        { key: "Form", label: " Pupils", icon: <MdPerson /> },
-        { key: "class", label: " Class", icon: <MdPerson /> },
-      ],
-    },
-
-  {
-    key: "fees",
-    label: "Fees",
+    key: "forms",
+    label: "Registeration",
     icon: <MdEdit />,
     children: [
-      { key: "fees", label: " PupilsFees", icon: <MdPerson /> },
-      { key: "feesCost", label: " feesUpdate", icon: <MdPerson /> },
+      { key: "Form", label: " Pupils", icon: <MdPerson /> },
+      { key: "class", label: " Class", icon: <MdPerson /> },
+      { key: "classList", label: "Class List", icon: <MdPerson /> },
     ],
   },
-  // {
-  //   key: "Staff",
-  //   label: "staff",
-  //   icon: <MdBarChart />,
-  //   children: [
-  //   { key: "TeacherRegistration", label: "Teacher Regis", icon: <MdPerson /> },
-  //   { key: "subjects", label: "Subjects", icon: <MdPerson /> },
-  //   { key: "TeacherAssignment", label: "Teacher Assignment", icon: <MdPerson /> },
-  //   { key: "TeacherPupilsPage", label: "TeacherPupilsPage", icon: <MdPerson /> },
-  //   { key: "GradeSheetPage", label: "Grade Sheet", icon: <MdPerson /> },
-  //   { key: "GeneralReportCard", label: "ReportCard", icon: <MdPerson /> },
+ 
+  {
+    key: "Staff",
+    label: "staff",
+    icon: <MdBarChart />,
+    children: [
+    { key: "TeacherRegistration", label: "Teacher Regis", icon: <MdPerson /> },
+    { key: "subjects", label: "Subjects", icon: <MdPerson /> },
+    { key: "TeacherAssignment", label: "Teacher Assignment", icon: <MdPerson /> },
+    { key: "GradeSheetPage", label: "Grade Sheet", icon: <MdPerson /> },
+    { key: "GeneralReportCard", label: "ReportCard", icon: <MdPerson /> },
      
-  //   ],
-  // },
+    ],
+  },
+
 ];
 
 // --- Button component ---
 const Button = ({ variant = "default", onClick, className = "", children }) => {
   let baseStyles =
-    "inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-indigo-950 disabled:pointer-events-none disabled:opacity-50";
+    "inline-flex items-center justify-start whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-indigo-950 disabled:pointer-events-none disabled:opacity-50";
   let variantStyles =
     variant === "default"
       ? "bg-indigo-600 text-white shadow hover:bg-indigo-700"
@@ -93,7 +89,7 @@ const Dashboard = () => (
 );
 
 // --- Main Admin Panel ---
-function FeesPanel() {
+function Gov() {
   const [activeTab, setActiveTab] = useState("dashboard");
   const [openDropdown, setOpenDropdown] = useState(null);
   const [openNestedDropdowns, setOpenNestedDropdowns] = useState({});
@@ -135,9 +131,10 @@ function FeesPanel() {
 
    const renderContent = () => {
     switch (activeTab) {
-      case "dashboard": return <FeesDashboard />;
+      case "dashboard": return <RegDashboard />;
       case "Form": return <Registration />;
       case "class": return <ClassRegistration />;
+      case "classList": return <StudentFilterPage />;
       case "fees": return <FeeReceipt />;
       case "feesCost": return <FeesCostPage />;
       case "TeacherRegistration": return <TeacherRegistration />;
@@ -146,6 +143,9 @@ function FeesPanel() {
       case "TeacherPupilsPage": return <TeacherPupilsPage />;
       case "GradeSheetPage": return <GradeSheetPage />;
       case "GeneralReportCard": return <GeneralReportCard />;
+      case "AdminForm": return <AdminForm />;
+    
+      case "schoolreg": return <SchoolRegistration />;
 
       default: return <Placeholder title={activeTab} />;
     }
@@ -194,4 +194,4 @@ function FeesPanel() {
   );
 }
 
-export default FeesPanel;
+export default Gov;

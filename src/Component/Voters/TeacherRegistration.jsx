@@ -184,6 +184,7 @@ const TeacherRegistration = () => {
         registeredBy: "",
         userPhoto: null,
         userPublicId: null,
+         schoolId: schoolId, // ✅ keep schoolId
         
         
       });

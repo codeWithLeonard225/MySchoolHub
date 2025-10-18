@@ -19,11 +19,29 @@ const LoginPage = () => {
 
   // Define all collections to check
   const collectionsToCheck = [
-    { name: "Admins", idField: "adminID", nameField: "adminName", role: "admin", route: "/admin" },
-    { name: "PupilsReg", idField: "studentID", nameField: "studentName", role: "pupil", route: "/PupilsDashboard" },
-    { name: "Teachers", idField: "teacherID", nameField: "teacherName", role: "teacher", route: "/teacher" },
-    { name: "CEOs", idField: "ceoID", nameField: "ceoName", role: "ceo", route: "/ceo" },
-  ];
+  { name: "Admins", idField: "adminID", nameField: "adminName", role: "admin", route: null }, // route will be dynamic
+  { name: "PupilsReg", idField: "studentID", nameField: "studentName", role: "pupil", route: "/PupilsDashboard" },
+  { name: "Teachers", idField: "teacherID", nameField: "teacherName", role: "teacher", route: "/teacher" },
+  { name: "CEOs", idField: "ceoID", nameField: "ceoName", role: "ceo", route: "/ceo" },
+];
+
+
+  // Map adminType to route
+const getAdminRoute = (adminType) => {
+  switch (adminType) {
+    case "Gov":
+      return "/gov";
+    case "Private":
+      return "/admin";
+    case "Fees":
+      return "/registra";
+    case "Special":
+      return "/special";
+    default:
+      return "/admin"; // fallback
+  }
+};
+
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -32,6 +50,9 @@ const LoginPage = () => {
 
     const trimmedUserID = userID.trim();
     const trimmedUserName = userName.trim();
+``
+
+
 
     if (!trimmedUserID || !trimmedUserName) {
       setError("Please enter your ID and Name.");
@@ -58,18 +79,22 @@ const LoginPage = () => {
       for (const { name, idField, nameField, role, route } of collectionsToCheck) {
         const userQuery = query(
           collection(db, name),
-          where(idField, "==", trimmedUserID),
+          where(idField, "==", trimmedUserID.toLowerCase()),
           where(nameField, "==", trimmedUserName)
         );
         const snapshot = await getDocs(userQuery);
 
         if (!snapshot.empty) {
-          foundUser = snapshot.docs[0].data();
-          userRole = role;
-          schoolId = foundUser.schoolId;
-          navigationRoute = route;
-          break;
-        }
+  foundUser = snapshot.docs[0].data();
+  userRole = role;
+  schoolId = foundUser.schoolId;
+
+  // 🆕 If this is an admin, set route dynamically based on adminType
+  navigationRoute = name === "Admins" ? getAdminRoute(foundUser.adminType) : route;
+
+  break;
+}
+
       }
 
       // 2. AUTHENTICATION DECISION & SCHOOL NAME FETCH

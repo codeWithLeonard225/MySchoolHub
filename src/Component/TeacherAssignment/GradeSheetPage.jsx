@@ -17,13 +17,13 @@ const GradeSheetPage = () => {
   const [academicYear, setAcademicYear] = useState("");
   const [academicYears, setAcademicYears] = useState([]); // All available years
   const [selectedClass, setSelectedClass] = useState("");
-  const [selectedTest, setSelectedTest] = useState("Final Exam"); // Default to a more common final test
+  const [selectedTest, setSelectedTest] = useState("Term 1 T1"); // Default to a more common final test
   const [availableClasses, setAvailableClasses] = useState([]);
   const [pupils, setPupils] = useState([]); // List of pupils for the selected class
   const [gradesData, setGradesData] = useState([]); // Raw grades data from DB
   const [loading, setLoading] = useState(false);
 
-  const tests = ["Test 1", "Test 2", "Test 3", "Final Exam"];
+   const tests = ["Term 1 T1", "Term 1 T2", "Term 2 T1", "Term 2 T2","Term 3 T1", "Term 3 T2"];
   const MAX_SCORE_PER_SUBJECT = 100; // Standard assumption for percentage calculation
 
   // 2. DATA FETCHING HOOKS

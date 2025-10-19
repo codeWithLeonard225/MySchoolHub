@@ -8,12 +8,15 @@ import {
   doc,
   query,
   where,
+  deleteDoc, // 💥 IMPORTED for deletion
 } from "firebase/firestore";
 import { useLocation } from "react-router-dom";
 
 const TeacherAssignmentPage = () => {
+  // --- Constants and State ---
+  const DELETE_PASSWORD = "1234"; // 💥 HARDCODED PASSWORD
   const location = useLocation();
-  const schoolId = location.state?.schoolId || "N/A"; // School ID passed via navigation
+  const schoolId = location.state?.schoolId || "N/A";
 
   const [teacher, setTeacher] = useState("");
   const [className, setClassName] = useState("");
@@ -24,7 +27,13 @@ const TeacherAssignmentPage = () => {
   const [assignments, setAssignments] = useState([]);
   const [editingId, setEditingId] = useState(null);
 
-  // 🔹 Fetch teachers by schoolId
+  // 💥 NEW STATE FOR DELETE POPUP
+  const [showDeletePopup, setShowDeletePopup] = useState(false);
+  const [deleteId, setDeleteId] = useState(null);
+  const [deletePasswordInput, setDeletePasswordInput] = useState("");
+  const [assignmentToDelete, setAssignmentToDelete] = useState(null);
+
+  // 🔹 Fetch teachers by schoolId (unchanged)
   useEffect(() => {
     if (schoolId === "N/A") return;
     const q = query(collection(db, "Teachers"), where("schoolId", "==", schoolId));
@@ -35,7 +44,7 @@ const TeacherAssignmentPage = () => {
     return () => unsub();
   }, [schoolId]);
 
-  // 🔹 Fetch classes & subjects by schoolId
+  // 🔹 Fetch classes & subjects by schoolId (unchanged)
   useEffect(() => {
     if (schoolId === "N/A") return;
     const q = query(collection(db, "ClassesAndSubjects"), where("schoolId", "==", schoolId));
@@ -46,7 +55,7 @@ const TeacherAssignmentPage = () => {
     return () => unsub();
   }, [schoolId]);
 
-  // 🔹 Update subject list based on selected class
+  // 🔹 Update subject list based on selected class (unchanged)
   useEffect(() => {
     if (!className) {
       setSubjectList([]);
@@ -58,7 +67,7 @@ const TeacherAssignmentPage = () => {
     setSelectedSubjects([]);
   }, [className, classesAndSubjects]);
 
-  // 🔹 Handle subject checkbox toggle
+  // 🔹 Handle subject checkbox toggle (unchanged)
   const handleSubjectToggle = (subject) => {
     if (selectedSubjects.includes(subject)) {
       setSelectedSubjects(selectedSubjects.filter((s) => s !== subject));
@@ -67,7 +76,7 @@ const TeacherAssignmentPage = () => {
     }
   };
 
-  // 🔹 Assign or update teacher
+  // 🔹 Assign or update teacher (unchanged)
   const handleAssign = async () => {
     if (!teacher || !className || selectedSubjects.length === 0) {
       alert("Please select a teacher, class, and at least one subject.");
@@ -89,7 +98,7 @@ const TeacherAssignmentPage = () => {
           teacher,
           className,
           subjects: selectedSubjects,
-          schoolId, // ✅ Add schoolId here
+          schoolId,
           createdAt: new Date(),
         });
         alert("Teacher assigned successfully!");
@@ -104,7 +113,7 @@ const TeacherAssignmentPage = () => {
     }
   };
 
-  // 🔹 Fetch assignments by schoolId
+  // 🔹 Fetch assignments by schoolId (unchanged)
   useEffect(() => {
     if (schoolId === "N/A") return;
     const q = query(collection(db, "TeacherAssignments"), where("schoolId", "==", schoolId));
@@ -115,7 +124,7 @@ const TeacherAssignmentPage = () => {
     return () => unsub();
   }, [schoolId]);
 
-  // 🔹 Edit existing assignment
+  // 🔹 Edit existing assignment (unchanged)
   const handleEdit = (assignment) => {
     setEditingId(assignment.id);
     setTeacher(assignment.teacher);
@@ -123,8 +132,46 @@ const TeacherAssignmentPage = () => {
     setSelectedSubjects(assignment.subjects);
   };
 
+  // 💥 NEW: Open Delete Confirmation Popup
+  const handleOpenDelete = (assignment) => {
+    setDeleteId(assignment.id);
+    setAssignmentToDelete(assignment);
+    setDeletePasswordInput(""); // Clear password input
+    setShowDeletePopup(true);
+  };
+
+  // 💥 NEW: Execute Deletion
+  const handleDeleteAssignment = async () => {
+    if (deletePasswordInput !== DELETE_PASSWORD) {
+      alert("Invalid password.");
+      return;
+    }
+
+    if (!deleteId) return;
+
+    try {
+      await deleteDoc(doc(db, "TeacherAssignments", deleteId));
+      alert(`Assignment for ${assignmentToDelete.teacher} (${assignmentToDelete.className}) deleted successfully!`);
+      // Close popup and reset state
+      setShowDeletePopup(false);
+      setDeleteId(null);
+      setAssignmentToDelete(null);
+    } catch (err) {
+      console.error("Error deleting assignment:", err);
+      alert("Error deleting assignment. Please try again.");
+    }
+  };
+
+  // 💥 NEW: Close Delete Confirmation Popup
+  const handleCloseDeletePopup = () => {
+    setShowDeletePopup(false);
+    setDeleteId(null);
+    setAssignmentToDelete(null);
+    setDeletePasswordInput("");
+  };
+
   return (
-    <div className="max-w-5xl mx-auto p-6 bg-white rounded-2xl shadow-md">
+    <div className="max-w-5xl mx-auto p-6 bg-white rounded-2xl shadow-md relative">
       <h2 className="text-2xl font-semibold mb-4 text-center text-gray-800">
         Teacher Class & Subject Assignment
       </h2>
@@ -134,7 +181,7 @@ const TeacherAssignmentPage = () => {
         School ID: <span className="font-semibold">{schoolId}</span>
       </div>
 
-      {/* Inputs */}
+      {/* Inputs (unchanged) */}
       <div className="space-y-4">
         {/* Teacher Dropdown */}
         <div>
@@ -231,12 +278,19 @@ const TeacherAssignmentPage = () => {
                   <td className="border px-3 py-2">{assign.teacher}</td>
                   <td className="border px-3 py-2">{assign.className}</td>
                   <td className="border px-3 py-2">{assign.subjects.join(", ")}</td>
-                  <td className="border px-3 py-2">
+                  <td className="border px-3 py-2 flex gap-2">
                     <button
                       onClick={() => handleEdit(assign)}
-                      className="bg-yellow-400 text-white px-3 py-1 rounded-md hover:bg-yellow-500"
+                      className="bg-yellow-400 text-white px-3 py-1 rounded-md hover:bg-yellow-500 text-xs"
                     >
                       Edit
+                    </button>
+                    {/* 💥 DELETE BUTTON */}
+                    <button
+                      onClick={() => handleOpenDelete(assign)}
+                      className="bg-red-600 text-white px-3 py-1 rounded-md hover:bg-red-700 text-xs"
+                    >
+                      Delete
                     </button>
                   </td>
                 </tr>
@@ -245,6 +299,49 @@ const TeacherAssignmentPage = () => {
           </tbody>
         </table>
       </div>
+
+      {/* 💥 DELETE CONFIRMATION POPUP */}
+      {showDeletePopup && assignmentToDelete && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+          <div className="bg-white p-6 rounded-lg shadow-xl max-w-sm w-full">
+            <h3 className="text-lg font-bold mb-3 text-red-600">Confirm Deletion</h3>
+            <p className="text-gray-700 mb-4">
+              Are you sure you want to delete the assignment for:
+              <br />
+              Teacher: <strong>{assignmentToDelete.teacher}</strong>
+              <br />
+              Class: <strong>{assignmentToDelete.className}</strong>
+            </p>
+
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Enter Password (1234):
+            </label>
+            <input
+              type="password"
+              value={deletePasswordInput}
+              onChange={(e) => setDeletePasswordInput(e.target.value)}
+              className="w-full border rounded-md px-3 py-2 mb-4 focus:ring focus:ring-red-300"
+              placeholder="1234"
+            />
+
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={handleCloseDeletePopup}
+                className="px-4 py-2 bg-gray-300 rounded-md hover:bg-gray-400"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteAssignment}
+                className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 disabled:bg-red-400"
+                disabled={deletePasswordInput !== DELETE_PASSWORD}
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

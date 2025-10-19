@@ -183,7 +183,7 @@ const ClassRegistration = () => {
             <form onSubmit={handleSubmit} className="bg-white shadow-lg rounded-2xl p-6 w-full max-w-2xl">
                 <h2 className="text-2xl font-bold text-center mb-4">{classData.id ? "Update Class" : "Register Class"}</h2>
                 {/* 🏫 School ID (read-only field) */}
-                <div className="mb-4">
+                {/* <div className="mb-4">
                     <label className="block mb-2 font-medium text-sm text-gray-700">School ID</label>
                     <input
                         type="text"
@@ -191,7 +191,7 @@ const ClassRegistration = () => {
                         readOnly
                         className="w-full p-2 border rounded-lg bg-gray-100 text-gray-600"
                     />
-                </div>
+                </div> */}
 
                 <div className="flex flex-col md:flex-row md:space-x-4">
                     <div className="flex-1">

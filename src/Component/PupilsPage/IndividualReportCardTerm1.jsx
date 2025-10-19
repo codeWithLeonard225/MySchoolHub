@@ -20,7 +20,7 @@ const schoolName = location.state?.schoolName || "Unknown School"; // Correctly 
 
 
 
-  const tests = ["Test 1", "Test 2"];
+  const tests = ["Term 1 T1", "Term 1 T2"];
 
   // ✅ Step 1: Fetch latest class & academic year for the pupil
   useEffect(() => {
@@ -104,8 +104,8 @@ const schoolName = location.state?.schoolName || "Unknown School"; // Correctly 
         const studentSubjectGrades = classGradesData.filter(
           (g) => g.pupilID === id && g.subject === subject
         );
-        const t1 = studentSubjectGrades.find(g => g.test === "Test 1")?.grade || 0;
-        const t2 = studentSubjectGrades.find(g => g.test === "Test 2")?.grade || 0;
+        const t1 = studentSubjectGrades.find(g => g.test === "Term 1 T1")?.grade || 0;
+        const t2 = studentSubjectGrades.find(g => g.test === "Term 1 T2")?.grade || 0;
         const mean = (Number(t1) + Number(t2)) / 2;
         subjectScores.push({ id, mean });
       }
@@ -129,8 +129,8 @@ const schoolName = location.state?.schoolName || "Unknown School"; // Correctly 
     let finalTotalMeanSum = 0; // Sum of unrounded means for accurate total calculation
 
     const subjectData = uniqueSubjects.map((subject) => {
-      const t1 = pupilGradesData.find((g) => g.subject === subject && g.test === "Test 1")?.grade || 0;
-      const t2 = pupilGradesData.find((g) => g.subject === subject && g.test === "Test 2")?.grade || 0;
+      const t1 = pupilGradesData.find((g) => g.subject === subject && g.test === "Term 1 T1")?.grade || 0;
+      const t2 = pupilGradesData.find((g) => g.subject === subject && g.test === "Term 1 T2")?.grade || 0;
       const rawMean = (Number(t1) + Number(t2)) / 2;
 
       // ✅ Subject Mean: 0 decimal place (rounded to nearest whole number)
@@ -162,8 +162,8 @@ const schoolName = location.state?.schoolName || "Unknown School"; // Correctly 
       let totalRawMeanSum = 0;
 
       for (const subject of subjectsInClass) {
-        const t1 = pupilGrades.find(g => g.subject === subject && g.test === "Test 1")?.grade || 0;
-        const t2 = pupilGrades.find(g => g.subject === subject && g.test === "Test 2")?.grade || 0;
+        const t1 = pupilGrades.find(g => g.subject === subject && g.test === "Term 1 T1")?.grade || 0;
+        const t2 = pupilGrades.find(g => g.subject === subject && g.test === "Term 1 T2")?.grade || 0;
         totalRawMeanSum += (Number(t1) + Number(t2)) / 2;
       }
 
@@ -215,7 +215,7 @@ const schoolName = location.state?.schoolName || "Unknown School"; // Correctly 
   return (
     <div className="max-w-5xl mx-auto p-6 bg-white shadow-xl rounded-2xl">
       <h2 className="text-2xl font-bold text-center text-indigo-700 mb-6">
-      {schoolName}
+        Model Secondary School {schoolName}
       </h2>
 
       {/* 🧑‍🎓 Pupil Info */}
@@ -259,11 +259,12 @@ const schoolName = location.state?.schoolName || "Unknown School"; // Correctly 
             <thead className="bg-indigo-600 text-white">
               <tr>
                 <th className="px-4 py-2 text-left">Subject</th>
-                {tests.map((t, i) => (
-                  <th key={i} className="px-4 py-2">
-                    {t}
-                  </th>
-                ))}
+               {tests.map((t) => (
+  <th key={t} className="px-4 py-2">
+    {t.split(" ").pop()} {/* Displays only T1 or T2 */}
+  </th>
+))}
+
                 <th className="px-4 py-2">Mn</th>
                 <th className="px-4 py-2">Rnk</th>
               </tr>

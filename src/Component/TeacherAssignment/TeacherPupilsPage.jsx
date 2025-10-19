@@ -25,14 +25,14 @@ const TeacherGradesPage = () => {
   const [selectedClass, setSelectedClass] = useState("");
   const [selectedSubject, setSelectedSubject] = useState("");
   const [grades, setGrades] = useState({});
-  const [selectedTest, setSelectedTest] = useState("Test 1");
+  const [selectedTest, setSelectedTest] = useState("Term 1 T1");
   const [academicYear, setAcademicYear] = useState("");
   const [alreadySubmitted, setAlreadySubmitted] = useState(false);
   const [showPopup, setShowPopup] = useState(false);
   const [gradeSummary, setGradeSummary] = useState({ filled: 0, empty: 0 });
   const [submitting, setSubmitting] = useState(false); // NEW state
 
-  const tests = ["Test 1", "Test 2", "Test 3", "Final Exam"];
+  const tests = ["Term 1 T1", "Term 1 T2", "Term 2 T1", "Term 2 T2","Term 3 T1", "Term 3 T2"];
   const teacherName = user?.data?.teacherName;
 
   // --- Fetch assignments ---

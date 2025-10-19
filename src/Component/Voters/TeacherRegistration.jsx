@@ -11,6 +11,7 @@ import {
   updateDoc,
   query,
   onSnapshot,
+  getDocs,
   where ,
 } from "firebase/firestore";
 import { v4 as uuidv4 } from "uuid";
@@ -136,65 +137,100 @@ const TeacherRegistration = () => {
   };
 
   // Handle submit
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!formData.teacherName.trim()) {
-      toast.error("Teacher name is required.");
-      return;
-    }
+ // ... existing imports in TeacherRegistration
 
-    setIsSubmitting(true);
-    try {
-      const teacherData = {
-        teacherID: formData.teacherID,
-        teacherName: formData.teacherName.trim().toUpperCase(),
-        gender: formData.gender,
-        phone: formData.phone,
-        email: formData.email,
-        address: formData.address,
-        registrationDate: formData.registrationDate,
-        registeredBy: formData.registeredBy,
-        userPhotoUrl: formData.userPhoto,
-        userPublicId: formData.userPublicId,
-        schoolId: formData.schoolId, // ✅ include schoolId
+// ... existing component logic
 
-      };
+// Handle submit
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  if (!formData.teacherName.trim()) {
+    toast.error("Teacher name is required.");
+    return;
+  }
 
-      if (formData.id) {
-        const teacherRef = doc(db, "Teachers", formData.id);
-        await updateDoc(teacherRef, teacherData);
-        toast.success("Teacher updated successfully!");
-      } else {
-        await addDoc(collection(db, "Teachers"), {
-          ...teacherData,
-          timestamp: new Date(),
+  setIsSubmitting(true);
+  
+  const oldTeacherName = teachers.find(t => t.id === formData.id)?.teacherName; // Get the old name
+
+  try {
+    const newTeacherName = formData.teacherName.trim().toUpperCase();
+
+    const teacherData = {
+      teacherID: formData.teacherID,
+      teacherName: newTeacherName, // Use the new, capitalized name
+      gender: formData.gender,
+      phone: formData.phone,
+      email: formData.email,
+      address: formData.address,
+      registrationDate: formData.registrationDate,
+      registeredBy: formData.registeredBy,
+      userPhotoUrl: formData.userPhoto,
+      userPublicId: formData.userPublicId,
+      schoolId: formData.schoolId,
+    };
+
+    if (formData.id) {
+      // --- START: Update Logic ---
+      const teacherRef = doc(db, "Teachers", formData.id);
+      await updateDoc(teacherRef, teacherData);
+
+      // 💥 Step 2: Cascade Update in TeacherAssignments
+      if (oldTeacherName && oldTeacherName !== newTeacherName) {
+        // Query assignments with the OLD teacher name and current school ID
+        const assignmentsQuery = query(
+          collection(db, "TeacherAssignments"),
+          where("teacher", "==", oldTeacherName),
+          where("schoolId", "==", schoolId)
+        );
+        
+        const snapshot = await getDocs(assignmentsQuery); // Use getDocs for one-time fetch
+
+        const updatePromises = snapshot.docs.map(assignmentDoc => {
+          const assignmentRef = doc(db, "TeacherAssignments", assignmentDoc.id);
+          return updateDoc(assignmentRef, {
+            teacher: newTeacherName, // Update to the new name
+          });
         });
-        toast.success("Teacher registered successfully!");
-      }
 
-      setFormData({
-        id: null,
-        teacherID: uuidv4().slice(0, 8),
-        teacherName: "",
-        gender: "",
-        phone: "",
-        email: "",
-        address: "",
-        registrationDate: new Date().toISOString().slice(0, 10),
-        registeredBy: "",
-        userPhoto: null,
-        userPublicId: null,
-         schoolId: schoolId, // ✅ keep schoolId
-        
-        
+        await Promise.all(updatePromises);
+        toast.success(`Teacher and ${updatePromises.length} assignment(s) updated successfully!`);
+      } else {
+        toast.success("Teacher updated successfully!");
+      }
+      // --- END: Update Logic ---
+    } else {
+      // Standard Add Logic
+      await addDoc(collection(db, "Teachers"), {
+        ...teacherData,
+        timestamp: new Date(),
       });
-    } catch (err) {
-      console.error(err);
-      toast.error("Failed to save teacher data.");
-    } finally {
-      setIsSubmitting(false);
+      toast.success("Teacher registered successfully!");
     }
-  };
+
+    // Reset form
+    setFormData({
+      id: null,
+      teacherID: uuidv4().slice(0, 8),
+      teacherName: "",
+      gender: "",
+      phone: "",
+      email: "",
+      address: "",
+      registrationDate: new Date().toISOString().slice(0, 10),
+      registeredBy: "",
+      userPhoto: null,
+      userPublicId: null,
+      schoolId: schoolId,
+    });
+  } catch (err) {
+    console.error(err);
+    toast.error("Failed to save teacher data.");
+  } finally {
+    setIsSubmitting(false);
+  }
+};
+// ... rest of the component
 
   // Edit existing teacher
   const handleUpdate = (teacher) => {
@@ -244,7 +280,7 @@ const TeacherRegistration = () => {
           {formData.id ? "Update Teacher" : "Teacher Registration"}
         </h2>
         {/* 🏫 School ID (read-only field) */}
-        <div className="mb-4">
+        {/* <div className="mb-4">
           <label className="block mb-2 font-medium text-sm text-gray-700">School ID</label>
           <input
             type="text"
@@ -252,7 +288,7 @@ const TeacherRegistration = () => {
             readOnly
             className="w-full p-2 border rounded-lg bg-gray-100 text-gray-600"
           />
-        </div>
+        </div> */}
 
         <div className="flex flex-col md:flex-row md:space-x-4">
           <div className="flex-1">

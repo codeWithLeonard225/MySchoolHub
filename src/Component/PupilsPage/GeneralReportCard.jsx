@@ -19,7 +19,7 @@ const GeneralReportCard = () => {
   const [classGradesData, setClassGradesData] = useState([]);
   const [pupilGradesData, setPupilGradesData] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [selectedTerm, setSelectedTerm] = useState("Term 1");
+  const [selectedTerm, setSelectedTerm] = useState("Term 1"); // Start with 'Term 1' for display
   const location = useLocation();
 
   const {
@@ -33,18 +33,18 @@ const GeneralReportCard = () => {
   } = location.state || {};
 
 
-  // 🧮 Define term-test mapping
+  // 🧮 Define term-test mapping (CORRECTED)
+  // This must match the grade identifiers used in PupilGrades by the TeacherGradesPage
   const termTests = {
-    "Term 1": ["Test 1", "Test 2"],
-    "Term 2": ["Test 3", "Test 4"],
-    "Term 3": ["Test 5", "Test 6"],
+    "Term 1": ["Term 1 T1", "Term 1 T2"],
+    "Term 2": ["Term 2 T1", "Term 2 T2"],
+    "Term 3": ["Term 3 T1", "Term 3 T2"],
   };
 
-  // 🔹 Fetch academic years and classes (unchanged)
+  // 🔹 Fetch academic years and classes (unchanged logic)
   useEffect(() => {
     if (!schoolId) return;
 
-    // Only fetch classes for this school
     const q = query(
       collection(db, "PupilGrades"),
       where("schoolId", "==", schoolId)
@@ -53,17 +53,15 @@ const GeneralReportCard = () => {
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const data = snapshot.docs.map((doc) => doc.data());
 
-      // Unique academic years for this school
       const years = [...new Set(data.map((d) => d.academicYear))].sort().reverse();
-
-      // Unique classes for this school
       const classes = [...new Set(data.map((d) => d.className))].sort();
 
       setAcademicYears(years);
       setAvailableClasses(classes);
 
       if (years.length > 0) setAcademicYear(years[0]);
-      if (classes.length > 0) setSelectedClass(classes[0]);
+      // Only set class if it hasn't been set or if the previously selected class is no longer available
+      if (classes.length > 0 && !selectedClass) setSelectedClass(classes[0]);
     });
 
     return () => unsubscribe();
@@ -120,11 +118,13 @@ const GeneralReportCard = () => {
     return () => unsubscribe();
   }, [academicYear, selectedClass, selectedPupil]);
 
+  // Use the new test identifiers based on the selected term
   const tests = termTests[selectedTerm];
 
-  // 🧮 Ranking + Computation (unchanged)
+  // 🧮 Ranking + Computation (unchanged logic, now uses correct test names)
   const { subjects, reportRows, totalMarks, overallPercentage, overallRank } = useMemo(() => {
-    if (pupilGradesData.length === 0)
+    // ... (Your useMemo logic remains the same, as it dynamically uses the 'tests' array)
+     if (pupilGradesData.length === 0)
       return { subjects: [], reportRows: [], totalMarks: 0, overallPercentage: 0, overallRank: "—" };
 
     const pupilIDs = [...new Set(classGradesData.map((d) => d.pupilID))];
@@ -183,9 +183,10 @@ const GeneralReportCard = () => {
     return { subjects: uniqueSubjects, reportRows: subjectData, totalMarks, overallPercentage, overallRank };
   }, [pupilGradesData, classGradesData, selectedPupil, selectedTerm]);
 
+
   const pupilInfo = pupils.find((p) => p.studentID === selectedPupil);
 
-  // GRADE COLOR LOGIC (unchanged - already correct for on-screen Tests and Mean)
+  // GRADE COLOR LOGIC (unchanged)
   const getGradeColor = (val) => {
     const grade = Number(val);
     if (grade >= 50) {
@@ -196,7 +197,7 @@ const GeneralReportCard = () => {
     return "text-gray-900";
   };
 
-  // 🧾 Handle PDF Printing
+  // 🧾 Handle PDF Printing (UNCHANGED logic, but dynamically uses the 'tests' array)
  const handlePrintPDF = () => {
   if (!pupilInfo) return;
 
@@ -258,10 +259,14 @@ const GeneralReportCard = () => {
 
     // 5. Grades Table
     const tableData = reportRows.map((r) => [r.subject, r.test1, r.test2, r.mean, r.rank]);
+    
+    // Use the tests array for table header, which now contains "Term 1 T1", etc.
+    // If you prefer shorter headers for the PDF:
+    const pdfHeaders = ["Subject", tests[0].split(' ')[2] || 'T1', tests[1].split(' ')[2] || 'T2', "Mean", "Rank"];
 
     autoTable(doc, {
       startY: y,
-      head: [["Subject", tests[0], tests[1], "Mean", "Rank"]],
+      head: [pdfHeaders],
       body: tableData,
       theme: "striped",
       styles: { halign: "center", fontSize: 10 },
@@ -401,7 +406,7 @@ const GeneralReportCard = () => {
         </div>
       )}
 
-      {/* Table (On-screen display) (unchanged) */}
+      {/* Table (On-screen display) */}
       {loading ? (
         <div className="text-center text-indigo-600 font-medium p-8 border rounded-lg">Loading report...</div>
       ) : subjects.length > 0 ? (
@@ -410,9 +415,10 @@ const GeneralReportCard = () => {
             <thead className="bg-indigo-600 text-white">
               <tr>
                 <th className="px-4 py-2 text-left">Subject</th>
+                {/* 💥 UPDATED: Use the last part of the test name for cleaner UI headers */}
                 {tests.map((t) => (
                   <th key={t} className="px-4 py-2">
-                    {t}
+                    {t.split(' ').pop()} 
                   </th>
                 ))}
                 <th className="px-4 py-2">Mn</th>
@@ -423,12 +429,9 @@ const GeneralReportCard = () => {
               {reportRows.map((row, idx) => (
                 <tr key={idx} className="border-b hover:bg-gray-50 transition">
                   <td className="text-left px-4 py-2 font-semibold">{row.subject}</td>
-                  {/* Test grades use getGradeColor */}
                   <td className={`px-4 py-2 ${getGradeColor(row.test1)}`}>{row.test1}</td>
                   <td className={`px-4 py-2 ${getGradeColor(row.test2)}`}>{row.test2}</td>
-                  {/* Mean uses getGradeColor */}
                   <td className={`px-4 py-2 font-bold ${getGradeColor(row.mean)}`}>{row.mean}</td>
-                  {/* Rank is fixed red */}
                   <td className="px-4 py-2 font-bold text-red-600">{row.rank}</td>
                 </tr>
               ))}

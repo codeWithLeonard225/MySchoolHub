@@ -17,13 +17,15 @@ const SubjectPage = () => {
   const schoolId = location.state?.schoolId || "N/A"; // School ID passed via navigation
 
   const [className, setClassName] = useState("");
-  const [subjectInput, setSubjectInput] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("");
+  const [availableSubjects, setAvailableSubjects] = useState([]);
   const [subjects, setSubjects] = useState([]);
   const [allClasses, setAllClasses] = useState([]);
   const [classList, setClassList] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [editingId, setEditingId] = useState(null);
 
-  // ✅ Fetch all classes for the selected school only
+  // ✅ Fetch all classes for the selected school
   useEffect(() => {
     if (!schoolId || schoolId === "N/A") return;
 
@@ -41,17 +43,56 @@ const SubjectPage = () => {
     return () => unsubscribe();
   }, [schoolId]);
 
-  // ✅ Add subject to temporary list
-  const handleAddSubject = () => {
-    if (subjectInput.trim() !== "") {
-      setSubjects((prev) => [...prev, subjectInput.trim()]);
-      setSubjectInput("");
+  // ✅ Fetch all categories from SubjectCategories
+  useEffect(() => {
+    const unsub = onSnapshot(collection(db, "SubjectCategories"), (snapshot) => {
+      const fetched = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      setCategories(fetched);
+    });
+
+    return () => unsub();
+  }, []);
+
+  // ✅ Fetch subjects based on selected category
+  useEffect(() => {
+    if (!selectedCategory) {
+      setAvailableSubjects([]);
+      return;
     }
+
+    const q = query(
+      collection(db, "SubjectCategories"),
+      where("categoryName", "==", selectedCategory)
+    );
+
+    const unsub = onSnapshot(q, (snapshot) => {
+      const fetchedSubjects = snapshot.docs.flatMap(
+        (doc) => doc.data().subjects || []
+      );
+      setAvailableSubjects(fetchedSubjects);
+    });
+
+    return () => unsub();
+  }, [selectedCategory]);
+
+  // ✅ Add subject from available list
+  const handleAddSubject = (subject) => {
+    setSubjects((prev) => {
+      if (prev.includes(subject)) {
+        alert("This subject is already added.");
+        return prev;
+      }
+      return [...prev, subject];
+    });
   };
 
+  // ✅ Save or update class + subjects
   const handleSave = async () => {
     if (!className.trim() || subjects.length === 0) {
-      alert("Please select a class and enter at least one subject.");
+      alert("Please select a class and at least one subject.");
       return;
     }
 
@@ -60,35 +101,36 @@ const SubjectPage = () => {
       return;
     }
 
-    // 🔠 Sort subjects alphabetically before saving
-    const sortedSubjects = [...subjects].sort((a, b) => a.localeCompare(b));
+    try {
+      if (editingId) {
+        // Update existing record
+        await updateDoc(doc(db, "ClassesAndSubjects", editingId), {
+          className,
+          subjects,
+          schoolId,
+          updatedAt: new Date(),
+        });
+        setEditingId(null);
+      } else {
+        // Add new record
+        await addDoc(collection(db, "ClassesAndSubjects"), {
+          className,
+          subjects,
+          schoolId,
+          createdAt: new Date(),
+        });
+      }
 
-    if (editingId) {
-      // Update existing record
-      const docRef = doc(db, "ClassesAndSubjects", editingId);
-      await updateDoc(docRef, {
-        className,
-        subjects: sortedSubjects,
-        schoolId,
-        updatedAt: new Date(),
-      });
-      setEditingId(null);
-    } else {
-      // Add new record
-      await addDoc(collection(db, "ClassesAndSubjects"), {
-        className,
-        subjects: sortedSubjects,
-        schoolId,
-        createdAt: new Date(),
-      });
+      setClassName("");
+      setSubjects([]);
+      setSelectedCategory("");
+      alert("Saved successfully!");
+    } catch (error) {
+      console.error("Error saving:", error);
     }
-
-    setClassName("");
-    setSubjects([]);
   };
 
-
-  // ✅ Fetch ClassesAndSubjects filtered by schoolId
+  // ✅ Fetch existing ClassesAndSubjects filtered by school
   useEffect(() => {
     if (!schoolId || schoolId === "N/A") return;
 
@@ -96,24 +138,24 @@ const SubjectPage = () => {
     const q = query(subjRef, where("schoolId", "==", schoolId));
 
     const unsub = onSnapshot(q, (snapshot) => {
-      const classData = snapshot.docs.map((doc) => ({
+      const data = snapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
       }));
-      setAllClasses(classData);
+      setAllClasses(data);
     });
 
     return () => unsub();
   }, [schoolId]);
 
-  // ✅ Delete class + subjects
+  // ✅ Delete
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this class and its subjects?")) {
       await deleteDoc(doc(db, "ClassesAndSubjects", id));
     }
   };
 
-  // ✅ Edit existing data
+  // ✅ Edit
   const handleEdit = (cls) => {
     setClassName(cls.className);
     setSubjects(cls.subjects);
@@ -121,14 +163,14 @@ const SubjectPage = () => {
   };
 
   return (
-    <div className="max-w-4xl mx-auto p-6 bg-white rounded-2xl shadow-md">
+    <div className="max-w-5xl mx-auto p-6 bg-white rounded-2xl shadow-md">
       <h2 className="text-2xl font-semibold mb-4 text-center text-gray-800">
         Class and Subjects Setup
       </h2>
 
-      {/* ✅ Input Section */}
+      {/* Input Section */}
       <div className="space-y-4">
-        {/* Class Dropdown */}
+        {/* Select Class */}
         <div>
           <label className="font-medium text-gray-700">Class Name:</label>
           <select
@@ -145,27 +187,49 @@ const SubjectPage = () => {
           </select>
         </div>
 
-        {/* Subject Input */}
+        {/* Select Category */}
         <div>
-          <label className="font-medium text-gray-700">Subjects:</label>
-          <div className="flex gap-2 mt-1">
-            <input
-              type="text"
-              value={subjectInput}
-              onChange={(e) => setSubjectInput(e.target.value)}
-              className="flex-1 border rounded-md px-3 py-2 focus:ring focus:ring-blue-300"
-              placeholder="Enter subject e.g. Mathematics"
-            />
-            <button
-              onClick={handleAddSubject}
-              className="bg-green-600 text-white px-4 rounded-md hover:bg-green-700"
-            >
-              Add
-            </button>
-          </div>
+          <label className="font-medium text-gray-700">Select Category:</label>
+          <select
+            value={selectedCategory}
+            onChange={(e) => setSelectedCategory(e.target.value)}
+            className="w-full border rounded-md px-3 py-2 mt-1 focus:ring focus:ring-blue-300 bg-white"
+          >
+            <option value="">-- Select Subject Category --</option>
+            {categories.map((cat) => (
+              <option key={cat.id} value={cat.categoryName}>
+                {cat.categoryName}
+              </option>
+            ))}
+          </select>
+        </div>
 
-          {/* List of Added Subjects */}
-          {subjects.length > 0 && (
+        {/* Available Subjects */}
+        {availableSubjects.length > 0 && (
+          <div>
+            <label className="font-medium text-gray-700">Available Subjects:</label>
+            <div className="flex flex-wrap gap-2 mt-2">
+              {availableSubjects.map((subj, i) => (
+                <button
+                  key={i}
+                  onClick={() => handleAddSubject(subj)}
+                  className={`px-3 py-1 rounded-full border text-sm ${
+                    subjects.includes(subj)
+                      ? "bg-green-500 text-white border-green-500"
+                      : "bg-gray-100 hover:bg-gray-200"
+                  }`}
+                >
+                  {subj}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Selected Subjects */}
+        {subjects.length > 0 && (
+          <div>
+            <label className="font-medium text-gray-700">Selected Subjects:</label>
             <div className="mt-2 flex flex-wrap gap-2">
               {subjects.map((subj, index) => (
                 <span
@@ -176,8 +240,8 @@ const SubjectPage = () => {
                 </span>
               ))}
             </div>
-          )}
-        </div>
+          </div>
+        )}
 
         <button
           onClick={handleSave}
@@ -187,7 +251,7 @@ const SubjectPage = () => {
         </button>
       </div>
 
-      {/* ✅ Table */}
+      {/* Table */}
       <h3 className="text-xl font-semibold mt-8 mb-3 text-gray-800 text-center">
         Saved Classes & Subjects
       </h3>
@@ -215,12 +279,8 @@ const SubjectPage = () => {
                   <td className="border px-3 py-2">{index + 1}</td>
                   <td className="border px-3 py-2">{cls.className}</td>
                   <td className="border px-3 py-2">
-                    {cls.subjects
-                      ?.slice() // make a shallow copy so we don’t modify Firestore data directly
-                      .sort((a, b) => a.localeCompare(b))
-                      .join(", ") || "—"}
+                    {cls.subjects?.join(", ") || "—"}
                   </td>
-
                   <td className="border px-3 py-2 space-x-2">
                     <button
                       onClick={() => handleEdit(cls)}

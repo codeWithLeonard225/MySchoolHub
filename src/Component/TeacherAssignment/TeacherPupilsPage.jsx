@@ -80,13 +80,18 @@ const TeacherGradesPage = () => {
 );
 
 
-    const unsub = onSnapshot(pupilsQuery, (snapshot) => {
-      const data = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-      setPupils(data);
-      const initialGrades = {};
-      data.forEach((pupil) => (initialGrades[pupil.studentID] = ""));
-      setGrades(initialGrades);
-    });
+  const unsub = onSnapshot(pupilsQuery, (snapshot) => {
+  const data = snapshot.docs
+    .map((doc) => ({ id: doc.id, ...doc.data() }))
+    .sort((a, b) => a.studentName?.localeCompare(b.studentName)); // ✅ Sort alphabetically (A–Z)
+
+  setPupils(data);
+
+  const initialGrades = {};
+  data.forEach((pupil) => (initialGrades[pupil.studentID] = ""));
+  setGrades(initialGrades);
+});
+
 
     return () => unsub();
   }, [selectedClass, academicYear]);
@@ -244,7 +249,7 @@ const TeacherGradesPage = () => {
             <tr>
               <th className="border px-3 py-2 text-left">#</th>
               <th className="border px-3 py-2 text-left">Student Name</th>
-              <th className="border px-3 py-2 text-left">Student ID</th>
+              {/* <th className="border px-3 py-2 text-left">Student ID</th> */}
               <th className="border px-3 py-2 text-left">Class</th>
               <th className="border px-3 py-2 text-left">Grade</th>
             </tr>
@@ -261,7 +266,7 @@ const TeacherGradesPage = () => {
                 <tr key={pupil.id} className="hover:bg-gray-50">
                   <td className="border px-3 py-2">{index + 1}</td>
                   <td className="border px-3 py-2">{pupil.studentName}</td>
-                  <td className="border px-3 py-2">{pupil.studentID}</td>
+                  {/* <td className="border px-3 py-2">{pupil.studentID}</td> */}
                   <td className="border px-3 py-2">{pupil.class}</td>
                   <td className="border px-3 py-2">
                     <input

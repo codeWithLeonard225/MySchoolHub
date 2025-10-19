@@ -28,8 +28,11 @@ const StudentFilterPage = () => {
     const unsubscribe = onSnapshot(
       q,
       (snapshot) => {
-        const data = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+        const data = snapshot.docs
+          .map((doc) => ({ id: doc.id, ...doc.data() }))
+          .sort((a, b) => a.studentName?.localeCompare(b.studentName)); // ✅ Sort A–Z by Name
         setStudents(data);
+
 
         const classes = [...new Set(data.map((s) => s.class).filter(Boolean))];
         const years = [...new Set(data.map((s) => s.academicYear).filter(Boolean))];
@@ -166,7 +169,7 @@ const StudentFilterPage = () => {
               <th className="px-4 py-2 text-left text-sm font-medium text-gray-500">ID</th>
               <th className="px-4 py-2 text-left text-sm font-medium text-gray-500">Name</th>
               <th className="px-4 py-2 text-left text-sm font-medium text-gray-500">Class</th>
-        
+
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
@@ -176,7 +179,7 @@ const StudentFilterPage = () => {
                 <td className="px-4 py-2 text-sm text-gray-700">{student.studentID}</td>
                 <td className="px-4 py-2 text-sm text-gray-700">{student.studentName}</td>
                 <td className="px-4 py-2 text-sm text-gray-700">{student.class}</td>
-           
+
               </tr>
             ))}
             {filteredStudents.length === 0 && (

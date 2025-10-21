@@ -9,6 +9,9 @@ import TeacherGradesPage from "./Component/TeacherAssignment/TeacherPupilsPage";
 import PupilsDashboard from "./Component/PupilsPage/PupilsDashboard";
 import FeesPanel from "./Component/Admin/FeesPanel";
 import CeoPanel from "./Component/CeoPanel/CeoPanel";
+import PrivatePupilsDashboard from "./Component/PupilsPage/PrivatePupilsDashboard";
+import GovPupilDashboard from "./Component/PupilsPage/GovPupilDashboard";
+import PupilUpdate from "./Component/TeacherAssignment/PupilUpdate";
 
 function App() {
   return (
@@ -17,10 +20,18 @@ function App() {
         <Routes>
           <Route path="/" element={<LoginPage />} />
           <Route
-            path="/PupilsDashboard"
+            path="/PrivatePupilsDashboard"
             element={
               <ProtectedRoute role="pupil">
-                <PupilsDashboard />
+                <PrivatePupilsDashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/GovPupilDashboard"
+            element={
+              <ProtectedRoute role="pupil">
+                <GovPupilDashboard />
               </ProtectedRoute>
             }
           />
@@ -45,6 +56,14 @@ function App() {
             element={
               <ProtectedRoute role="admin">
                 <Gov/>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/special"
+            element={
+              <ProtectedRoute role="admin">
+                <PupilUpdate/>
               </ProtectedRoute>
             }
           />

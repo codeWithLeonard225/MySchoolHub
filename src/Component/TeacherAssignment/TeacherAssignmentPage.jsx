@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { db } from "../../../firebase";
 import {
   collection,
@@ -8,13 +8,13 @@ import {
   doc,
   query,
   where,
-  deleteDoc, // 💥 IMPORTED for deletion
+  deleteDoc,
 } from "firebase/firestore";
 import { useLocation } from "react-router-dom";
 
 const TeacherAssignmentPage = () => {
   // --- Constants and State ---
-  const DELETE_PASSWORD = "1234"; // 💥 HARDCODED PASSWORD
+  const DELETE_PASSWORD = "1234";
   const location = useLocation();
   const schoolId = location.state?.schoolId || "N/A";
 
@@ -27,7 +27,9 @@ const TeacherAssignmentPage = () => {
   const [assignments, setAssignments] = useState([]);
   const [editingId, setEditingId] = useState(null);
 
-  // 💥 NEW STATE FOR DELETE POPUP
+  // ⭐ NEW STATE for filtering
+  const [searchTerm, setSearchTerm] = useState("");
+
   const [showDeletePopup, setShowDeletePopup] = useState(false);
   const [deleteId, setDeleteId] = useState(null);
   const [deletePasswordInput, setDeletePasswordInput] = useState("");
@@ -64,7 +66,10 @@ const TeacherAssignmentPage = () => {
     }
     const selectedClass = classesAndSubjects.find((cls) => cls.className === className);
     setSubjectList(selectedClass ? selectedClass.subjects : []);
-    setSelectedSubjects([]);
+    // Retain selected subjects that still exist in the new class
+    setSelectedSubjects(prev => 
+      prev.filter(subject => selectedClass?.subjects.includes(subject))
+    );
   }, [className, classesAndSubjects]);
 
   // 🔹 Handle subject checkbox toggle (unchanged)
@@ -124,6 +129,23 @@ const TeacherAssignmentPage = () => {
     return () => unsub();
   }, [schoolId]);
 
+  // ⭐ NEW LOGIC: Filter assignments based on searchTerm
+  const filteredAssignments = useMemo(() => {
+    if (!searchTerm) {
+      return assignments;
+    }
+    const lowerCaseSearchTerm = searchTerm.toLowerCase();
+    
+    return assignments.filter(assign => 
+      // Filter by Teacher name
+      assign.teacher.toLowerCase().includes(lowerCaseSearchTerm) ||
+      // Filter by Class name
+      assign.className.toLowerCase().includes(lowerCaseSearchTerm) ||
+      // Filter by subjects (if any subject includes the term)
+      assign.subjects.some(subject => subject.toLowerCase().includes(lowerCaseSearchTerm))
+    );
+  }, [assignments, searchTerm]);
+
   // 🔹 Edit existing assignment (unchanged)
   const handleEdit = (assignment) => {
     setEditingId(assignment.id);
@@ -132,15 +154,15 @@ const TeacherAssignmentPage = () => {
     setSelectedSubjects(assignment.subjects);
   };
 
-  // 💥 NEW: Open Delete Confirmation Popup
+  // 🔹 Open Delete Confirmation Popup (unchanged)
   const handleOpenDelete = (assignment) => {
     setDeleteId(assignment.id);
     setAssignmentToDelete(assignment);
-    setDeletePasswordInput(""); // Clear password input
+    setDeletePasswordInput("");
     setShowDeletePopup(true);
   };
 
-  // 💥 NEW: Execute Deletion
+  // 🔹 Execute Deletion (unchanged)
   const handleDeleteAssignment = async () => {
     if (deletePasswordInput !== DELETE_PASSWORD) {
       alert("Invalid password.");
@@ -153,16 +175,14 @@ const TeacherAssignmentPage = () => {
       await deleteDoc(doc(db, "TeacherAssignments", deleteId));
       alert(`Assignment for ${assignmentToDelete.teacher} (${assignmentToDelete.className}) deleted successfully!`);
       // Close popup and reset state
-      setShowDeletePopup(false);
-      setDeleteId(null);
-      setAssignmentToDelete(null);
+      handleCloseDeletePopup();
     } catch (err) {
       console.error("Error deleting assignment:", err);
       alert("Error deleting assignment. Please try again.");
     }
   };
 
-  // 💥 NEW: Close Delete Confirmation Popup
+  // 🔹 Close Delete Confirmation Popup (unchanged)
   const handleCloseDeletePopup = () => {
     setShowDeletePopup(false);
     setDeleteId(null);
@@ -182,7 +202,7 @@ const TeacherAssignmentPage = () => {
       </div>
 
       {/* Inputs (unchanged) */}
-      <div className="space-y-4">
+      <div className="space-y-4 mb-8">
         {/* Teacher Dropdown */}
         <div>
           <label className="font-medium text-gray-700">Select Teacher:</label>
@@ -253,6 +273,17 @@ const TeacherAssignmentPage = () => {
         Assigned Teachers
       </h3>
 
+      {/* ⭐ NEW: Search/Filter Input */}
+      <div className="mb-4">
+        <input
+          type="text"
+          placeholder="Filter by Teacher, Class, or Subject..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="w-full border rounded-md px-4 py-2 focus:ring focus:ring-indigo-300"
+        />
+      </div>
+
       <div className="overflow-x-auto">
         <table className="min-w-full border border-gray-300 rounded-md text-sm">
           <thead className="bg-gray-100 text-gray-700">
@@ -265,17 +296,18 @@ const TeacherAssignmentPage = () => {
             </tr>
           </thead>
           <tbody>
-            {assignments.length === 0 ? (
+            {filteredAssignments.length === 0 ? (
               <tr>
                 <td colSpan="5" className="text-center py-4 text-gray-500">
-                  No assignments yet.
+                  {searchTerm ? "No assignments match your search." : "No assignments yet."}
                 </td>
               </tr>
             ) : (
-              assignments.map((assign, index) => (
+              // ⭐ RENDER filteredAssignments instead of assignments
+              filteredAssignments.map((assign, index) => (
                 <tr key={assign.id} className="hover:bg-gray-50">
                   <td className="border px-3 py-2">{index + 1}</td>
-                  <td className="border px-3 py-2">{assign.teacher}</td>
+                  <td className="border px-3 py-2 font-semibold">{assign.teacher}</td>
                   <td className="border px-3 py-2">{assign.className}</td>
                   <td className="border px-3 py-2">{assign.subjects.join(", ")}</td>
                   <td className="border px-3 py-2 flex gap-2">
@@ -285,7 +317,6 @@ const TeacherAssignmentPage = () => {
                     >
                       Edit
                     </button>
-                    {/* 💥 DELETE BUTTON */}
                     <button
                       onClick={() => handleOpenDelete(assign)}
                       className="bg-red-600 text-white px-3 py-1 rounded-md hover:bg-red-700 text-xs"
@@ -300,7 +331,7 @@ const TeacherAssignmentPage = () => {
         </table>
       </div>
 
-      {/* 💥 DELETE CONFIRMATION POPUP */}
+      {/* Delete Confirmation Popup (unchanged) */}
       {showDeletePopup && assignmentToDelete && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
           <div className="bg-white p-6 rounded-lg shadow-xl max-w-sm w-full">
@@ -314,14 +345,14 @@ const TeacherAssignmentPage = () => {
             </p>
 
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Enter Password (1234):
+              Enter Password ({DELETE_PASSWORD}):
             </label>
             <input
               type="password"
               value={deletePasswordInput}
               onChange={(e) => setDeletePasswordInput(e.target.value)}
               className="w-full border rounded-md px-3 py-2 mb-4 focus:ring focus:ring-red-300"
-              placeholder="1234"
+              placeholder={DELETE_PASSWORD}
             />
 
             <div className="flex justify-end gap-3">

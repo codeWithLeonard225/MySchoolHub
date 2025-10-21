@@ -72,7 +72,7 @@ const Dashboard = () => (
 );
 
 // Admin Panel
-function PupilsDashboard() {
+function PrivatePupilsDashboard() {
   const [activeTab, setActiveTab] = useState("dashboard");
   const [openDropdown, setOpenDropdown] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -183,4 +183,4 @@ function PupilsDashboard() {
   );
 }
 
-export default PupilsDashboard;
+export default PrivatePupilsDashboard;

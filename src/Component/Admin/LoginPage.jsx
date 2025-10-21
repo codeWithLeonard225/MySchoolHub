@@ -20,7 +20,7 @@ const LoginPage = () => {
   // Define all collections to check
   const collectionsToCheck = [
   { name: "Admins", idField: "adminID", nameField: "adminName", role: "admin", route: null }, // route will be dynamic
-  { name: "PupilsReg", idField: "studentID", nameField: "studentName", role: "pupil", route: "/PupilsDashboard" },
+  { name: "PupilsReg", idField: "studentID", nameField: "studentName", role: "pupil", route: null },
   { name: "Teachers", idField: "teacherID", nameField: "teacherName", role: "teacher", route: "/teacher" },
   { name: "CEOs", idField: "ceoID", nameField: "ceoName", role: "ceo", route: "/ceo" },
 ];
@@ -39,6 +39,21 @@ const getAdminRoute = (adminType) => {
       return "/special";
     default:
       return "/admin"; // fallback
+  }
+};
+  // Map pupilType to route
+const getPupilRoute = (pupilType) => {
+  switch (pupilType) {
+    case "Gov":
+      return "/GovPupilDashboard";
+    case "Private":
+      return "/PrivatePupilsDashboard";
+    case "GovSpecial":
+      return "/GovPupilSpecial";
+    case "PrivateSpecial":
+      return "/PrivatePupilSpecial";
+    default:
+      return "/contact-admin"; // fallback
   }
 };
 
@@ -76,26 +91,54 @@ const getAdminRoute = (adminType) => {
 
 
       // 1. ITERATE AND SEARCH: Check all collections for a match
-      for (const { name, idField, nameField, role, route } of collectionsToCheck) {
-        const userQuery = query(
-          collection(db, name),
-          where(idField, "==", trimmedUserID.toLowerCase()),
-          where(nameField, "==", trimmedUserName)
-        );
-        const snapshot = await getDocs(userQuery);
+//       for (const { name, idField, nameField, role, route } of collectionsToCheck) {
+//         const userQuery = query(
+//           collection(db, name),
+//           where(idField, "==", trimmedUserID.toLowerCase()),
+//           where(nameField, "==", trimmedUserName)
+//         );
+//         const snapshot = await getDocs(userQuery);
 
-        if (!snapshot.empty) {
-  foundUser = snapshot.docs[0].data();
-  userRole = role;
-  schoolId = foundUser.schoolId;
+//         if (!snapshot.empty) {
+//   foundUser = snapshot.docs[0].data();
+//   userRole = role;
+//   schoolId = foundUser.schoolId;
 
-  // 🆕 If this is an admin, set route dynamically based on adminType
-  navigationRoute = name === "Admins" ? getAdminRoute(foundUser.adminType) : route;
+//   // 🆕 If this is an admin, set route dynamically based on adminType
+//   navigationRoute = name === "Admins" ? getAdminRoute(foundUser.adminType) : route;
 
-  break;
+//   break;
+// }
+
+//       }
+
+// 1. ITERATE AND SEARCH: Check all collections for a match
+for (const { name, idField, nameField, role, route } of collectionsToCheck) {
+  const userQuery = query(
+    collection(db, name),
+    where(idField, "==", trimmedUserID.toLowerCase()),
+    where(nameField, "==", trimmedUserName)
+  );
+  const snapshot = await getDocs(userQuery);
+
+  if (!snapshot.empty) {
+    foundUser = snapshot.docs[0].data();
+    userRole = role;
+    schoolId = foundUser.schoolId;
+
+    // 🆕 DYNAMIC ROUTING
+    if (name === "Admins") {
+      navigationRoute = getAdminRoute(foundUser.adminType);
+    } else if (name === "PupilsReg") {
+      navigationRoute = getPupilRoute(foundUser.pupilType);
+    } else {
+      navigationRoute = route; // fallback for teachers, CEOs, etc.
+    }
+
+    break;
+  }
 }
 
-      }
 
       // 2. AUTHENTICATION DECISION & SCHOOL NAME FETCH
       if (foundUser && schoolId) {

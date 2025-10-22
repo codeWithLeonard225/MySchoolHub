@@ -98,28 +98,43 @@ const PupilUpdate = () => {
 
 
     // ✅ EFFECT 2: Real-Time LISTENER for Students (PupilsReg collection)
-    useEffect(() => {
-        if (!currentSchoolId || currentSchoolId === "N/A") {
-            setUsers([]);
-            return;
-        }
+  useEffect(() => {
+  if (!currentSchoolId || currentSchoolId === "N/A") {
+    setUsers([]);
+    return;
+  }
 
-        const collectionRef = collection(db, "PupilsReg");
-        const q = query(collectionRef, where("schoolId", "==", currentSchoolId));
+  const collectionRef = collection(db, "PupilsReg");
 
-        const unsubscribe = onSnapshot(q, (snapshot) => {
-            const usersList = snapshot.docs.map(doc => ({
-                id: doc.id,
-                ...doc.data(),
-            }));
-            setUsers(usersList);
-        }, (error) => {
-            console.error("Firestore 'PupilsReg' onSnapshot failed:", error);
-            toast.error("Failed to stream student data.");
-        });
+  // ✅ If a class user logs in, filter by their class
+  const isClassUser = user?.role === "teacher" && user?.data?.className;
+  const className = user?.data?.className || null;
 
-        return () => unsubscribe();
-    }, [currentSchoolId]);
+  let q;
+  if (isClassUser && className) {
+    q = query(
+      collectionRef,
+      where("schoolId", "==", currentSchoolId),
+      where("class", "==", className)
+    );
+  } else {
+    // Default: show all pupils in the school
+    q = query(collectionRef, where("schoolId", "==", currentSchoolId));
+  }
+
+  const unsubscribe = onSnapshot(q, (snapshot) => {
+    const usersList = snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+    setUsers(usersList);
+  }, (error) => {
+    console.error("Firestore 'PupilsReg' onSnapshot failed:", error);
+    toast.error("Failed to stream student data.");
+  });
+
+  return () => unsubscribe();
+}, [currentSchoolId, user]);
 
 
     // ✅ EFFECT 3: Fetch classes based on schoolId

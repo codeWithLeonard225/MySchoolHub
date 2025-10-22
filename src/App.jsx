@@ -60,15 +60,15 @@ function App() {
             }
           />
           <Route
-            path="/special"
+            path="/class"
             element={
-              <ProtectedRoute role="admin">
+              <ProtectedRoute role="teacher">
                 <PupilUpdate/>
               </ProtectedRoute>
             }
           />
           <Route
-            path="/teacher"
+            path="/subjectTeacher"
             element={
               <ProtectedRoute role="teacher">
                 <TeacherGradesPage />

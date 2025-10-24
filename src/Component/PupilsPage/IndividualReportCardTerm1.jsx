@@ -6,9 +6,9 @@ import { useLocation } from "react-router-dom";
 
 const IndividualReportCardTerm1 = () => {
   const location = useLocation();
-const pupilData = location.state?.user || {};
-const schoolId = location.state?.schoolId || "N/A";
-const schoolName = location.state?.schoolName || "Unknown School"; // Correctly receives schoolName
+  const pupilData = location.state?.user || {};
+  const schoolId = location.state?.schoolId || "N/A";
+  const schoolName = location.state?.schoolName || "Unknown School"; // Correctly receives schoolName
 
 
   // Individual pupil's grades
@@ -29,7 +29,7 @@ const schoolName = location.state?.schoolName || "Unknown School"; // Correctly 
     const pupilRegRef = query(
       collection(db, "PupilsReg"),
       where("studentID", "==", pupilData.studentID),
-        where("schoolId", "==", schoolId),
+      where("schoolId", "==", schoolId),
 
     );
 
@@ -57,7 +57,7 @@ const schoolName = location.state?.schoolName || "Unknown School"; // Correctly 
       where("academicYear", "==", latestInfo.academicYear),
       where("className", "==", latestInfo.class),
       where("pupilID", "==", pupilData.studentID),
-        where("schoolId", "==", schoolId),
+      where("schoolId", "==", schoolId),
     );
 
     const unsubscribe = onSnapshot(pupilGradesRef, (snapshot) => {
@@ -75,7 +75,7 @@ const schoolName = location.state?.schoolName || "Unknown School"; // Correctly 
       collection(db, "PupilGrades"),
       where("academicYear", "==", latestInfo.academicYear),
       where("className", "==", latestInfo.class),
-        where("schoolId", "==", schoolId)
+      where("schoolId", "==", schoolId)
     );
 
     const unsubscribe = onSnapshot(classGradesRef, (snapshot) => {
@@ -259,11 +259,11 @@ const schoolName = location.state?.schoolName || "Unknown School"; // Correctly 
             <thead className="bg-indigo-600 text-white">
               <tr>
                 <th className="px-4 py-2 text-left">Subject</th>
-               {tests.map((t) => (
-  <th key={t} className="px-4 py-2">
-    {t.split(" ").pop()} {/* Displays only T1 or T2 */}
-  </th>
-))}
+                {tests.map((t) => (
+                  <th key={t} className="px-4 py-2">
+                    {t.split(" ").pop()} {/* Displays only T1 or T2 */}
+                  </th>
+                ))}
 
                 <th className="px-4 py-2">Mn</th>
                 <th className="px-4 py-2">Rnk</th>

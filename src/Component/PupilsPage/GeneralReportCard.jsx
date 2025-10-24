@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { db } from "../../../firebase";
-import { collection, query, where, onSnapshot } from "firebase/firestore";
+import { getDocs, doc, collection, query, where, onSnapshot  } from "firebase/firestore";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { useLocation } from "react-router-dom";
@@ -21,6 +21,8 @@ const GeneralReportCard = () => {
   const [loading, setLoading] = useState(false);
   const [selectedTerm, setSelectedTerm] = useState("Term 1"); // Start with 'Term 1' for display
   const location = useLocation();
+  // 🔹 Fetch Classes Cache for subjectPercentage
+const [classesCache, setClassesCache] = useState([]);
 
   const {
     schoolId,
@@ -67,23 +69,36 @@ const GeneralReportCard = () => {
     return () => unsubscribe();
   }, [schoolId]);
 
-
-  // 🔹 Fetch pupils in class/year (unchanged)
   useEffect(() => {
-    if (!academicYear || !selectedClass) return;
-    const q = query(
-      collection(db, "PupilsReg"),
-      where("schoolId", "==", schoolId),
-      where("academicYear", "==", academicYear),
-      where("class", "==", selectedClass)
-    );
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const data = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-      setPupils(data);
-      if (data.length > 0 && !selectedPupil) setSelectedPupil(data[0].studentID);
-    });
-    return () => unsubscribe();
-  }, [academicYear, selectedClass]);
+  if (!schoolId) return;
+  const fetchClasses = async () => {
+    const snapshot = await getDocs(query(collection(db, "Classes"), where("schoolId", "==", schoolId)));
+    const data = snapshot.docs.map(doc => doc.data());
+    setClassesCache(data);
+  };
+  fetchClasses();
+}, [schoolId]);
+
+
+  // 🔹 Fetch pupils in class/year
+useEffect(() => {
+  if (!academicYear || !selectedClass) return;
+  const q = query(
+    collection(db, "PupilsReg"),
+    where("schoolId", "==", schoolId),
+    where("academicYear", "==", academicYear),
+    where("class", "==", selectedClass)
+  );
+  const unsubscribe = onSnapshot(q, (snapshot) => {
+    const data = snapshot.docs
+      .map((doc) => ({ id: doc.id, ...doc.data() }))
+      .sort((a, b) => a.studentName.localeCompare(b.studentName)); // 🔹 Sort alphabetically
+    setPupils(data);
+    if (data.length > 0 && !selectedPupil) setSelectedPupil(data[0].studentID);
+  });
+  return () => unsubscribe();
+}, [academicYear, selectedClass, schoolId]);
+
 
   // 🔹 Fetch grades for class (unchanged)
   useEffect(() => {
@@ -121,67 +136,73 @@ const GeneralReportCard = () => {
   // Use the new test identifiers based on the selected term
   const tests = termTests[selectedTerm];
 
-  // 🧮 Ranking + Computation (unchanged logic, now uses correct test names)
-  const { subjects, reportRows, totalMarks, overallPercentage, overallRank } = useMemo(() => {
-    // ... (Your useMemo logic remains the same, as it dynamically uses the 'tests' array)
-     if (pupilGradesData.length === 0)
-      return { subjects: [], reportRows: [], totalMarks: 0, overallPercentage: 0, overallRank: "—" };
+ 
+ // 🔹 Updated useMemo for percentage calculation
+const { subjects, reportRows, totalMarks, overallPercentage, overallRank } = useMemo(() => {
+  if (pupilGradesData.length === 0) 
+    return { subjects: [], reportRows: [], totalMarks: 0, overallPercentage: 0, overallRank: "—" };
 
-    const pupilIDs = [...new Set(classGradesData.map((d) => d.pupilID))];
-    const classMeansBySubject = {};
+  const pupilIDs = [...new Set(classGradesData.map((d) => d.pupilID))];
 
-    for (const subject of [...new Set(classGradesData.map((d) => d.subject))]) {
-      const subjectScores = pupilIDs.map((id) => {
-        const g = classGradesData.filter((x) => x.pupilID === id && x.subject === subject);
-        const t1 = g.find((x) => x.test === tests[0])?.grade || 0;
-        const t2 = g.find((x) => x.test === tests[1])?.grade || 0;
-        return { id, mean: (Number(t1) + Number(t2)) / 2 };
-      });
-      subjectScores.sort((a, b) => b.mean - a.mean);
-      subjectScores.forEach((x, i) => {
-        if (i > 0 && x.mean === subjectScores[i - 1].mean) x.rank = subjectScores[i - 1].rank;
-        else x.rank = i + 1;
-      });
-      classMeansBySubject[subject] = subjectScores;
-    }
+  // Subjects list
+  const uniqueSubjects = [...new Set(pupilGradesData.map((d) => d.subject))].sort();
 
-    const uniqueSubjects = [...new Set(pupilGradesData.map((d) => d.subject))].sort();
-    let totalSum = 0;
+  // Fetch subjectPercentage for selected class
+  const classInfo = classesCache.find(c => c.schoolId === schoolId && c.className === selectedClass);
+  const totalSubjectPercentage = classInfo?.subjectPercentage || (uniqueSubjects.length * 100); // fallback
 
-    const subjectData = uniqueSubjects.map((subject) => {
-      const t1 = pupilGradesData.find((g) => g.subject === subject && g.test === tests[0])?.grade || 0;
-      const t2 = pupilGradesData.find((g) => g.subject === subject && g.test === tests[1])?.grade || 0;
-      const rawMean = (Number(t1) + Number(t2)) / 2;
-      const mean = Math.round(rawMean);
-      totalSum += rawMean;
-
-      const rank = classMeansBySubject[subject]?.find((s) => s.id === selectedPupil)?.rank || "—";
-      return { subject, test1: t1, test2: t2, mean, rank };
+  // Compute mean per subject and rank
+  const classMeansBySubject = {};
+  for (const subject of uniqueSubjects) {
+    const subjectScores = pupilIDs.map((id) => {
+      const g = classGradesData.filter(x => x.pupilID === id && x.subject === subject);
+      const t1 = g.find(x => x.test === tests[0])?.grade || 0;
+      const t2 = g.find(x => x.test === tests[1])?.grade || 0;
+      return { id, mean: (Number(t1) + Number(t2)) / 2 };
     });
-
-    const overallScores = pupilIDs.map((id) => {
-      const pupilData = classGradesData.filter((x) => x.pupilID === id);
-      const subjects = [...new Set(pupilData.map((d) => d.subject))];
-      const totalMean = subjects.reduce((acc, subject) => {
-        const t1 = pupilData.find((x) => x.subject === subject && x.test === tests[0])?.grade || 0;
-        const t2 = pupilData.find((x) => x.subject === subject && x.test === tests[1])?.grade || 0;
-        return acc + (Number(t1) + Number(t2)) / 2;
-      }, 0);
-      return { id, totalMean };
-    });
-
-    overallScores.sort((a, b) => b.totalMean - a.totalMean);
-    overallScores.forEach((x, i) => {
-      if (i > 0 && x.totalMean === overallScores[i - 1].totalMean) x.rank = overallScores[i - 1].rank;
+    subjectScores.sort((a, b) => b.mean - a.mean);
+    subjectScores.forEach((x, i) => {
+      if (i > 0 && x.mean === subjectScores[i - 1].mean) x.rank = subjectScores[i - 1].rank;
       else x.rank = i + 1;
     });
+    classMeansBySubject[subject] = subjectScores;
+  }
 
-    const overallRank = overallScores.find((x) => x.id === selectedPupil)?.rank || "—";
-    const totalMarks = Math.round(totalSum);
-    const overallPercentage = uniqueSubjects.length ? (totalSum / uniqueSubjects.length).toFixed(1) : 0;
+  // Compute pupil reportRows
+  let totalSum = 0;
+  const subjectData = uniqueSubjects.map(subject => {
+    const t1 = pupilGradesData.find(g => g.subject === subject && g.test === tests[0])?.grade || 0;
+    const t2 = pupilGradesData.find(g => g.subject === subject && g.test === tests[1])?.grade || 0;
+    const rawMean = (Number(t1) + Number(t2)) / 2;
+    totalSum += rawMean;
+    const mean = Math.round(rawMean);
+    const rank = classMeansBySubject[subject]?.find(s => s.id === selectedPupil)?.rank || "—";
+    return { subject, test1: t1, test2: t2, mean, rank };
+  });
 
-    return { subjects: uniqueSubjects, reportRows: subjectData, totalMarks, overallPercentage, overallRank };
-  }, [pupilGradesData, classGradesData, selectedPupil, selectedTerm]);
+  // Compute overall rank & percentage using totalSubjectPercentage
+  const overallScores = pupilIDs.map(id => {
+    const pupilData = classGradesData.filter(x => x.pupilID === id);
+    const totalMean = [...new Set(pupilData.map(d => d.subject))].reduce((acc, subject) => {
+      const t1 = pupilData.find(x => x.subject === subject && x.test === tests[0])?.grade || 0;
+      const t2 = pupilData.find(x => x.subject === subject && x.test === tests[1])?.grade || 0;
+      return acc + (Number(t1) + Number(t2)) / 2;
+    }, 0);
+    return { id, totalMean };
+  });
+
+  overallScores.sort((a, b) => b.totalMean - a.totalMean);
+  overallScores.forEach((x, i) => {
+    if (i > 0 && x.totalMean === overallScores[i - 1].totalMean) x.rank = overallScores[i - 1].rank;
+    else x.rank = i + 1;
+  });
+
+  const overallRank = overallScores.find(x => x.id === selectedPupil)?.rank || "—";
+  const totalMarks = Math.round(totalSum);
+  const overallPercentage = totalSubjectPercentage > 0 ? ((totalSum / totalSubjectPercentage) * 100).toFixed(1) : 0;
+
+  return { subjects: uniqueSubjects, reportRows: subjectData, totalMarks, overallPercentage, overallRank };
+}, [pupilGradesData, classGradesData, selectedPupil, selectedTerm, selectedClass, classesCache]);
 
 
   const pupilInfo = pupils.find((p) => p.studentID === selectedPupil);

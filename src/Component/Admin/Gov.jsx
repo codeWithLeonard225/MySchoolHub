@@ -20,6 +20,7 @@ import {
 } from "react-icons/md";
 import Registration from "../Voters/Registration";
 import ClassRegistration from "./ClassRegistration";
+import Testing from "./Testing";
 import FeeReceipt from "../FeeReceipt.jsx/FeeReceipt";
 import FeesCostPage from "../FeeReceipt.jsx/FeesCostPage";
 import FeesDashboard from "../Dashboard/FeesDsahboard";
@@ -28,6 +29,8 @@ import TeacherAssignmentPage from "../TeacherAssignment/TeacherAssignmentPage";
 import TeacherRegistration from "../Voters/TeacherRegistration";
 import TeacherPupilsPage from "../TeacherAssignment/TeacherPupilsPage";
 import GradeSheetPage from "../TeacherAssignment/GradeSheetPage";
+import SubGradeMatrixPage from "../TeacherAssignment/SubGradeMatrixPage";
+import ClassFullTermMatrixPage from "../TeacherAssignment/ClassFullTermMatrixPage";
 import GeneralReportCard from "../PupilsPage/GeneralReportCard";
 import SchoolRegistration from "../CeoPanel/SchoolRegistration"
 import AdminForm from "../CeoPanel/AdminForm"
@@ -56,8 +59,20 @@ const NAV_ITEMS = [
     { key: "TeacherRegistration", label: "Teacher Regis", icon: <MdPerson /> },
     { key: "subjects", label: "Subjects", icon: <MdPerson /> },
     { key: "TeacherAssignment", label: "Teacher Assignment", icon: <MdPerson /> },
-    { key: "GradeSheetPage", label: "Grade Sheet", icon: <MdPerson /> },
+
+     
+    ],
+  },
+  {
+    key: "results",
+    label: "Pupils Results",
+    icon: <MdBarChart />,
+    children: [
+    { key: "GradeSheetPage", label: "Test Grade Sheet", icon: <MdPerson /> },
+    { key: "SubGradeMatrixPage", label: "Sub Grade Sheet", icon: <MdPerson /> },
+    { key: "ClassFullTermMatrixPage", label: "Term Grade Sheet", icon: <MdPerson /> },
     { key: "GeneralReportCard", label: "ReportCard", icon: <MdPerson /> },
+    // { key: "Testing", label: "Testing", icon: <MdPerson /> },
      
     ],
   },
@@ -143,6 +158,9 @@ function Gov() {
       case "TeacherPupilsPage": return <TeacherPupilsPage />;
       case "GradeSheetPage": return <GradeSheetPage />;
       case "GeneralReportCard": return <GeneralReportCard />;
+      case "SubGradeMatrixPage": return <SubGradeMatrixPage/>;
+      case "ClassFullTermMatrixPage": return <ClassFullTermMatrixPage/>;
+      case "Testing": return <Testing/>;
       case "AdminForm": return <AdminForm />;
     
       case "schoolreg": return <SchoolRegistration />;

@@ -14,11 +14,14 @@ import {
 } from "firebase/firestore";
 import { useAuth } from "../Security/AuthContext";
 import { useLocation } from "react-router-dom";
+// ⭐️ NEW IMPORTS
+import jsPDF from "jspdf"; 
+import autoTable from "jspdf-autotable"; 
 
 const TeacherGradesPage = () => {
   const { user } = useAuth(); // get logged-in user
-   const location = useLocation();
-    const schoolId = location.state?.schoolId || "N/A"; // School ID passed via navigation
+  const location = useLocation();
+  const schoolId = location.state?.schoolId || "N/A"; // School ID passed via navigation
 
   const [assignments, setAssignments] = useState([]);
   const [pupils, setPupils] = useState([]);
@@ -30,19 +33,22 @@ const TeacherGradesPage = () => {
   const [alreadySubmitted, setAlreadySubmitted] = useState(false);
   const [showPopup, setShowPopup] = useState(false);
   const [gradeSummary, setGradeSummary] = useState({ filled: 0, empty: 0 });
-  const [submitting, setSubmitting] = useState(false); // NEW state
+  const [submitting, setSubmitting] = useState(false);
+  
+  // ⭐️ NEW STATE: To hold the grades previously submitted for PDF download
+  const [submittedGradesMap, setSubmittedGradesMap] = useState({}); 
 
   const tests = ["Term 1 T1", "Term 1 T2", "Term 2 T1", "Term 2 T2","Term 3 T1", "Term 3 T2"];
   const teacherName = user?.data?.teacherName;
 
-  // --- Fetch assignments ---
+  // --- Fetch assignments (unchanged) ---
   useEffect(() => {
     if (!teacherName) return;
-   const q = query(
-  collection(db, "TeacherAssignments"),
-  where("teacher", "==", teacherName),
-  where("schoolId", "==", schoolId)
-);
+    const q = query(
+      collection(db, "TeacherAssignments"),
+      where("teacher", "==", teacherName),
+      where("schoolId", "==", schoolId)
+    );
     const unsub = onSnapshot(q, (snapshot) => {
       const data = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
       setAssignments(data);
@@ -52,9 +58,9 @@ const TeacherGradesPage = () => {
       }
     });
     return () => unsub();
-  }, [teacherName]);
+  }, [teacherName, schoolId]);
 
-  // --- Fetch latest academic year ---
+  // --- Fetch latest academic year (unchanged) ---
   useEffect(() => {
     const q = query(collection(db, "PupilsReg"), orderBy("academicYear", "desc"), limit(1));
     const unsub = onSnapshot(q, (snapshot) => {
@@ -65,61 +71,75 @@ const TeacherGradesPage = () => {
     return () => unsub();
   }, []);
 
-  // --- Fetch pupils for selected class ---
+  // --- Fetch pupils for selected class (unchanged) ---
   useEffect(() => {
     if (!selectedClass || !academicYear) {
       setPupils([]);
       return;
     }
 
-   const pupilsQuery = query(
-  collection(db, "PupilsReg"),
-  where("class", "==", selectedClass),
-  where("academicYear", "==", academicYear),
-  where("schoolId", "==", schoolId)
-);
+    const pupilsQuery = query(
+      collection(db, "PupilsReg"),
+      where("class", "==", selectedClass),
+      where("academicYear", "==", academicYear),
+      where("schoolId", "==", schoolId)
+    );
 
 
-  const unsub = onSnapshot(pupilsQuery, (snapshot) => {
-  const data = snapshot.docs
-    .map((doc) => ({ id: doc.id, ...doc.data() }))
-    .sort((a, b) => a.studentName?.localeCompare(b.studentName)); // ✅ Sort alphabetically (A–Z)
+    const unsub = onSnapshot(pupilsQuery, (snapshot) => {
+      const data = snapshot.docs
+        .map((doc) => ({ id: doc.id, studentID: doc.id, ...doc.data() })) // ⭐️ Ensure studentID is set to doc.id
+        .sort((a, b) => a.studentName?.localeCompare(b.studentName)); 
 
-  setPupils(data);
+      setPupils(data);
 
-  const initialGrades = {};
-  data.forEach((pupil) => (initialGrades[pupil.studentID] = ""));
-  setGrades(initialGrades);
-});
+      const initialGrades = {};
+      data.forEach((pupil) => (initialGrades[pupil.studentID] = ""));
+      setGrades(initialGrades);
+    });
 
 
     return () => unsub();
-  }, [selectedClass, academicYear]);
+  }, [selectedClass, academicYear, schoolId]);
 
-  // --- Check for existing grades ---
+  // --- Check for existing grades & Fetch submitted grades ---
   useEffect(() => {
     const checkExistingGrades = async () => {
-      if (!selectedClass || !selectedSubject || !selectedTest || !academicYear) {
+      if (!selectedClass || !selectedSubject || !selectedTest || !academicYear || !schoolId) {
         setAlreadySubmitted(false);
+        setSubmittedGradesMap({});
         return;
       }
 
-     const q = query(
-  collection(db, "PupilGrades"),
-  where("className", "==", selectedClass),
-  where("subject", "==", selectedSubject),
-  where("test", "==", selectedTest),
-  where("academicYear", "==", academicYear),
-  where("schoolId", "==", schoolId)
-);
+      const q = query(
+        collection(db, "PupilGrades"),
+        where("className", "==", selectedClass),
+        where("subject", "==", selectedSubject),
+        where("test", "==", selectedTest),
+        where("academicYear", "==", academicYear),
+        where("schoolId", "==", schoolId)
+      );
 
 
       const snapshot = await getDocs(q);
-      setAlreadySubmitted(!snapshot.empty);
+      const isSubmitted = !snapshot.empty;
+      setAlreadySubmitted(isSubmitted);
+      
+      // ⭐️ NEW: Map submitted grades if they exist
+      if (isSubmitted) {
+        const gradesMap = {};
+        snapshot.docs.forEach(doc => {
+            const data = doc.data();
+            gradesMap[data.pupilID] = data.grade;
+        });
+        setSubmittedGradesMap(gradesMap);
+      } else {
+          setSubmittedGradesMap({});
+      }
     };
 
     checkExistingGrades();
-  }, [selectedClass, selectedSubject, selectedTest, academicYear]);
+  }, [selectedClass, selectedSubject, selectedTest, academicYear, schoolId]);
 
   const handleGradeChange = (pupilID, value) => {
     setGrades({ ...grades, [pupilID]: value });
@@ -133,6 +153,7 @@ const TeacherGradesPage = () => {
     setShowPopup(true);
   };
 
+  // --- Submit Grades (unchanged) ---
   const handleSubmitGrades = async () => {
     if (!teacherName || !selectedClass || !selectedSubject || !selectedTest) {
       alert("Please select class, subject, and test.");
@@ -144,8 +165,8 @@ const TeacherGradesPage = () => {
       return;
     }
 
-    setSubmitting(true); // freeze submit
-    setShowPopup(false); // close popup immediately
+    setSubmitting(true);
+    setShowPopup(false); 
 
     try {
       for (const pupilID of Object.keys(grades)) {
@@ -160,7 +181,7 @@ const TeacherGradesPage = () => {
             grade: parseFloat(gradeValue),
             test: selectedTest,
             academicYear,
-              schoolId,  // ✅ added here
+            schoolId, 
             timestamp: serverTimestamp(),
           });
         }
@@ -168,13 +189,73 @@ const TeacherGradesPage = () => {
 
       alert(`✅ Grades for ${selectedTest} (${academicYear}) submitted successfully!`);
       setAlreadySubmitted(true);
-      setGrades({}); // ✅ clear all grade inputs
+      setGrades({});
     } catch (err) {
       console.error(err);
       alert("❌ Error submitting grades.");
     } finally {
-      setSubmitting(false); // unfreeze button
+      setSubmitting(false); 
     }
+  };
+
+  // ⭐️ NEW FUNCTION: Download PDF of Submitted Grades
+  const handleDownloadSubmittedPDF = () => {
+    if (!alreadySubmitted || pupils.length === 0) {
+        alert("No submitted data available to generate PDF.");
+        return;
+    }
+
+    const doc = new jsPDF({ orientation: "portrait", unit: "pt", format: "A4" });
+    let startY = 30;
+
+    // Title
+    doc.setFontSize(16).setFont(doc.getFont().fontName, "bold");
+    doc.text(`Submitted Grades Record`, 40, startY);
+    startY += 20;
+
+    // Details
+    doc.setFontSize(11).setFont(doc.getFont().fontName, "normal");
+    doc.text(`Teacher: ${teacherName}`, 40, startY);
+    doc.text(`Class: ${selectedClass}`, 200, startY);
+    doc.text(`Subject: ${selectedSubject}`, 350, startY);
+    startY += 15;
+    doc.text(`Test: ${selectedTest}`, 40, startY);
+    doc.text(`Academic Year: ${academicYear}`, 200, startY);
+    startY += 25;
+
+    // Table Data
+    const tableData = pupils.map((pupil, index) => {
+        const grade = submittedGradesMap[pupil.studentID] || "N/A";
+        return [
+            index + 1,
+            pupil.studentName,
+            pupil.studentID,
+            pupil.class,
+            grade // Use the fetched submitted grade
+        ];
+    }).filter(row => row[4] !== "N/A"); // Only include pupils with a submitted grade
+
+    // Table Headers
+    const head = [['#', 'Student Name', 'Student ID', 'Class', 'Grade']];
+    
+    // AutoTable
+    autoTable(doc, {
+        startY: startY,
+        head: head,
+        body: tableData,
+        theme: "striped",
+        styles: { fontSize: 10, cellPadding: 5 },
+        columnStyles: {
+            0: { cellWidth: 30, halign: 'center' },
+            1: { cellWidth: 150, halign: 'left' },
+            2: { cellWidth: 70, halign: 'center' },
+            3: { cellWidth: 70, halign: 'center' },
+            4: { cellWidth: 60, halign: 'center', fontStyle: 'bold' },
+        }
+    });
+
+    // Save PDF
+    doc.save(`${selectedClass}_${selectedSubject}_${selectedTest}_Submitted_Grades.pdf`);
   };
 
   return (
@@ -203,7 +284,7 @@ const TeacherGradesPage = () => {
         </select>
       </div>
 
-      {/* Class Tabs */}
+      {/* Class Tabs (unchanged) */}
       {assignments.length > 0 && (
         <div className="mb-4 flex gap-2 flex-wrap">
           {assignments.map((a) => (
@@ -223,12 +304,12 @@ const TeacherGradesPage = () => {
         </div>
       )}
 
-      {/* Subject Tabs */}
+      {/* Subject Tabs (unchanged) */}
       {assignments.length > 0 && selectedClass && (
         <div className="mb-4 flex gap-2 flex-wrap">
           {assignments
             .find((a) => a.className === selectedClass)
-            .subjects.map((subject, i) => (
+            ?.subjects.map((subject, i) => (
               <button
                 key={i}
                 className={`px-4 py-2 rounded-md ${
@@ -242,14 +323,13 @@ const TeacherGradesPage = () => {
         </div>
       )}
 
-      {/* Pupils Table */}
+      {/* Pupils Table (unchanged) */}
       <div className="overflow-x-auto">
         <table className="min-w-full border border-gray-300 rounded-md text-sm">
           <thead className="bg-gray-100 text-gray-700">
             <tr>
               <th className="border px-3 py-2 text-left">#</th>
               <th className="border px-3 py-2 text-left">Student Name</th>
-              {/* <th className="border px-3 py-2 text-left">Student ID</th> */}
               <th className="border px-3 py-2 text-left">Class</th>
               <th className="border px-3 py-2 text-left">Grade</th>
             </tr>
@@ -266,14 +346,14 @@ const TeacherGradesPage = () => {
                 <tr key={pupil.id} className="hover:bg-gray-50">
                   <td className="border px-3 py-2">{index + 1}</td>
                   <td className="border px-3 py-2">{pupil.studentName}</td>
-                  {/* <td className="border px-3 py-2">{pupil.studentID}</td> */}
                   <td className="border px-3 py-2">{pupil.class}</td>
                   <td className="border px-3 py-2">
                     <input
                       type="number"
                       min="0"
                       max="100"
-                      value={grades[pupil.studentID] || ""}
+                      // Use the grade from the grades state (empty if submitted, for clarity)
+                      value={grades[pupil.studentID] || submittedGradesMap[pupil.studentID] || ""} 
                       onChange={(e) => handleGradeChange(pupil.studentID, e.target.value)}
                       className="w-20 border px-2 py-1 rounded-md text-center"
                       disabled={alreadySubmitted || submitting}
@@ -286,11 +366,11 @@ const TeacherGradesPage = () => {
         </table>
       </div>
 
-      {/* Submit Button */}
-      <div className="mt-4">
+      {/* Submit/Download Buttons */}
+      <div className="mt-4 flex gap-3">
         <button
           onClick={handleShowPopup}
-          className={`w-full py-2 rounded-md ${
+          className={`w-full py-2 rounded-md transition-colors ${
             alreadySubmitted || submitting
               ? "bg-gray-400 cursor-not-allowed"
               : "bg-green-600 hover:bg-green-700 text-white"
@@ -303,9 +383,19 @@ const TeacherGradesPage = () => {
             ? "Submitting..."
             : "Submit Grades"}
         </button>
+
+        {/* ⭐️ NEW DOWNLOAD BUTTON */}
+        {alreadySubmitted && (
+          <button
+            onClick={handleDownloadSubmittedPDF}
+            className="w-full py-2 rounded-md bg-blue-600 hover:bg-blue-700 text-white transition-colors"
+          >
+            ⬇️ Download Submitted Grades PDF
+          </button>
+        )}
       </div>
 
-      {/* Popup */}
+      {/* Popup (unchanged) */}
       {showPopup && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40">
           <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full text-center">

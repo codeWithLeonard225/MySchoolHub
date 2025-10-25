@@ -183,7 +183,7 @@ useEffect(() => {
         Pupil Grade Sheet Report
       </h2>
 
-      {/* Buttons */}
+      {/* Buttons
       <div className="flex justify-center gap-4 mb-6 no-print">
         <button
           onClick={handlePrint}
@@ -197,7 +197,7 @@ useEffect(() => {
         >
           📄 Download PDF
         </button>
-      </div>
+      </div> */}
 
       {/* Filter Section */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 p-4 border rounded-lg bg-indigo-50 no-print">

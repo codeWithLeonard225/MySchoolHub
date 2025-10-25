@@ -28,6 +28,8 @@ import TeacherAssignmentPage from "../TeacherAssignment/TeacherAssignmentPage";
 import TeacherRegistration from "../Voters/TeacherRegistration";
 import TeacherPupilsPage from "../TeacherAssignment/TeacherPupilsPage";
 import GradeSheetPage from "../TeacherAssignment/GradeSheetPage";
+import SubGradeMatrixPage from "../TeacherAssignment/SubGradeMatrixPage";
+import ClassFullTermMatrixPage from "../TeacherAssignment/ClassFullTermMatrixPage";
 import GeneralReportCard from "../PupilsPage/GeneralReportCard";
 import SchoolRegistration from "../CeoPanel/SchoolRegistration"
 import AdminForm from "../CeoPanel/AdminForm"
@@ -61,12 +63,24 @@ const NAV_ITEMS = [
     label: "staff",
     icon: <MdBarChart />,
     children: [
-    { key: "TeacherRegistration", label: "Teacher Regis", icon: <MdPerson /> },
-    { key: "subjects", label: "Subjects", icon: <MdPerson /> },
-    { key: "TeacherAssignment", label: "Teacher Assignment", icon: <MdPerson /> },
-    { key: "GradeSheetPage", label: "Grade Sheet", icon: <MdPerson /> },
-    { key: "GeneralReportCard", label: "ReportCard", icon: <MdPerson /> },
-     
+      { key: "TeacherRegistration", label: "Teacher Regis", icon: <MdPerson /> },
+      { key: "subjects", label: "Subjects", icon: <MdPerson /> },
+      { key: "TeacherAssignment", label: "Teacher Assignment", icon: <MdPerson /> },
+
+
+    ],
+  },
+  {
+    key: "results",
+    label: "Pupils Results",
+    icon: <MdBarChart />,
+    children: [
+      { key: "GradeSheetPage", label: "Test Grade Sheet", icon: <MdPerson /> },
+      { key: "SubGradeMatrixPage", label: "Sub Grade Sheet", icon: <MdPerson /> },
+      { key: "ClassFullTermMatrixPage", label: "Term Grade Sheet", icon: <MdPerson /> },
+      { key: "GeneralReportCard", label: "ReportCard", icon: <MdPerson /> },
+      // { key: "Testing", label: "Testing", icon: <MdPerson /> },
+
     ],
   },
 
@@ -137,7 +151,7 @@ function AdminPanel() {
       </div>
     ));
 
-   const renderContent = () => {
+  const renderContent = () => {
     switch (activeTab) {
       case "dashboard": return <RegDashboard />;
       case "Form": return <Registration />;
@@ -149,10 +163,12 @@ function AdminPanel() {
       case "subjects": return <SubjectPage />;
       case "TeacherAssignment": return <TeacherAssignmentPage />;
       case "TeacherPupilsPage": return <TeacherPupilsPage />;
+      case "SubGradeMatrixPage": return <SubGradeMatrixPage />;
+      case "ClassFullTermMatrixPage": return <ClassFullTermMatrixPage />;
       case "GradeSheetPage": return <GradeSheetPage />;
       case "GeneralReportCard": return <GeneralReportCard />;
       case "AdminForm": return <AdminForm />;
-    
+
       case "schoolreg": return <SchoolRegistration />;
 
       default: return <Placeholder title={activeTab} />;

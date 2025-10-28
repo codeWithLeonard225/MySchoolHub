@@ -28,20 +28,27 @@ import TeacherAssignmentPage from "../TeacherAssignment/TeacherAssignmentPage";
 import TeacherRegistration from "../Voters/TeacherRegistration";
 import TeacherPupilsPage from "../TeacherAssignment/TeacherPupilsPage";
 import GradeSheetPage from "../TeacherAssignment/GradeSheetPage";
+import SubGradeMatrixPage from "../TeacherAssignment/SubGradeMatrixPage";
+import ClassFullTermMatrixPage from "../TeacherAssignment/ClassFullTermMatrixPage";
 import GeneralReportCard from "../PupilsPage/GeneralReportCard";
+import SchoolRegistration from "../CeoPanel/SchoolRegistration"
+import AdminForm from "../CeoPanel/AdminForm"
+import RegDashboard from "../Dashboard/RegDashboard"
+import StudentFilterPage from "../Voters/StudentFilterPage";
 
 
 // --- Navigation Items ---
 const NAV_ITEMS = [
   {
-      key: "forms",
-      label: "Registeration",
-      icon: <MdEdit />,
-      children: [
-        { key: "Form", label: " Pupils", icon: <MdPerson /> },
-        { key: "class", label: " Class", icon: <MdPerson /> },
-      ],
-    },
+    key: "forms",
+    label: "Registeration",
+    icon: <MdEdit />,
+    children: [
+      { key: "Form", label: " Pupils", icon: <MdPerson /> },
+      { key: "class", label: "Class", icon: <MdPerson /> },
+      { key: "classList", label: "Class List", icon: <MdPerson /> },
+    ],
+  },
 
   {
     key: "fees",
@@ -63,7 +70,7 @@ const NAV_ITEMS = [
   //   { key: "TeacherPupilsPage", label: "TeacherPupilsPage", icon: <MdPerson /> },
   //   { key: "GradeSheetPage", label: "Grade Sheet", icon: <MdPerson /> },
   //   { key: "GeneralReportCard", label: "ReportCard", icon: <MdPerson /> },
-     
+
   //   ],
   // },
 ];
@@ -133,11 +140,12 @@ function FeesPanel() {
       </div>
     ));
 
-   const renderContent = () => {
+  const renderContent = () => {
     switch (activeTab) {
       case "dashboard": return <FeesDashboard />;
       case "Form": return <Registration />;
       case "class": return <ClassRegistration />;
+      case "classList": return <StudentFilterPage />;
       case "fees": return <FeeReceipt />;
       case "feesCost": return <FeesCostPage />;
       case "TeacherRegistration": return <TeacherRegistration />;

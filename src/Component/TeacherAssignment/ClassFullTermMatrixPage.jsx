@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { db } from "../../../firebase";
+import { schooldb } from "../Database/SchoolsResults";
 import {
     collection,
     onSnapshot,
@@ -47,7 +48,7 @@ const ClassPerformanceSummary = () => {
     useEffect(() => {
         if (!schoolId || schoolId === "N/A") return;
 
-        const q = query(collection(db, "PupilGrades"), where("schoolId", "==", schoolId));
+        const q = query(collection(schooldb, "PupilGrades"), where("schoolId", "==", schoolId));
         const unsub = onSnapshot(q, (snapshot) => {
             const years = [...new Set(snapshot.docs.map(doc => doc.data().academicYear).filter(Boolean))];
             const classes = [...new Set(snapshot.docs.map(doc => doc.data().className).filter(Boolean))];
@@ -89,7 +90,7 @@ const ClassPerformanceSummary = () => {
 
         setLoading(true);
         const gradesQuery = query(
-            collection(db, "PupilGrades"),
+            collection(schooldb, "PupilGrades"),
             where("schoolId", "==", schoolId),
             where("academicYear", "==", academicYear),
             where("className", "==", selectedClass)

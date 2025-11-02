@@ -33,6 +33,8 @@ import SchoolRegistration from "./SchoolRegistration"
 import AdminForm from "./AdminForm"
 import UpdateNamesToUppercase from "./UpdateNamesToUppercase"
 import RegDashboard from "../Dashboard/RegDashboard"
+import NationalResultPage from "./NationalResultPage";
+import BECEStatementOfResult from "./BECEStatementOfResult";
 
 
 // --- Navigation Items ---
@@ -76,6 +78,8 @@ const NAV_ITEMS = [
       { key: "schoolreg", label: " School Reg", icon: <MdPerson /> },
       { key: "AdminForm", label: " Admin Form", icon: <MdPerson /> },
       { key: "UpdateNamesToUppercase", label: " UpdateNamesToUppercase", icon: <MdPerson /> },
+      { key: "NationalResultPage", label: " NationalResultPage", icon: <MdPerson /> },
+      { key: "BECEStatementOfResult", label: " BECEStatementOfResult", icon: <MdPerson /> },
     ],
   },
 ];
@@ -160,6 +164,8 @@ function CeoPanel() {
       case "GeneralReportCard": return <GeneralReportCard />;
       case "AdminForm": return <AdminForm />;
       case "UpdateNamesToUppercase": return <UpdateNamesToUppercase />;
+      case "NationalResultPage": return <NationalResultPage />;
+      case "BECEStatementOfResult": return <BECEStatementOfResult />;
     
       case "schoolreg": return <SchoolRegistration />;
 

@@ -165,9 +165,7 @@ const Registration = () => {
         return () => unsubscribe();
     }, [currentSchoolId]);
 
-    
-    // ⭐ NEW EFFECT 4: Fetch Pupil Access Types based on schoolId
-    // ⭐ REVISED EFFECT 4: Fetch Pupil Access Types based on schoolId and set default
+  
     useEffect(() => {
         if (!currentSchoolId || currentSchoolId === "N/A") {
             setAccessTypeOptions([]);
@@ -185,10 +183,6 @@ const Registration = () => {
                 .sort((a, b) => a.localeCompare(b));
             
             setAccessTypeOptions(options);
-
-            // ⭐ DEFAULT LOGIC: Set the first fetched access type (index 0) as default
-            // only if we are registering a new student (no formData.id), options are available, 
-            // and the default hasn't been set yet.
             if (!formData.id && options.length > 0 && formData.pupilType === "" && !hasSetDefaultType) {
                 setFormData(prev => ({ 
                     ...prev, 
@@ -206,15 +200,49 @@ const Registration = () => {
     // Re-evaluate if currentSchoolId changes, or if we transition from update (formData.id) to register
     }, [currentSchoolId, formData.id, formData.pupilType, hasSetDefaultType]);
 
+
+ // --- New State for Filtering ---
+    const TODAY_DATE = useMemo(() => new Date().toISOString().slice(0, 10), []);
+    const [currentFilter, setCurrentFilter] = useState({ 
+        date: TODAY_DATE, 
+        class: "All" 
+    });
+
+    const handleDateFilterChange = (date) => {
+        setCurrentFilter(prev => ({ ...prev, date }));
+    };
+
+    const handleClassFilterChange = (className) => {
+        setCurrentFilter(prev => ({ ...prev, class: className }));
+    };
+
+    const handleResetFilters = () => {
+        setSearchTerm("");
+        setCurrentFilter({
+            date: TODAY_DATE, // Reset to today
+            class: "All"
+        });
+        toast.info("Filters reset to show today's registrations.");
+    };
     
-    // 🔎 FILTER LOGIC: Simplified, as 'users' is already school-filtered
-    // 🔎 FILTER & SORT LOGIC
+   // 🔎 FILTER & SORT LOGIC: Updated to use currentFilter state
     const filteredUsers = useMemo(() => {
         let filtered = users;
+        const lowerCaseSearchTerm = searchTerm.toLowerCase();
 
-        if (searchTerm.trim() !== "") {
-            const lowerCaseSearchTerm = searchTerm.toLowerCase();
-            filtered = users.filter(user => {
+        // 1. Filter by Date (Default Filter)
+        if (currentFilter.date !== "All") {
+            filtered = filtered.filter(user => user.registrationDate === currentFilter.date);
+        }
+
+        // 2. Filter by Class
+        if (currentFilter.class !== "All") {
+            filtered = filtered.filter(user => user.class === currentFilter.class);
+        }
+        
+        // 3. Filter by Search Term
+        if (lowerCaseSearchTerm.trim() !== "") {
+            filtered = filtered.filter(user => {
                 return (
                     (user.studentName && user.studentName.toLowerCase().includes(lowerCaseSearchTerm)) ||
                     (user.class && user.class.toLowerCase().includes(lowerCaseSearchTerm)) ||
@@ -225,13 +253,13 @@ const Registration = () => {
             });
         }
 
-        // Sort by studentName ASC
+        // 4. Sort by studentName ASC
         return filtered.sort((a, b) => {
             if (!a.studentName) return 1;
             if (!b.studentName) return -1;
             return a.studentName.localeCompare(b.studentName);
         });
-    }, [users, searchTerm]);
+    }, [users, searchTerm, currentFilter]); // Depend on currentFilter
 
 
     // ... (rest of helper functions: generateUniqueId, handleInputChange, etc.)
@@ -455,6 +483,8 @@ const Registration = () => {
         }
     };
 
+   
+
     return (
         <div className="flex flex-col items-center min-h-screen bg-gray-100 p-6 space-y-6">
             <form onSubmit={handleSubmit} className="bg-white shadow-lg rounded-2xl p-6 w-full max-w-2xl">
@@ -642,11 +672,6 @@ const Registration = () => {
                                 </option>
                             ))}
                         </select>
-                        {/* // 🛑 Original hardcoded options removed:
-                            <option value="Boarder">Boarder</option>
-                            <option value="Day Pupil">Day Pupil</option>
-                            <option value="Scholarship">Scholarship</option>
-                        */}
                     </div>
 
 
@@ -685,22 +710,56 @@ const Registration = () => {
             {/* --- REGISTERED STUDENTS TABLE --- */}
             {/* ---------------------------------------------------- */}
             <div className="bg-white shadow-lg rounded-2xl p-6 w-full max-w-full lg:max-w-4xl">
-                {/* ✅ Student count is now correct! 
-                    It shows the number of students displayed (filteredUsers) 
-                    out of the total students fetched for the school (users).
-                */}
+              
                 <h2 className="text-2xl font-bold text-center mb-4">Registered Students ({filteredUsers.length} of {users.length})</h2>
 
-                <div className="mb-6">
-                    {/* Single Search Input for Name OR Class */}
+                {/* --- NEW FILTER CONTROLS --- */}
+                <div className="mb-6 space-y-4">
+                    {/* Search Input */}
                     <input
                         type="text"
-                        placeholder="Search by Student Name OR Class (e.g., John or Grade 7)"
+                        placeholder="Search by Student Name or ID..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full p-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
+                        className="w-full p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
                     />
+
+                    {/* Date and Class Filters */}
+                    <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-3">
+                        <div className="flex-1">
+                            <label className="block mb-1 text-xs font-medium text-gray-700">Filter by Date</label>
+                            <select
+                                value={currentFilter.date}
+                                onChange={(e) => handleDateFilterChange(e.target.value)}
+                                className="w-full p-2 border border-gray-300 rounded-lg"
+                            >
+                                <option value={TODAY_DATE}>Today's Registrations</option>
+                                <option value="All">All Registrations</option>
+                            </select>
+                        </div>
+                        <div className="flex-1">
+                            <label className="block mb-1 text-xs font-medium text-gray-700">Filter by Class</label>
+                            <select
+                                value={currentFilter.class}
+                                onChange={(e) => handleClassFilterChange(e.target.value)}
+                                className="w-full p-2 border border-gray-300 rounded-lg"
+                            >
+                                <option value="All">All Classes</option>
+                                {classOptions.map(c => (
+                                    <option key={c} value={c}>{c}</option>
+                                ))}
+                            </select>
+                        </div>
+                        <button
+                            type="button"
+                            onClick={handleResetFilters}
+                            className="w-full sm:w-auto mt-auto py-2 px-4 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition"
+                        >
+                            Reset
+                        </button>
+                    </div>
                 </div>
+
 
 
                 <div className="overflow-x-auto">

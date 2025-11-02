@@ -76,9 +76,9 @@ function App() {
             }
           />
           <Route
-            path="/ceo"
+            path="/special"
             element={
-              <ProtectedRoute role="ceo">
+              <ProtectedRoute role="admin">
                 <CeoPanel />
               </ProtectedRoute>
             }

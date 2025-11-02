@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { db } from "../../../firebase";
+import { schooldb } from "../Database/SchoolsResults";
 import {
     collection,
     onSnapshot,
@@ -53,7 +54,7 @@ const GradeSheetPage = () => {
     useEffect(() => {
         if (!schoolId || schoolId === "N/A") return;
 
-        const q = query(collection(db, "PupilGrades"), where("schoolId", "==", schoolId));
+        const q = query(collection(schooldb, "PupilGrades"), where("schoolId", "==", schoolId));
         const unsub = onSnapshot(q, (snapshot) => {
             const years = [...new Set(snapshot.docs.map(doc => doc.data().academicYear).filter(Boolean))];
             const classes = [...new Set(snapshot.docs.map(doc => doc.data().className).filter(Boolean))];
@@ -99,7 +100,7 @@ const GradeSheetPage = () => {
         setEditingGrades({}); 
         
         const gradesQuery = query(
-            collection(db, "PupilGrades"),
+            collection(schooldb, "PupilGrades"),
             where("schoolId", "==", schoolId),
             where("academicYear", "==", academicYear),
             where("className", "==", selectedClass),
@@ -194,7 +195,7 @@ const GradeSheetPage = () => {
         }
 
         try {
-            const gradeRef = doc(db, "PupilGrades", editedGrade.gradeDocId);
+            const gradeRef = doc(schooldb, "PupilGrades", editedGrade.gradeDocId);
             await updateDoc(gradeRef, { grade: newGradeValue });
             
             // Remove the grade from the temporary edits
@@ -227,7 +228,7 @@ const GradeSheetPage = () => {
         }
         
         try {
-            const gradeRef = doc(db, "PupilGrades", gradeDocId);
+            const gradeRef = doc(schooldb, "PupilGrades", gradeDocId);
             await deleteDoc(gradeRef);
             
             // Remove from temporary edits

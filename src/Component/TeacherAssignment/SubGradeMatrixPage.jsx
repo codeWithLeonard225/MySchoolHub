@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { db } from "../../../firebase";
+import { schooldb } from "../Database/SchoolsResults";
 import {
   collection,
   onSnapshot,
@@ -48,7 +49,7 @@ const SubGradeMatrixPage = () => {
     if (!schoolId) return;
 
     const q = query(
-      collection(db, "PupilGrades"),
+      collection(schooldb, "PupilGrades"),
       where("schoolId", "==", schoolId)
     );
 
@@ -96,7 +97,7 @@ const SubGradeMatrixPage = () => {
 
     // 2. Fetch Class Grades
     const gradesQuery = query(
-      collection(db, "PupilGrades"),
+      collection(schooldb, "PupilGrades"),
       where("academicYear", "==", academicYear),
       where("schoolId", "==", schoolId),
       where("className", "==", selectedClass)

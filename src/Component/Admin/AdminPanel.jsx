@@ -35,6 +35,8 @@ import SchoolRegistration from "../CeoPanel/SchoolRegistration"
 import AdminForm from "../CeoPanel/AdminForm"
 import RegDashboard from "../Dashboard/RegDashboard"
 import StudentFilterPage from "../Voters/StudentFilterPage";
+import NationalResultPage from "../CeoPanel/NationalResultPage";
+import BECEStatementOfResult from "../CeoPanel/BECEStatementOfResult";
 
 
 // --- Navigation Items ---
@@ -80,6 +82,17 @@ const NAV_ITEMS = [
       { key: "ClassFullTermMatrixPage", label: "Term Grade Sheet", icon: <MdPerson /> },
       { key: "GeneralReportCard", label: "ReportCard", icon: <MdPerson /> },
       // { key: "Testing", label: "Testing", icon: <MdPerson /> },
+
+    ],
+  },
+  {
+    key: "NationalResults",
+    label: "National Results",
+    icon: <MdBarChart />,
+    children: [
+      { key: "beceResult", label: "Bece Result Entering", icon: <MdPerson /> },
+      { key: "beceReport", label: "Bece Result Report", icon: <MdPerson /> },
+
 
     ],
   },
@@ -168,6 +181,8 @@ function AdminPanel() {
       case "GradeSheetPage": return <GradeSheetPage />;
       case "GeneralReportCard": return <GeneralReportCard />;
       case "AdminForm": return <AdminForm />;
+      case "beceResult": return <NationalResultPage />;
+      case "beceReport": return <BECEStatementOfResult />;
 
       case "schoolreg": return <SchoolRegistration />;
 

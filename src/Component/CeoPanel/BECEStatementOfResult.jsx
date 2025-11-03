@@ -108,9 +108,7 @@ const BECEStatementOfResult = () => {
                     toast.error(`No result found for "${nameToSearch}".`);
                 }
                 setLoading(false);
-                // Immediately unsubscribe after the first data is retrieved (since we use limit(1))
-                // For a single-use search, `getDocs` is usually better, but keeping `onSnapshot` 
-                // for consistency with previous components.
+             
                 unsubscribe();
             }, (err) => {
                 console.error("Firestore Search Error:", err);
@@ -167,70 +165,78 @@ const BECEStatementOfResult = () => {
     };
 
     const handleDownloadPDF = async () => {
-        if (!resultData) {
-            toast.error("Please search and load a result before downloading.");
-            return;
-        }
-        // we'll use placeholder data/images here.
-        const SCHOOL_LOGO_BASE64 = getBase64Image(data.schoolLogoUrl);
-        const PUPIL_IMG_BASE64 = getBase64Image(data.pupilImgUrl);
-        const WATERMARK_BASE64 = SCHOOL_LOGO_BASE64;
+     if (!resultData) {
+            toast.error("Please search and load a result before downloading.");
+            return;
+        }
+        // we'll use placeholder data/images here.
+        const SCHOOL_LOGO_BASE64 = getBase64Image(data.schoolLogoUrl);
+        const PUPIL_IMG_BASE64 = getBase64Image(data.pupilImgUrl);
+        const WATERMARK_BASE64 = SCHOOL_LOGO_BASE64;
 
-        const doc = new jsPDF({
-            orientation: "portrait",
-            unit: "mm",
-            format: "a4"
-        });
+        const doc = new jsPDF({
+            orientation: "portrait",
+            unit: "mm",
+            format: "a4"
+        });
 
-        const marginX = 15;
-        const pageWidth = doc.internal.pageSize.getWidth();
-        const pageHeight = doc.internal.pageSize.getHeight();
-        const tableWidth = pageWidth - (2 * marginX);
+        const marginX = 15;
+        const pageWidth = doc.internal.pageSize.getWidth();
+        const pageHeight = doc.internal.pageSize.getHeight();
+        const tableWidth = pageWidth - (2 * marginX);
 
-        let y = 25;
+        let y = 25;
 
-        // -----------------------------------------------------------
-        // 🌟 ADD WATERMARK (faded)
-        // -----------------------------------------------------------
-        const wmWidth = 80;
-        const wmHeight = 80;
-        const wmX = (pageWidth / 2) - (wmWidth / 2);
-        const wmY = (pageHeight / 2) - (wmHeight / 2) + 40;
+        // -----------------------------------------------------------
+        // 🌟 ADD WATERMARK (faded)
+        // -----------------------------------------------------------
+        const wmWidth = 80;
+        const wmHeight = 80;
+        const wmX = (pageWidth / 2) - (wmWidth / 2);
+        const wmY = (pageHeight / 2) - (wmHeight / 2) + 40;
 
-        const gState = new doc.GState({ opacity: 0.15 });
-        doc.setGState(gState);
-        doc.addImage(WATERMARK_BASE64, 'JPEG', wmX, wmY, wmWidth, wmHeight);
-        doc.setGState(new doc.GState({ opacity: 1.0 }));
+        const gState = new doc.GState({ opacity: 0.15 });
+        doc.setGState(gState);
+        doc.addImage(WATERMARK_BASE64, 'JPEG', wmX, wmY, wmWidth, wmHeight);
+        doc.setGState(new doc.GState({ opacity: 1.0 }));
 
-        // -----------------------------------------------------------
-        // 🌟 PDF Header
-        // -----------------------------------------------------------
-        doc.setFontSize(16).setFont('helvetica', 'bold');
-        doc.text(data.schoolName, pageWidth / 2, y, null, null, "center");
-        y += 7;
+        // -----------------------------------------------------------
+        // 🌟 PDF Header
+        // -----------------------------------------------------------
+        // 🚨 1. School Name in Blue
+        doc.setTextColor(0, 51, 102); // Set color to Dark Blue
+        doc.setFontSize(16).setFont('helvetica', 'bold');
+        doc.text(data.schoolName, pageWidth / 2, y, null, null, "center");
+        y += 7;
+        doc.setTextColor(0, 0, 0); // Reset color to Black
 
-        doc.setFontSize(10).setFont('helvetica', 'normal');
-        doc.text(data.schoolAddress, pageWidth / 2, y, null, null, "center");
-        y += 5;
+        doc.setFontSize(10).setFont('helvetica', 'normal');
+        doc.text(data.schoolAddress, pageWidth / 2, y, null, null, "center");
+        y += 5;
 
-        doc.line(marginX, y, pageWidth - marginX, y);
-        y += 5;
+        doc.line(marginX, y, pageWidth - marginX, y);
+        y += 5;
 
-        // School Logo
-        const logoWidth = 24;
-        const logoHeight = 24;
-        const logoX = pageWidth / 2 - (logoWidth / 2);
-        doc.addImage(SCHOOL_LOGO_BASE64, 'JPEG', logoX, y, logoWidth, logoHeight);
-        y += logoHeight + 5;
+        // School Logo
+        const logoWidth = 24;
+        const logoHeight = 24;
+        const logoX = pageWidth / 2 - (logoWidth / 2);
+        doc.addImage(SCHOOL_LOGO_BASE64, 'JPEG', logoX, y, logoWidth, logoHeight);
+        y += logoHeight + 5;
 
-        // Title
-        doc.setFontSize(18).setFont('helvetica', 'bold');
-        doc.text("BASIC EDUCATION CERTIFICATE EXAMINATION (BECE)", pageWidth / 2, y + 5, null, null, "center");
-        doc.setFontSize(14);
-        doc.text("STATEMENT OF RESULT", pageWidth / 2, y + 12, null, null, "center");
-        doc.line(pageWidth / 2 - 35, y + 13, pageWidth / 2 + 35, y + 13);
-        y += 24;
-
+        // Title
+        // 🚨 2. BASIC EDUCATION CERTIFICATE EXAMINATION (BECE) in Blue
+        doc.setTextColor(0, 51, 102); // Set color to Dark Blue
+        doc.setFontSize(18).setFont('helvetica', 'bold');
+        doc.text("BASIC EDUCATION CERTIFICATE EXAMINATION (BECE)", pageWidth / 2, y + 5, null, null, "center");
+        doc.setFontSize(14);
+        
+        // 🚨 3. STATEMENT OF RESULT in Blue
+        doc.text("STATEMENT OF RESULT", pageWidth / 2, y + 12, null, null, "center");
+        doc.setTextColor(0, 0, 0); // Reset color to Black
+        
+        doc.line(pageWidth / 2 - 35, y + 13, pageWidth / 2 + 35, y + 13);
+        y += 24;
         // -----------------------------------------------------------
         // 🌟 Certification Text + Pupil Image
         // -----------------------------------------------------------
@@ -329,18 +335,26 @@ const BECEStatementOfResult = () => {
         doc.text(`AGGREGATE: ${data.aggregate || '……………………..'}`, pageWidth - marginX, y, null, null, "right");
         y += 10;
 
-        // Signature and Date on the same line
-        doc.setFont('helvetica', 'normal');
-        const signatureX = marginX;
-        const dateX = pageWidth - marginX - 70;
-        doc.text("Signature of Principal/Head Teacher: _________________________", signatureX, y);
-        doc.text("Date of Issue: _________________________             ", dateX, y); y += 10; // Added spaces to align right margin
+       // --- Signature Row (Principal and Proprietor separated horizontally) ---
+    const principalSignX = marginX; // Left alignment
+    const proprietorSignX = pageWidth / 2 + 10; // Right side alignment (adjusted to fit on the page)
+
+    doc.text("Sign of Principal: _________________________", principalSignX, y);
+    doc.text("Sign of Proprietor: _________________________", proprietorSignX, y);
+    y += 10; // New line for the date
+
+    // --- Date of Issue Row (Centered/Aligned) ---
+    const dateOfIssueX = principalSignX; // Align with the left edge for simplicity
+
+    doc.text("Date of Issue: _________________________             ", dateOfIssueX, y); 
+    
+       
 
         doc.setFontSize(9).setFont('helvetica', 'bold'); // Make it slightly smaller and bold for emphasis
         doc.setTextColor(200, 0, 0); // Red text for attention
         doc.text("Any Alteration will render this Certificate Invalid", pageWidth - marginX, y, null, null, "right");
         doc.setTextColor(0, 0, 0); // Reset color to black
-        y += 10;
+        y += 1;
         // -----------------------------------------------------------
         // 🌟 Draw the Unique Border Last
         // -----------------------------------------------------------

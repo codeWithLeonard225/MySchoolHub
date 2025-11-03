@@ -381,31 +381,34 @@ const BECEStatementOfResult = () => {
 
     // UPDATE Logic 
     const handleUpdateFirebase = async (dataToUpdate) => {
-        if (!editingId) return;
-        setIsSubmitting(true);
+  if (!editingId) return;
+  setIsSubmitting(true);
 
-        try {
-            const resultDocRef = doc(schooldb, "BECE_Results", editingId);
+  try {
+    const resultDocRef = doc(schooldb, "BECE_Results", editingId);
 
-            const finalDataToUpdate = {
-                ...dataToUpdate,
-                schoolId: currentSchoolId,
-                updatedAt: serverTimestamp(),
-                id: undefined, // Don't write the local 'id' field to Firestore
-            };
+    // 🧹 Remove `id` and undefined fields before updating
+    const { id, ...rest } = dataToUpdate;
+    const cleanedData = Object.fromEntries(
+      Object.entries({
+        ...rest,
+        schoolId: currentSchoolId,
+        updatedAt: serverTimestamp(),
+      }).filter(([_, value]) => value !== undefined)
+    );
 
-            await updateDoc(resultDocRef, finalDataToUpdate);
+    await updateDoc(resultDocRef, cleanedData);
 
-            toast.success(`🎉 Result for ${dataToUpdate.studentName} updated successfully!`);
-            handleCancelEdit();
+    toast.success(`🎉 Result for ${dataToUpdate.studentName} updated successfully!`);
+    handleCancelEdit();
+  } catch (error) {
+    console.error("Error updating result:", error);
+    toast.error("Failed to update result.");
+  } finally {
+    setIsSubmitting(false);
+  }
+};
 
-        } catch (error) {
-            console.error("Error updating result:", error);
-            toast.error("Failed to update result.");
-        } finally {
-            setIsSubmitting(false);
-        }
-    };
 
     // DELETE Logic (Unchanged)
     const handleDeleteResult = async (id, studentName) => {

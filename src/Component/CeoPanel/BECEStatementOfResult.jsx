@@ -6,7 +6,7 @@ import {
     onSnapshot,
     query,
     where,
-    limit,
+    limit,updateDoc
 } from "firebase/firestore";
 // 🚨 IMPORTANT: Replace with your actual Firebase DB config
 // Example: import { db } from "../firebaseConfig"; 
@@ -296,8 +296,7 @@ const BECEStatementOfResult = () => {
                 ]);
             });
         };
-
-        addSection('A. COMPULSORY CORE', data.core);
+addSection('A. COMPULSORY CORE', data.core);
         addSection('B. OPTIONAL CORE', data.optionalCore);
         addSection('C. PRE-VOCATIONAL', data.prevocational);
 
@@ -318,8 +317,10 @@ const BECEStatementOfResult = () => {
             styles: { fontSize: 9, cellPadding: 2, fillColor: null },
             columnStyles: {
                 0: { cellWidth: tableWidth * 0.55, halign: 'left' },
-                1: { cellWidth: tableWidth * 0.15, halign: 'center' },
-                2: { cellWidth: tableWidth * 0.30, halign: 'center' },
+                // 🛑 CHANGE: Apply bold style to Grade column (Index 1)
+                1: { cellWidth: tableWidth * 0.15, halign: 'center', fontStyle: 'bold' }, 
+                // 🛑 CHANGE: Apply bold style to Interpretation column (Index 2)
+                2: { cellWidth: tableWidth * 0.30, halign: 'center', fontStyle: 'bold' }, 
             },
             didDrawPage: (hookData) => { y = hookData.cursor.y; }
         });

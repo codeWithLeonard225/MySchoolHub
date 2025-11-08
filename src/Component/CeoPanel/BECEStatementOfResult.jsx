@@ -253,7 +253,7 @@ const BECEStatementOfResult = () => {
 
         // Certification text with line padding
         const certLines = [
-            `THIS IS TO CERTIFY THAT ${data.studentName.toUpperCase() || '……………………………………………………………………………………………'}`,
+            `THIS IS TO CERTIFY THAT: ${data.studentName.toUpperCase() || '……………………………………………………………………………………………'}`,
             `Index Number: ${data.indexNumber || '………………………………...'}`,
             `Took the above examination and obtained the following results:`
         ];

@@ -11,6 +11,7 @@ import {
     getDocs,
     // ⭐️ NEW IMPORTS for Edit/Delete
     updateDoc, 
+    addDoc,
     deleteDoc, 
     doc,
 } from "firebase/firestore";
@@ -177,44 +178,61 @@ const GradeSheetPage = () => {
         }));
     };
 
-    // 🔹 Handler for saving the updated grade
-    const handleSaveGrade = async (pupilID, subject, gradeDocId) => {
-        const editKey = `${pupilID}-${subject}`;
-        const editedGrade = editingGrades[editKey];
+  
+   // 🔹 Handler for saving the updated grade OR adding new
+const handleSaveGrade = async (pupilID, subject, gradeDocId) => {
+  const editKey = `${pupilID}-${subject}`;
+  const editedGrade = editingGrades[editKey];
 
-        if (!editedGrade || editedGrade.value === "" || editedGrade.gradeDocId === "") {
-            toast.error("Invalid grade or document ID.");
-            return;
-        }
+  if (!editedGrade || editedGrade.value === "") {
+    toast.error("Please enter a grade before saving.");
+    return;
+  }
 
-        const newGradeValue = parseFloat(editedGrade.value);
+  const newGradeValue = parseFloat(editedGrade.value);
 
-        if (isNaN(newGradeValue) || newGradeValue < 0 || newGradeValue > MAX_SCORE_PER_SUBJECT) {
-            toast.error(`Grade must be between 0 and ${MAX_SCORE_PER_SUBJECT}.`);
-            return;
-        }
+  if (isNaN(newGradeValue) || newGradeValue < 0 || newGradeValue > MAX_SCORE_PER_SUBJECT) {
+    toast.error(`Grade must be between 0 and ${MAX_SCORE_PER_SUBJECT}.`);
+    return;
+  }
 
-        try {
-            const gradeRef = doc(schooldb, "PupilGrades", editedGrade.gradeDocId);
-            await updateDoc(gradeRef, { grade: newGradeValue });
-            
-            // Remove the grade from the temporary edits
-            setEditingGrades(prev => {
-                const newState = { ...prev };
-                delete newState[editKey];
-                return newState;
-            });
-            
-            // Re-fetch grades to update the table calculations
-            await fetchGrades();
-            
-            toast.success(`✅ Grade for ${pupilID} in ${subject} updated to ${newGradeValue}.`);
+  try {
+    if (gradeDocId) {
+      // ✅ UPDATE existing grade
+      const gradeRef = doc(schooldb, "PupilGrades", gradeDocId);
+      await updateDoc(gradeRef, { grade: newGradeValue });
+      toast.success(`✅ Updated ${subject} for ${pupilID} to ${newGradeValue}.`);
+    } else {
+      // 🆕 ADD new grade document
+      await addDoc(collection(schooldb, "PupilGrades"), {
+        schoolId,
+        pupilID,
+        subject,
+        grade: newGradeValue,
+        academicYear,
+        className: selectedClass,
+        test: selectedTest,
+        createdAt: new Date().toISOString(),
+      });
+      toast.success(`🆕 Added new grade for ${pupilID} in ${subject}.`);
+    }
 
-        } catch (error) {
-            console.error("Error updating grade:", error);
-            toast.error("❌ Failed to update grade.");
-        }
-    };
+    // Remove from temporary edits
+    setEditingGrades(prev => {
+      const newState = { ...prev };
+      delete newState[editKey];
+      return newState;
+    });
+
+    // Refresh grades
+    await fetchGrades();
+
+  } catch (error) {
+    console.error("Error saving grade:", error);
+    toast.error("❌ Failed to save grade.");
+  }
+};
+
     
     // 🔹 Handler for deleting the grade
     const handleDeleteGrade = async (pupilID, subject, gradeDocId) => {

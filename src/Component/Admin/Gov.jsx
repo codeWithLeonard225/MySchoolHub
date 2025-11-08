@@ -36,6 +36,7 @@ import SchoolRegistration from "../CeoPanel/SchoolRegistration"
 import AdminForm from "../CeoPanel/AdminForm"
 import RegDashboard from "../Dashboard/RegDashboard"
 import StudentFilterPage from "../Voters/StudentFilterPage";
+import TeacherAssignmentReport from "../TeacherAssignment/TeacherAssignmentReport";
 
 
 // --- Navigation Items ---
@@ -50,17 +51,18 @@ const NAV_ITEMS = [
       { key: "classList", label: "Class List", icon: <MdPerson /> },
     ],
   },
- 
+
   {
     key: "Staff",
     label: "staff",
     icon: <MdBarChart />,
     children: [
-    { key: "TeacherRegistration", label: "Teacher Regis", icon: <MdPerson /> },
-    { key: "subjects", label: "Subjects", icon: <MdPerson /> },
-    { key: "TeacherAssignment", label: "Teacher Assignment", icon: <MdPerson /> },
+      { key: "TeacherRegistration", label: "Teacher Regis", icon: <MdPerson /> },
+      { key: "subjects", label: "Subjects", icon: <MdPerson /> },
+      { key: "TeacherAssignment", label: "Teacher Assignment", icon: <MdPerson /> },
+      { key: "TeacherAssignmentReport", label: "Teacher Assignment Report ", icon: <MdPerson /> },
 
-     
+
     ],
   },
   {
@@ -68,12 +70,12 @@ const NAV_ITEMS = [
     label: "Pupils Results",
     icon: <MdBarChart />,
     children: [
-    { key: "GradeSheetPage", label: "Test Grade Sheet", icon: <MdPerson /> },
-    { key: "SubGradeMatrixPage", label: "Sub Grade Sheet", icon: <MdPerson /> },
-    { key: "ClassFullTermMatrixPage", label: "Term Grade Sheet", icon: <MdPerson /> },
-    { key: "GeneralReportCard", label: "ReportCard", icon: <MdPerson /> },
-    // { key: "Testing", label: "Testing", icon: <MdPerson /> },
-     
+      { key: "GradeSheetPage", label: "Test Grade Sheet", icon: <MdPerson /> },
+      { key: "SubGradeMatrixPage", label: "Sub Grade Sheet", icon: <MdPerson /> },
+      { key: "ClassFullTermMatrixPage", label: "Term Grade Sheet", icon: <MdPerson /> },
+      { key: "GeneralReportCard", label: "ReportCard", icon: <MdPerson /> },
+      // { key: "Testing", label: "Testing", icon: <MdPerson /> },
+
     ],
   },
 
@@ -144,7 +146,7 @@ function Gov() {
       </div>
     ));
 
-   const renderContent = () => {
+  const renderContent = () => {
     switch (activeTab) {
       case "dashboard": return <RegDashboard />;
       case "Form": return <Registration />;
@@ -158,11 +160,12 @@ function Gov() {
       case "TeacherPupilsPage": return <TeacherPupilsPage />;
       case "GradeSheetPage": return <GradeSheetPage />;
       case "GeneralReportCard": return <GeneralReportCard />;
-      case "SubGradeMatrixPage": return <SubGradeMatrixPage/>;
-      case "ClassFullTermMatrixPage": return <ClassFullTermMatrixPage/>;
-      case "Testing": return <Testing/>;
+      case "SubGradeMatrixPage": return <SubGradeMatrixPage />;
+      case "ClassFullTermMatrixPage": return <ClassFullTermMatrixPage />;
+      case "Testing": return <Testing />;
       case "AdminForm": return <AdminForm />;
-    
+      case "TeacherAssignmentReport": return <TeacherAssignmentReport />;
+
       case "schoolreg": return <SchoolRegistration />;
 
       default: return <Placeholder title={activeTab} />;

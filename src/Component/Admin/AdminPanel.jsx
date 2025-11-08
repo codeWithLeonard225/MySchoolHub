@@ -37,6 +37,7 @@ import RegDashboard from "../Dashboard/RegDashboard"
 import StudentFilterPage from "../Voters/StudentFilterPage";
 import NationalResultPage from "../CeoPanel/NationalResultPage";
 import BECEStatementOfResult from "../CeoPanel/BECEStatementOfResult";
+import TeacherAssignmentReport from "../TeacherAssignment/TeacherAssignmentReport";
 
 
 // --- Navigation Items ---
@@ -68,6 +69,7 @@ const NAV_ITEMS = [
       { key: "TeacherRegistration", label: "Teacher Regis", icon: <MdPerson /> },
       { key: "subjects", label: "Subjects", icon: <MdPerson /> },
       { key: "TeacherAssignment", label: "Teacher Assignment", icon: <MdPerson /> },
+      { key: "TeacherAssignmentReport", label: "Teacher Assignment Report ", icon: <MdPerson /> },
 
 
     ],
@@ -183,6 +185,7 @@ function AdminPanel() {
       case "AdminForm": return <AdminForm />;
       case "beceResult": return <NationalResultPage />;
       case "beceReport": return <BECEStatementOfResult />;
+      case "TeacherAssignmentReport": return <TeacherAssignmentReport />;
 
       case "schoolreg": return <SchoolRegistration />;
 

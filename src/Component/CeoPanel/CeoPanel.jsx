@@ -35,6 +35,7 @@ import UpdateNamesToUppercase from "./UpdateNamesToUppercase"
 import RegDashboard from "../Dashboard/RegDashboard"
 import NationalResultPage from "./NationalResultPage";
 import BECEStatementOfResult from "./BECEStatementOfResult";
+import SubjectData from "./SubjectData";
 
 
 // --- Navigation Items ---
@@ -63,6 +64,7 @@ const NAV_ITEMS = [
     icon: <MdBarChart />,
     children: [
     { key: "TeacherRegistration", label: "Teacher Regis", icon: <MdPerson /> },
+     { key: "SubjectData", label: "SubjectData", icon: <MdPerson /> },
     { key: "subjects", label: "Subjects", icon: <MdPerson /> },
     { key: "TeacherAssignment", label: "Teacher Assignment", icon: <MdPerson /> },
     { key: "GradeSheetPage", label: "Grade Sheet", icon: <MdPerson /> },
@@ -158,6 +160,7 @@ function CeoPanel() {
       case "feesCost": return <FeesCostPage />;
       case "TeacherRegistration": return <TeacherRegistration />;
       case "subjects": return <SubjectPage />;
+      case "SubjectData": return <SubjectData />;
       case "TeacherAssignment": return <TeacherAssignmentPage />;
       case "TeacherPupilsPage": return <TeacherPupilsPage />;
       case "GradeSheetPage": return <GradeSheetPage />;

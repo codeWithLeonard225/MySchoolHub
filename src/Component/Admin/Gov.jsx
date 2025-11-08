@@ -27,7 +27,7 @@ import FeesDashboard from "../Dashboard/FeesDsahboard";
 import SubjectPage from "../SubjectPage/SubjectPage";
 import TeacherAssignmentPage from "../TeacherAssignment/TeacherAssignmentPage";
 import TeacherRegistration from "../Voters/TeacherRegistration";
-import TeacherPupilsPage from "../TeacherAssignment/TeacherPupilsPage";
+import TeacherPupilsPageAdmin from "../TeacherAssignment/TeacherPupilsPageAdmin";
 import GradeSheetPage from "../TeacherAssignment/GradeSheetPage";
 import SubGradeMatrixPage from "../TeacherAssignment/SubGradeMatrixPage";
 import ClassFullTermMatrixPage from "../TeacherAssignment/ClassFullTermMatrixPage";
@@ -61,6 +61,7 @@ const NAV_ITEMS = [
       { key: "subjects", label: "Subjects", icon: <MdPerson /> },
       { key: "TeacherAssignment", label: "Teacher Assignment", icon: <MdPerson /> },
       { key: "TeacherAssignmentReport", label: "Teacher Assignment Report ", icon: <MdPerson /> },
+    
 
 
     ],
@@ -74,6 +75,7 @@ const NAV_ITEMS = [
       { key: "SubGradeMatrixPage", label: "Sub Grade Sheet", icon: <MdPerson /> },
       { key: "ClassFullTermMatrixPage", label: "Term Grade Sheet", icon: <MdPerson /> },
       { key: "GeneralReportCard", label: "ReportCard", icon: <MdPerson /> },
+      { key: "TeacherPupilsPageAdmin", label: "TeacherPupilsGrade", icon: <MdPerson /> },
       // { key: "Testing", label: "Testing", icon: <MdPerson /> },
 
     ],
@@ -165,6 +167,7 @@ function Gov() {
       case "Testing": return <Testing />;
       case "AdminForm": return <AdminForm />;
       case "TeacherAssignmentReport": return <TeacherAssignmentReport />;
+      case "TeacherPupilsPageAdmin": return <TeacherPupilsPageAdmin />;
 
       case "schoolreg": return <SchoolRegistration />;
 

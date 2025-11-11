@@ -89,11 +89,6 @@ const SubjectPage = () => {
     });
   };
 
-  // 🆕 ✅ Remove subject from selected list
-  const handleRemoveSubject = (subjectToRemove) => {
-    setSubjects((prev) => prev.filter((subject) => subject !== subjectToRemove));
-  };
-
   // ✅ Save or update class + subjects
   const handleSave = async () => {
     if (!className.trim() || subjects.length === 0) {
@@ -231,33 +226,18 @@ const SubjectPage = () => {
           </div>
         )}
 
-        {/* Selected Subjects (Updated with Remove button) */}
+        {/* Selected Subjects */}
         {subjects.length > 0 && (
           <div>
-            <label className="font-medium text-gray-700">Selected Subjects (Click to Remove):</label>
+            <label className="font-medium text-gray-700">Selected Subjects:</label>
             <div className="mt-2 flex flex-wrap gap-2">
               {subjects.map((subj, index) => (
-                <button
+                <span
                   key={index}
-                  onClick={() => handleRemoveSubject(subj)}
-                  className="bg-blue-600 text-white px-3 py-1 rounded-full text-sm flex items-center space-x-1 hover:bg-blue-700 transition duration-150"
+                  className="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-sm"
                 >
-                  <span>{subj}</span>
-                  <svg
-                    className="w-4 h-4 ml-1"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M6 18L18 6M6 6l12 12"
-                    ></path>
-                  </svg>
-                </button>
+                  {subj}
+                </span>
               ))}
             </div>
           </div>

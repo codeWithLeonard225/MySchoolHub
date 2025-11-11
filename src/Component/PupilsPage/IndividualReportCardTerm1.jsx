@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useMemo } from "react";
-// ⭐️ ADDED getDocs for fetching Classes data
 import { db } from "../../../firebase";
 import { schooldb } from "../Database/SchoolsResults";
 import { getDocs, collection, query, where, onSnapshot } from "firebase/firestore";
@@ -12,33 +11,67 @@ const IndividualReportCardTerm1 = () => {
     const schoolId = location.state?.schoolId || "N/A";
     const schoolName = location.state?.schoolName || "Unknown School";
 
-    // Individual pupil's grades
     const [pupilGradesData, setPupilGradesData] = useState([]);
-    // All grades for the current class/year (used for ranking)
     const [classGradesData, setClassGradesData] = useState([]);
     const [latestInfo, setLatestInfo] = useState({ class: "", academicYear: "" });
     const [loading, setLoading] = useState(true);
-    // ⭐️ NEW STATE: Cache for class configuration (including subjectPercentage)
+    // ⭐️ CACHE STATE
     const [classesCache, setClassesCache] = useState([]);
     const [totalPupilsInClass, setTotalPupilsInClass] = useState(0);
 
-
     const tests = ["Term 1 T1", "Term 1 T2"];
 
-    // 1. Fetch Classes Cache (MUST BE TOP-LEVEL HOOK)
+    // 1. 🚀 OPTIMIZED: Fetch Classes Cache using localStorage
     useEffect(() => {
         if (!schoolId) return;
-        const fetchClasses = async () => {
-            // Fetch configuration from the main database (db)
-            const snapshot = await getDocs(query(collection(db, "Classes"), where("schoolId", "==", schoolId)));
-            const data = snapshot.docs.map(doc => doc.data());
-            setClassesCache(data);
+        const CLASSES_CACHE_KEY = `classes_config_${schoolId}`;
+        const CACHE_DURATION_MS = 24 * 60 * 60 * 1000; // 24 hours
+
+        const fetchClasses = async (useCache) => {
+            let data = [];
+            
+            // --- 1. Attempt to load from cache ---
+            if (useCache) {
+                const cachedData = localStorage.getItem(CLASSES_CACHE_KEY);
+                if (cachedData) {
+                    try {
+                        const { timestamp, data: cachedClasses } = JSON.parse(cachedData);
+                        // Check if cache is still valid
+                        if (Date.now() - timestamp < CACHE_DURATION_MS) {
+                            // console.log("Using cached Classes data.");
+                            setClassesCache(cachedClasses);
+                            return; // 🛑 Cache hit! Skip Firestore read.
+                        }
+                    } catch (e) {
+                        console.error("Error parsing cache, fetching fresh data.");
+                        // Proceed to fetch if parsing fails
+                    }
+                }
+            }
+            
+            // --- 2. Cache expired or not found, fetch from Firestore ---
+            // console.log("Fetching fresh Classes data from Firestore.");
+            try {
+                const snapshot = await getDocs(query(collection(db, "Classes"), where("schoolId", "==", schoolId)));
+                data = snapshot.docs.map(doc => doc.data());
+                setClassesCache(data);
+                
+                // Store new data in cache
+                localStorage.setItem(CLASSES_CACHE_KEY, JSON.stringify({
+                    timestamp: Date.now(),
+                    data: data,
+                }));
+            } catch (error) {
+                console.error("Error fetching Classes data:", error);
+            }
         };
-        fetchClasses();
-    }, [schoolId]); // Dependency: only runs when schoolId changes
+        
+        fetchClasses(true); 
+
+    }, [schoolId]); 
 
 
-    // 2. Fetch latest class & academic year for the pupil
+    // 2. Fetch latest class & academic year for the pupil (Real-time is good here)
     useEffect(() => {
         if (!pupilData.studentID) return;
 
@@ -63,33 +96,32 @@ const IndividualReportCardTerm1 = () => {
         return () => unsubscribe();
     }, [pupilData.studentID, schoolId]);
 
-    // ✅ Fetch total pupils in the same class & academic year
-useEffect(() => {
-  if (!latestInfo.academicYear || !latestInfo.class || !schoolId) return;
+    // 3. Fetch total pupils in the same class & academic year (Real-time is good here)
+    useEffect(() => {
+        if (!latestInfo.academicYear || !latestInfo.class || !schoolId) return;
 
-  const pupilsRef = query(
-    collection(db, "PupilsReg"),
-    where("academicYear", "==", latestInfo.academicYear),
-    where("class", "==", latestInfo.class),
-    where("schoolId", "==", schoolId)
-  );
+        const pupilsRef = query(
+            collection(db, "PupilsReg"),
+            where("academicYear", "==", latestInfo.academicYear),
+            where("class", "==", latestInfo.class),
+            where("schoolId", "==", schoolId)
+        );
 
-  const unsubscribe = onSnapshot(
-    pupilsRef,
-    (snapshot) => {
-      setTotalPupilsInClass(snapshot.size); // total number of pupils
-    },
-    (error) => {
-      console.error("Error counting pupils:", error);
-    }
-  );
+        const unsubscribe = onSnapshot(
+            pupilsRef,
+            (snapshot) => {
+                setTotalPupilsInClass(snapshot.size); 
+            },
+            (error) => {
+                console.error("Error counting pupils:", error);
+            }
+        );
 
-  return () => unsubscribe();
-}, [latestInfo, schoolId]);
+        return () => unsubscribe();
+    }, [latestInfo, schoolId]);
 
 
-
-    // 3A. Fetch individual pupil's grades (real-time)
+    // 4A. Fetch individual pupil's grades (Real-time is essential for up-to-date grades)
     useEffect(() => {
         if (!latestInfo.academicYear || !latestInfo.class || !pupilData.studentID) return;
 
@@ -108,7 +140,7 @@ useEffect(() => {
         return () => unsubscribe();
     }, [latestInfo, pupilData.studentID, schoolId]);
 
-    // 3B. Fetch all class grades for ranking (real-time)
+    // 4B. Fetch all class grades for ranking (Real-time is essential for accurate ranking)
     useEffect(() => {
         if (!latestInfo.academicYear || !latestInfo.class) return;
 
@@ -128,6 +160,7 @@ useEffect(() => {
     }, [latestInfo, schoolId]);
 
 
+    // 5. Memoized Calculation Logic (Unchanged)
     const { subjects, reportRows, totalMarks, overallPercentage, overallRank, totalSubjectPercentage } = useMemo(() => {
         if (pupilGradesData.length === 0)
             return { subjects: [], reportRows: [], totalMarks: 0, overallPercentage: 0, overallRank: "—", totalSubjectPercentage: 0 };
@@ -135,21 +168,16 @@ useEffect(() => {
         const pupilIDs = [...new Set(classGradesData.map((d) => d.pupilID))];
         const uniqueSubjects = [...new Set(pupilGradesData.map((d) => d.subject))].sort();
 
-        // ⭐️ CORRECTED LOOKUP: Get configured total possible score from cache
         const classInfo = classesCache.find(
             (c) => c.schoolId === schoolId && c.className === latestInfo.class
         );
         const configuredPercentage = classInfo?.subjectPercentage;
         
-        // Determine total possible score (max mean * number of subjects, or use configured value)
         const totalSubjectPercentage = configuredPercentage 
             ? configuredPercentage 
             : (uniqueSubjects.length * 100);
 
-
-        // ----------------------------------------------------
         // 1. Calculate Mean for ALL Students/Subjects in the Class (for subject rank)
-        // ----------------------------------------------------
         const classMeansBySubject = {};
         for (const subject of [...new Set(classGradesData.map((d) => d.subject))]) {
             const subjectScores = [];
@@ -175,9 +203,7 @@ useEffect(() => {
             classMeansBySubject[subject] = subjectScores;
         }
 
-        // ----------------------------------------------------
         // 2. Build the current Pupil's Report Rows (with subject rank)
-        // ----------------------------------------------------
         let finalTotalMeanSum = 0;
 
         const subjectData = uniqueSubjects.map((subject) => {
@@ -203,9 +229,7 @@ useEffect(() => {
             };
         });
 
-        // ----------------------------------------------------
         // 3. Calculate Overall Total Score and Rank
-        // ----------------------------------------------------
         const overallScores = [];
 
         for (const id of pupilIDs) {
@@ -240,12 +264,9 @@ useEffect(() => {
             }
         }
 
-        // ----------------------------------------------------
         // 4. Final Summary Metrics
-        // ----------------------------------------------------
         const totalMarks = Math.round(finalTotalMeanSum);
 
-        // ✅ FINAL CORRECTED PERCENTAGE CALCULATION
         const overallPercentage =
             totalSubjectPercentage > 0
                 ? ((finalTotalMeanSum / totalSubjectPercentage) * 100).toFixed(1)
@@ -262,13 +283,13 @@ useEffect(() => {
     }, [pupilGradesData, classGradesData, pupilData.studentID, classesCache, schoolId, latestInfo.class]);
 
 
-    // ✅ Grade color helper
+    // Grade color helper (Unchanged)
     const getGradeColor = (val) => {
         if (val >= 50) return "text-green-600 font-bold";
         return "text-red-600 font-bold";
     };
 
-    // ✅ UI 
+    // UI (Unchanged)
     return (
         <div className="max-w-5xl mx-auto p-6 bg-white shadow-xl rounded-2xl">
             <h2 className="text-2xl font-bold text-center text-indigo-700 mb-6">

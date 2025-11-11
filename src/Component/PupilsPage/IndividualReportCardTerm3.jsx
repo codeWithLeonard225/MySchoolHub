@@ -20,24 +20,61 @@ const IndividualReportCardTerm3 = () => {
     const [loading, setLoading] = useState(true);
     // ⭐️ NEW STATE: Cache for class configuration (including subjectPercentage)
     const [classesCache, setClassesCache] = useState([]);
-     const [totalPupilsInClass, setTotalPupilsInClass] = useState(0);
+    const [totalPupilsInClass, setTotalPupilsInClass] = useState(0);
 
     const tests = ["Term 3 T1", "Term 3 T2"];
 
-    // 1. Fetch Classes Cache (MUST BE TOP-LEVEL HOOK)
+    // 1. 🚀 OPTIMIZED: Fetch Classes Cache using localStorage (REDUCES DB READS)
     useEffect(() => {
         if (!schoolId) return;
-        const fetchClasses = async () => {
-            // Fetch configuration from the main database (db)
-            const snapshot = await getDocs(query(collection(db, "Classes"), where("schoolId", "==", schoolId)));
-            const data = snapshot.docs.map(doc => doc.data());
-            setClassesCache(data);
+        
+        // Use the same cache key across all report card components
+        const CLASSES_CACHE_KEY = `classes_config_${schoolId}`;
+        const CACHE_DURATION_MS = 24 * 60 * 60 * 1000; // 24 hours
+
+        const fetchClasses = async (useCache) => {
+            let data = [];
+            
+            // --- 1. Attempt to load from cache ---
+            if (useCache) {
+                const cachedData = localStorage.getItem(CLASSES_CACHE_KEY);
+                if (cachedData) {
+                    try {
+                        const { timestamp, data: cachedClasses } = JSON.parse(cachedData);
+                        // Check if cache is still valid
+                        if (Date.now() - timestamp < CACHE_DURATION_MS) {
+                            setClassesCache(cachedClasses);
+                            return; // 🛑 CACHE HIT! Skip Firestore read.
+                        }
+                    } catch (e) {
+                        // Proceed to fetch if parsing fails
+                    }
+                }
+            }
+            
+            // --- 2. Cache expired or not found, fetch from Firestore ---
+            try {
+                // Fetch configuration from the main database (db)
+                const snapshot = await getDocs(query(collection(db, "Classes"), where("schoolId", "==", schoolId)));
+                data = snapshot.docs.map(doc => doc.data());
+                setClassesCache(data);
+                
+                // Store new data in cache
+                localStorage.setItem(CLASSES_CACHE_KEY, JSON.stringify({
+                    timestamp: Date.now(),
+                    data: data,
+                }));
+            } catch (error) {
+                console.error("Error fetching Classes data:", error);
+            }
         };
-        fetchClasses();
+        
+        fetchClasses(true); 
+
     }, [schoolId]); // Dependency: only runs when schoolId changes
 
 
-    // 2. Fetch latest class & academic year for the pupil
+    // 2. Fetch latest class & academic year for the pupil (Unchanged)
     useEffect(() => {
         if (!pupilData.studentID) return;
 
@@ -63,7 +100,7 @@ const IndividualReportCardTerm3 = () => {
     }, [pupilData.studentID, schoolId]);
 
 
-    // 3A. Fetch individual pupil's grades (real-time)
+    // 3A. Fetch individual pupil's grades (real-time - schooldb)
     useEffect(() => {
         if (!latestInfo.academicYear || !latestInfo.class || !pupilData.studentID) return;
 
@@ -82,32 +119,32 @@ const IndividualReportCardTerm3 = () => {
         return () => unsubscribe();
     }, [latestInfo, pupilData.studentID, schoolId]);
 
-    // ✅ Fetch total pupils in the same class & academic year
-useEffect(() => {
-  if (!latestInfo.academicYear || !latestInfo.class || !schoolId) return;
+    // ✅ Fetch total pupils in the same class & academic year (Unchanged)
+    useEffect(() => {
+        if (!latestInfo.academicYear || !latestInfo.class || !schoolId) return;
 
-  const pupilsRef = query(
-    collection(db, "PupilsReg"),
-    where("academicYear", "==", latestInfo.academicYear),
-    where("class", "==", latestInfo.class),
-    where("schoolId", "==", schoolId)
-  );
+        const pupilsRef = query(
+            collection(db, "PupilsReg"),
+            where("academicYear", "==", latestInfo.academicYear),
+            where("class", "==", latestInfo.class),
+            where("schoolId", "==", schoolId)
+        );
 
-  const unsubscribe = onSnapshot(
-    pupilsRef,
-    (snapshot) => {
-      setTotalPupilsInClass(snapshot.size); // total number of pupils
-    },
-    (error) => {
-      console.error("Error counting pupils:", error);
-    }
-  );
+        const unsubscribe = onSnapshot(
+            pupilsRef,
+            (snapshot) => {
+                setTotalPupilsInClass(snapshot.size); // total number of pupils
+            },
+            (error) => {
+                console.error("Error counting pupils:", error);
+            }
+        );
 
-  return () => unsubscribe();
-}, [latestInfo, schoolId]);
+        return () => unsubscribe();
+    }, [latestInfo, schoolId]);
 
 
-    // 3B. Fetch all class grades for ranking (real-time)
+    // 3B. Fetch all class grades for ranking (real-time - schooldb)
     useEffect(() => {
         if (!latestInfo.academicYear || !latestInfo.class) return;
 
@@ -134,7 +171,7 @@ useEffect(() => {
         const pupilIDs = [...new Set(classGradesData.map((d) => d.pupilID))];
         const uniqueSubjects = [...new Set(pupilGradesData.map((d) => d.subject))].sort();
 
-        // ⭐️ CORRECTED LOOKUP: Get configured total possible score from cache
+        // ⭐️ CORRECTED LOOKUP: Uses the cached classesCache state
         const classInfo = classesCache.find(
             (c) => c.schoolId === schoolId && c.className === latestInfo.class
         );
@@ -157,6 +194,7 @@ useEffect(() => {
                 const studentSubjectGrades = classGradesData.filter(
                     (g) => g.pupilID === id && g.subject === subject
                 );
+                // Note: The test names are correctly set to Term 3 T1/T2
                 const t1 = studentSubjectGrades.find((g) => g.test === "Term 3 T1")?.grade || 0;
                 const t2 = studentSubjectGrades.find((g) => g.test === "Term 3 T2")?.grade || 0;
                 const mean = (Number(t1) + Number(t2)) / 2;
@@ -271,7 +309,7 @@ useEffect(() => {
     return (
         <div className="max-w-5xl mx-auto p-6 bg-white shadow-xl rounded-2xl">
             <h2 className="text-2xl font-bold text-center text-indigo-700 mb-6">
-                {schoolName}
+                {schoolName} - Term 3 Report
             </h2>
 
             {/* 🧑‍🎓 Pupil Info */}
@@ -291,12 +329,12 @@ useEffect(() => {
                 <div>
                     <p className="text-lg font-semibold text-indigo-800">{pupilData.studentName}</p>
                    <p className="text-gray-600">
-  <span className="font-medium">Class:</span>{" "}
-  {latestInfo.class || "N/A"}{" "}
-  <span className="ml-2 text-sm text-gray-500">
-    ({totalPupilsInClass} pupils)
-  </span>
-</p>
+                      <span className="font-medium">Class:</span>{" "}
+                      {latestInfo.class || "N/A"}{" "}
+                      <span className="ml-2 text-sm text-gray-500">
+                        ({totalPupilsInClass} pupils)
+                      </span>
+                    </p>
 
                     <p className="text-gray-600">
                         <span className="font-medium">Academic Year:</span>{" "}

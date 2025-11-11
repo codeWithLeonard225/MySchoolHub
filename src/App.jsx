@@ -12,6 +12,7 @@ import CeoPanel from "./Component/CeoPanel/CeoPanel";
 import PrivatePupilsDashboard from "./Component/PupilsPage/PrivatePupilsDashboard";
 import GovPupilDashboard from "./Component/PupilsPage/GovPupilDashboard";
 import PupilUpdate from "./Component/TeacherAssignment/PupilUpdate";
+import PrintableStudentForm from "./Component/Voters/PrintableStudentForm";
 
 function App() {
   return (
@@ -80,6 +81,14 @@ function App() {
             element={
               <ProtectedRoute role="admin">
                 <CeoPanel />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/print-student/:studentID"
+            element={
+              <ProtectedRoute role="admin">
+                <PrintableStudentForm />
               </ProtectedRoute>
             }
           />

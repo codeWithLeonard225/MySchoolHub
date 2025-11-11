@@ -35,10 +35,15 @@ import SchoolRegistration from "../CeoPanel/SchoolRegistration"
 import AdminForm from "../CeoPanel/AdminForm"
 import RegDashboard from "../Dashboard/RegDashboard"
 import StudentFilterPage from "../Voters/StudentFilterPage";
+import StudentIDCards from "../Voters/StudentIDCards";
 import NationalResultPage from "../CeoPanel/NationalResultPage";
 import BECEStatementOfResult from "../CeoPanel/BECEStatementOfResult";
 import TeacherAssignmentReport from "../TeacherAssignment/TeacherAssignmentReport";
 import TeacherPupilsPageAdmin from "../TeacherAssignment/TeacherPupilsPageAdmin";
+import ExamUploader from "../Admin/PastQuestionUpload";
+import SchoolLibraryUpload from "../Admin/SchoolLibraryUpload";
+import PupilIDCard from "../Voters/PupilIDCard";
+import IDCardPage from "../Voters/IDCardPage";
 
 
 // --- Navigation Items ---
@@ -51,6 +56,7 @@ const NAV_ITEMS = [
       { key: "Form", label: " Pupils", icon: <MdPerson /> },
       { key: "class", label: "Class", icon: <MdPerson /> },
       { key: "classList", label: "Class List", icon: <MdPerson /> },
+      { key: "StudentIDCards", label: "Student IDCards", icon: <MdPerson /> },
     ],
   },
   {
@@ -60,6 +66,7 @@ const NAV_ITEMS = [
     children: [
       { key: "fees", label: " PupilsFees", icon: <MdPerson /> },
       { key: "feesCost", label: " feesUpdate", icon: <MdPerson /> },
+
     ],
   },
   {
@@ -71,7 +78,9 @@ const NAV_ITEMS = [
       { key: "subjects", label: "Subjects", icon: <MdPerson /> },
       { key: "TeacherAssignment", label: "Teacher Assignment", icon: <MdPerson /> },
       { key: "TeacherAssignmentReport", label: "Teacher Assignment Report ", icon: <MdPerson /> },
-    
+      { key: "PastQuestions", label: "Upload Past Questions ", icon: <MdPerson /> },
+      { key: "SchoolLibraryUpload", label: "SchoolLibrary Upload ", icon: <MdPerson /> },
+
 
 
     ],
@@ -85,7 +94,7 @@ const NAV_ITEMS = [
       { key: "SubGradeMatrixPage", label: "Sub Grade Sheet", icon: <MdPerson /> },
       { key: "ClassFullTermMatrixPage", label: "Term Grade Sheet", icon: <MdPerson /> },
       { key: "GeneralReportCard", label: "ReportCard", icon: <MdPerson /> },
-         { key: "TeacherPupilsPageAdmin", label: "TeacherPupilsGrade", icon: <MdPerson /> },
+      { key: "TeacherPupilsPageAdmin", label: "TeacherPupilsGrade", icon: <MdPerson /> },
       // { key: "Testing", label: "Testing", icon: <MdPerson /> },
 
     ],
@@ -98,6 +107,18 @@ const NAV_ITEMS = [
       { key: "beceResult", label: "Bece Result Entering", icon: <MdPerson /> },
       { key: "beceReport", label: "Bece Result Report", icon: <MdPerson /> },
 
+
+    ],
+  },
+  {
+    key: "idcards",
+    label: "Pupils ID Cards",
+    icon: <MdBarChart />,
+    children: [
+      { key: "PupilIDCard", label: "PupilIDCard", icon: <MdPerson /> },
+      { key: "IDCardPage", label: "IDCardPage", icon: <MdPerson /> },
+
+      // { key: "Testing", label: "Testing", icon: <MdPerson /> },
 
     ],
   },
@@ -175,6 +196,7 @@ function AdminPanel() {
       case "Form": return <Registration />;
       case "class": return <ClassRegistration />;
       case "classList": return <StudentFilterPage />;
+      case "StudentIDCards": return <StudentIDCards />;
       case "fees": return <FeeReceipt />;
       case "feesCost": return <FeesCostPage />;
       case "TeacherRegistration": return <TeacherRegistration />;
@@ -190,7 +212,10 @@ function AdminPanel() {
       case "beceReport": return <BECEStatementOfResult />;
       case "TeacherAssignmentReport": return <TeacherAssignmentReport />;
       case "TeacherPupilsPageAdmin": return <TeacherPupilsPageAdmin />;
-
+      case "PastQuestions": return <ExamUploader />;
+      case "SchoolLibraryUpload": return <SchoolLibraryUpload />;
+      case "PupilIDCard": return <PupilIDCard />;
+      case "IDCardPage": return <IDCardPage />;
       case "schoolreg": return <SchoolRegistration />;
 
       default: return <Placeholder title={activeTab} />;

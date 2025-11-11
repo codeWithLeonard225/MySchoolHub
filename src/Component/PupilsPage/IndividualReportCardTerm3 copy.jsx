@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useMemo } from "react";
+// ⭐️ ADDED getDocs for fetching Classes data
 import { db } from "../../../firebase";
 import { schooldb } from "../Database/SchoolsResults";
 import { getDocs, collection, query, where, onSnapshot } from "firebase/firestore";
 import { useLocation } from "react-router-dom";
 
 
-const IndividualReportCardTerm2 = () => {
+const IndividualReportCardTerm3 = () => {
     const location = useLocation();
     const pupilData = location.state?.user || {};
     const schoolId = location.state?.schoolId || "N/A";
@@ -19,61 +20,24 @@ const IndividualReportCardTerm2 = () => {
     const [loading, setLoading] = useState(true);
     // ⭐️ NEW STATE: Cache for class configuration (including subjectPercentage)
     const [classesCache, setClassesCache] = useState([]);
-    const [totalPupilsInClass, setTotalPupilsInClass] = useState(0);
+     const [totalPupilsInClass, setTotalPupilsInClass] = useState(0);
 
-    const tests = ["Term 2 T1", "Term 2 T2"];
+    const tests = ["Term 3 T1", "Term 3 T2"];
 
-    // 1. 🚀 OPTIMIZED: Fetch Classes Cache using localStorage (REDUCES DB READS)
+    // 1. Fetch Classes Cache (MUST BE TOP-LEVEL HOOK)
     useEffect(() => {
         if (!schoolId) return;
-        
-        // Use the same cache key for all reports, as the config is the same
-        const CLASSES_CACHE_KEY = `classes_config_${schoolId}`;
-        const CACHE_DURATION_MS = 24 * 60 * 60 * 1000; // 24 hours
-
-        const fetchClasses = async (useCache) => {
-            let data = [];
-            
-            // --- 1. Attempt to load from cache ---
-            if (useCache) {
-                const cachedData = localStorage.getItem(CLASSES_CACHE_KEY);
-                if (cachedData) {
-                    try {
-                        const { timestamp, data: cachedClasses } = JSON.parse(cachedData);
-                        // Check if cache is still valid
-                        if (Date.now() - timestamp < CACHE_DURATION_MS) {
-                            setClassesCache(cachedClasses);
-                            return; // 🛑 CACHE HIT! Skip Firestore read.
-                        }
-                    } catch (e) {
-                        // Proceed to fetch if parsing fails
-                    }
-                }
-            }
-            
-            // --- 2. Cache expired or not found, fetch from Firestore ---
-            try {
-                // Fetch configuration from the main database (db)
-                const snapshot = await getDocs(query(collection(db, "Classes"), where("schoolId", "==", schoolId)));
-                data = snapshot.docs.map(doc => doc.data());
-                setClassesCache(data);
-                
-                // Store new data in cache
-                localStorage.setItem(CLASSES_CACHE_KEY, JSON.stringify({
-                    timestamp: Date.now(),
-                    data: data,
-                }));
-            } catch (error) {
-                console.error("Error fetching Classes data:", error);
-            }
+        const fetchClasses = async () => {
+            // Fetch configuration from the main database (db)
+            const snapshot = await getDocs(query(collection(db, "Classes"), where("schoolId", "==", schoolId)));
+            const data = snapshot.docs.map(doc => doc.data());
+            setClassesCache(data);
         };
-        
-        fetchClasses(true); 
-
+        fetchClasses();
     }, [schoolId]); // Dependency: only runs when schoolId changes
 
 
-    // 2. Fetch latest class & academic year for the pupil (Unchanged, relies on db)
+    // 2. Fetch latest class & academic year for the pupil
     useEffect(() => {
         if (!pupilData.studentID) return;
 
@@ -98,32 +62,8 @@ const IndividualReportCardTerm2 = () => {
         return () => unsubscribe();
     }, [pupilData.studentID, schoolId]);
 
-    // ✅ Fetch total pupils in the same class & academic year (Unchanged, relies on db)
-    useEffect(() => {
-        if (!latestInfo.academicYear || !latestInfo.class || !schoolId) return;
 
-        const pupilsRef = query(
-            collection(db, "PupilsReg"),
-            where("academicYear", "==", latestInfo.academicYear),
-            where("class", "==", latestInfo.class),
-            where("schoolId", "==", schoolId)
-        );
-
-        const unsubscribe = onSnapshot(
-            pupilsRef,
-            (snapshot) => {
-                setTotalPupilsInClass(snapshot.size); // total number of pupils
-            },
-            (error) => {
-                console.error("Error counting pupils:", error);
-            }
-        );
-
-        return () => unsubscribe();
-    }, [latestInfo, schoolId]);
-
-
-    // 3A. Fetch individual pupil's grades (real-time - schooldb)
+    // 3A. Fetch individual pupil's grades (real-time)
     useEffect(() => {
         if (!latestInfo.academicYear || !latestInfo.class || !pupilData.studentID) return;
 
@@ -142,7 +82,32 @@ const IndividualReportCardTerm2 = () => {
         return () => unsubscribe();
     }, [latestInfo, pupilData.studentID, schoolId]);
 
-    // 3B. Fetch all class grades for ranking (real-time - schooldb)
+    // ✅ Fetch total pupils in the same class & academic year
+useEffect(() => {
+  if (!latestInfo.academicYear || !latestInfo.class || !schoolId) return;
+
+  const pupilsRef = query(
+    collection(db, "PupilsReg"),
+    where("academicYear", "==", latestInfo.academicYear),
+    where("class", "==", latestInfo.class),
+    where("schoolId", "==", schoolId)
+  );
+
+  const unsubscribe = onSnapshot(
+    pupilsRef,
+    (snapshot) => {
+      setTotalPupilsInClass(snapshot.size); // total number of pupils
+    },
+    (error) => {
+      console.error("Error counting pupils:", error);
+    }
+  );
+
+  return () => unsubscribe();
+}, [latestInfo, schoolId]);
+
+
+    // 3B. Fetch all class grades for ranking (real-time)
     useEffect(() => {
         if (!latestInfo.academicYear || !latestInfo.class) return;
 
@@ -169,7 +134,7 @@ const IndividualReportCardTerm2 = () => {
         const pupilIDs = [...new Set(classGradesData.map((d) => d.pupilID))];
         const uniqueSubjects = [...new Set(pupilGradesData.map((d) => d.subject))].sort();
 
-        // ⭐️ IMPORTANT: This uses the cached classesCache state
+        // ⭐️ CORRECTED LOOKUP: Get configured total possible score from cache
         const classInfo = classesCache.find(
             (c) => c.schoolId === schoolId && c.className === latestInfo.class
         );
@@ -192,9 +157,8 @@ const IndividualReportCardTerm2 = () => {
                 const studentSubjectGrades = classGradesData.filter(
                     (g) => g.pupilID === id && g.subject === subject
                 );
-                // Note: The test names are correctly set to Term 2 T1/T2
-                const t1 = studentSubjectGrades.find((g) => g.test === "Term 2 T1")?.grade || 0;
-                const t2 = studentSubjectGrades.find((g) => g.test === "Term 2 T2")?.grade || 0;
+                const t1 = studentSubjectGrades.find((g) => g.test === "Term 3 T1")?.grade || 0;
+                const t2 = studentSubjectGrades.find((g) => g.test === "Term 3 T2")?.grade || 0;
                 const mean = (Number(t1) + Number(t2)) / 2;
                 subjectScores.push({ id, mean });
             }
@@ -216,8 +180,8 @@ const IndividualReportCardTerm2 = () => {
         let finalTotalMeanSum = 0;
 
         const subjectData = uniqueSubjects.map((subject) => {
-            const t1 = pupilGradesData.find((g) => g.subject === subject && g.test === "Term 2 T1")?.grade || 0;
-            const t2 = pupilGradesData.find((g) => g.subject === subject && g.test === "Term 2 T2")?.grade || 0;
+            const t1 = pupilGradesData.find((g) => g.subject === subject && g.test === "Term 3 T1")?.grade || 0;
+            const t2 = pupilGradesData.find((g) => g.subject === subject && g.test === "Term 3 T2")?.grade || 0;
             const rawMean = (Number(t1) + Number(t2)) / 2;
             const displayMean = Math.round(rawMean);
 
@@ -249,8 +213,8 @@ const IndividualReportCardTerm2 = () => {
             let totalRawMeanSum = 0;
 
             for (const subject of subjectsInClass) {
-                const t1 = pupilGrades.find((g) => g.subject === subject && g.test === "Term 2 T1")?.grade || 0;
-                const t2 = pupilGrades.find((g) => g.subject === subject && g.test === "Term 2 T2")?.grade || 0;
+                const t1 = pupilGrades.find((g) => g.subject === subject && g.test === "Term 3 T1")?.grade || 0;
+                const t2 = pupilGrades.find((g) => g.subject === subject && g.test === "Term 3 T2")?.grade || 0;
                 totalRawMeanSum += (Number(t1) + Number(t2)) / 2;
             }
 
@@ -307,7 +271,7 @@ const IndividualReportCardTerm2 = () => {
     return (
         <div className="max-w-5xl mx-auto p-6 bg-white shadow-xl rounded-2xl">
             <h2 className="text-2xl font-bold text-center text-indigo-700 mb-6">
-                {schoolName} - Term 2 Report
+                {schoolName}
             </h2>
 
             {/* 🧑‍🎓 Pupil Info */}
@@ -327,12 +291,12 @@ const IndividualReportCardTerm2 = () => {
                 <div>
                     <p className="text-lg font-semibold text-indigo-800">{pupilData.studentName}</p>
                    <p className="text-gray-600">
-                      <span className="font-medium">Class:</span>{" "}
-                      {latestInfo.class || "N/A"}{" "}
-                      <span className="ml-2 text-sm text-gray-500">
-                        ({totalPupilsInClass} pupils)
-                      </span>
-                    </p>
+  <span className="font-medium">Class:</span>{" "}
+  {latestInfo.class || "N/A"}{" "}
+  <span className="ml-2 text-sm text-gray-500">
+    ({totalPupilsInClass} pupils)
+  </span>
+</p>
 
                     <p className="text-gray-600">
                         <span className="font-medium">Academic Year:</span>{" "}
@@ -341,7 +305,6 @@ const IndividualReportCardTerm2 = () => {
                     <p className="text-gray-600">
                         <span className="font-medium">Student ID:</span> {pupilData.studentID}
                     </p>
-                    
                 </div>
             </div>
 
@@ -425,4 +388,4 @@ const IndividualReportCardTerm2 = () => {
     );
 };
 
-export default IndividualReportCardTerm2;
+export default IndividualReportCardTerm3;

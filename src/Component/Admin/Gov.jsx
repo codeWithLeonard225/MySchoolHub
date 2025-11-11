@@ -37,6 +37,10 @@ import AdminForm from "../CeoPanel/AdminForm"
 import RegDashboard from "../Dashboard/RegDashboard"
 import StudentFilterPage from "../Voters/StudentFilterPage";
 import TeacherAssignmentReport from "../TeacherAssignment/TeacherAssignmentReport";
+import PastQuestions from "../Admin/PastQuestionUpload";
+import PupilIDCard from "../Voters/PupilIDCard";
+import IDCardPage from "../Voters/IDCardPage";
+
 
 
 // --- Navigation Items ---
@@ -61,6 +65,7 @@ const NAV_ITEMS = [
       { key: "subjects", label: "Subjects", icon: <MdPerson /> },
       { key: "TeacherAssignment", label: "Teacher Assignment", icon: <MdPerson /> },
       { key: "TeacherAssignmentReport", label: "Teacher Assignment Report ", icon: <MdPerson /> },
+        { key: "PastQuestions", label: "Upload Past Questions ", icon: <MdPerson /> },
     
 
 
@@ -76,6 +81,18 @@ const NAV_ITEMS = [
       { key: "ClassFullTermMatrixPage", label: "Term Grade Sheet", icon: <MdPerson /> },
       { key: "GeneralReportCard", label: "ReportCard", icon: <MdPerson /> },
       { key: "TeacherPupilsPageAdmin", label: "TeacherPupilsGrade", icon: <MdPerson /> },
+      // { key: "Testing", label: "Testing", icon: <MdPerson /> },
+
+    ],
+  },
+  {
+    key: "idcards",
+    label: "Pupils ID Cards",
+    icon: <MdBarChart />,
+    children: [
+      { key: "PupilIDCard", label: "PupilIDCard",icon: <MdPerson /> },
+      { key: "IDCardPage", label: "IDCardPage", icon: <MdPerson /> },
+  
       // { key: "Testing", label: "Testing", icon: <MdPerson /> },
 
     ],
@@ -159,7 +176,6 @@ function Gov() {
       case "TeacherRegistration": return <TeacherRegistration />;
       case "subjects": return <SubjectPage />;
       case "TeacherAssignment": return <TeacherAssignmentPage />;
-      case "TeacherPupilsPage": return <TeacherPupilsPage />;
       case "GradeSheetPage": return <GradeSheetPage />;
       case "GeneralReportCard": return <GeneralReportCard />;
       case "SubGradeMatrixPage": return <SubGradeMatrixPage />;
@@ -168,6 +184,12 @@ function Gov() {
       case "AdminForm": return <AdminForm />;
       case "TeacherAssignmentReport": return <TeacherAssignmentReport />;
       case "TeacherPupilsPageAdmin": return <TeacherPupilsPageAdmin />;
+        case "PastQuestions": return <PastQuestions />;
+        case "PupilIDCard": return <PupilIDCard />;
+        case "IDCardPage": return <IDCardPage />;
+      
+
+
 
       case "schoolreg": return <SchoolRegistration />;
 

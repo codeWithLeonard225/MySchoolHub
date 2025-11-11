@@ -5,6 +5,7 @@ import PupilPage from "./PupilPage";
 import IndividualReportCardTerm1 from "./IndividualReportCardTerm1";
 import IndividualReportCardTerm2 from "./IndividualReportCardTerm2";
 import IndividualReportCardTerm3 from "./IndividualReportCardTerm3";
+import PupilPastQuestionViewer from "./PupilPastQuestionViewer";
 
 // Navigation Items
 const NAV_ITEMS = [
@@ -31,7 +32,7 @@ const NAV_ITEMS = [
   },
   {
     key: "WaecPastQuestions",
-    label: "Waec Past Questions",
+    label: "SmartPikin Waec Past Ques.",
     icon: <MdAssignmentTurnedIn />,
     children: [
       { key: "npse", label: "NPSE" },
@@ -132,6 +133,8 @@ function GovPupilDashboard() {
           return <IndividualReportCardTerm2 />;
       case "term3":
         return <IndividualReportCardTerm3 />; 
+         case "schoolPastQuestions":
+                return <PupilPastQuestionViewer />; 
       default:
         return <div className="p-6 bg-white rounded-xl shadow-md">No content found.</div>;
     }

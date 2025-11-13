@@ -9,6 +9,7 @@ import {
   MdKeyboardArrowDown,
   MdPerson,
   MdAttachMoney,
+  MdMenuBook,
   MdAssignmentTurnedIn,
   MdBarChart,
   MdFormatListBulleted,
@@ -44,6 +45,7 @@ import ExamUploader from "../Admin/PastQuestionUpload";
 import SchoolLibraryUpload from "../Admin/SchoolLibraryUpload";
 import PupilIDCard from "../Voters/PupilIDCard";
 import IDCardPage from "../Voters/IDCardPage";
+import LogoutPage from "../Admin/LogoutPage"
 
 
 // --- Navigation Items ---
@@ -56,7 +58,7 @@ const NAV_ITEMS = [
       { key: "Form", label: " Pupils", icon: <MdPerson /> },
       { key: "class", label: "Class", icon: <MdPerson /> },
       { key: "classList", label: "Class List", icon: <MdPerson /> },
-      { key: "StudentIDCards", label: "Student IDCards", icon: <MdPerson /> },
+
     ],
   },
   {
@@ -90,11 +92,11 @@ const NAV_ITEMS = [
     label: "Pupils Results",
     icon: <MdBarChart />,
     children: [
-      { key: "GradeSheetPage", label: "Test Grade Sheet", icon: <MdPerson /> },
+      // { key: "GradeSheetPage", label: "Test Grade Sheet", icon: <MdPerson /> },
+      { key: "TeacherPupilsPageAdmin", label: "TeacherPupilsGrade", icon: <MdPerson /> },
       { key: "SubGradeMatrixPage", label: "Sub Grade Sheet", icon: <MdPerson /> },
       { key: "ClassFullTermMatrixPage", label: "Term Grade Sheet", icon: <MdPerson /> },
       { key: "GeneralReportCard", label: "ReportCard", icon: <MdPerson /> },
-      { key: "TeacherPupilsPageAdmin", label: "TeacherPupilsGrade", icon: <MdPerson /> },
       // { key: "Testing", label: "Testing", icon: <MdPerson /> },
 
     ],
@@ -121,6 +123,11 @@ const NAV_ITEMS = [
       // { key: "Testing", label: "Testing", icon: <MdPerson /> },
 
     ],
+  },
+  {
+    key: "LogoutPage",
+    label: "Logout",
+    icon: <MdWarning />, // 📖
   },
 
 ];
@@ -217,6 +224,7 @@ function AdminPanel() {
       case "PupilIDCard": return <PupilIDCard />;
       case "IDCardPage": return <IDCardPage />;
       case "schoolreg": return <SchoolRegistration />;
+      case "LogoutPage": return <LogoutPage />;
 
       default: return <Placeholder title={activeTab} />;
     }

@@ -61,20 +61,21 @@ const PupilIDCard = ({ studentData, schoolInfo }) => (
         className="w-[1in] h-[1.25in] object-cover border rounded-sm"
       />
       <div className="flex flex-col justify-center text-[8.8pt] font-medium leading-[1.9] text-gray-800">
+         <p><strong>ID:</strong> {studentData.studentID}</p>
         <p>
           <strong>Name:</strong> {studentData.studentName}
         </p>
+      <p>
+  <strong>Class:</strong>{" "}
+  {studentData.class ? studentData.class.slice(0, 3).toUpperCase() : "N/A"}
+</p>
+
         <p>
-          <strong>Class:</strong> {studentData.class}
+          <strong>DOB:</strong> {formatDate(studentData.dob)}
         </p>
+       
         <p>
-          <strong>DOB:</strong> {studentData.dob}
-        </p>
-        <p>
-          <strong>Year:</strong> {studentData.academicYear}
-        </p>
-        <p>
-          <strong>Reg:</strong> {studentData.registrationDate}
+          <strong>Address:</strong> {studentData.addressLine1}
         </p>
       </div>
     </div>
@@ -94,7 +95,15 @@ const PupilIDCard = ({ studentData, schoolInfo }) => (
     </div>
   </div>
 );
-
+  const formatDate = (dateStr) => {
+  if (!dateStr) return "N/A";
+  const date = new Date(dateStr);
+  return date.toLocaleDateString("en-GB", {
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
+  });
+};
 const PupilIDCardsPage = () => {
   const location = useLocation();
   const {

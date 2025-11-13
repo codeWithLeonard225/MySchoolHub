@@ -2,6 +2,13 @@ import React, { useEffect, useState, useMemo } from "react";
 import { db } from "../../../firebase";
 import { collection, query, where, onSnapshot } from "firebase/firestore";
 import { useLocation } from "react-router-dom";
+import localforage from "localforage"; // ⬅️ Import localforage
+
+// Initialize localforage store
+const assignmentsStore = localforage.createInstance({
+    name: "TeacherAssignmentsCache",
+    storeName: "assignmentsData",
+});
 
 const TeacherAssignmentReport = () => {
     const location = useLocation();
@@ -9,6 +16,11 @@ const TeacherAssignmentReport = () => {
 
     const [assignments, setAssignments] = useState([]);
     const [searchTerm, setSearchTerm] = useState("");
+    const [loading, setLoading] = useState(true); // ⬅️ Added loading state
+
+    // --- Configuration ---
+    const LOCALFORAGE_KEY = `assignments_${schoolId}`;
+    // ---------------------
 
     // --- Helper Function ---
     // Function to sort the class list alphabetically
@@ -17,18 +29,65 @@ const TeacherAssignmentReport = () => {
     };
     // -------------------------
 
-    // Fetch assignments by schoolId
+    // 1. Load from IndexDB Cache and Set up Real-Time onSnapshot
     useEffect(() => {
-        if (schoolId === "N/A") return;
-        const q = query(collection(db, "TeacherAssignments"), where("schoolId", "==", schoolId));
-        const unsub = onSnapshot(q, (snapshot) => {
-            const data = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-            setAssignments(data);
-        });
-        return () => unsub();
+        if (schoolId === "N/A") {
+            setLoading(false);
+            return;
+        }
+
+        const loadAndListen = async () => {
+            setLoading(true);
+
+            // 🚀 Step 1: Attempt to load from localforage cache (FAST initial load)
+            try {
+                const cachedItem = await assignmentsStore.getItem(LOCALFORAGE_KEY);
+                if (cachedItem && cachedItem.data && cachedItem.data.length > 0) {
+                    setAssignments(cachedItem.data);
+                    setLoading(false); // Initial load complete via cache
+                    console.log("Loaded initial assignments from IndexDB cache.");
+                }
+            } catch (e) {
+                console.error("Failed to retrieve cached assignments:", e);
+                // Continue to Firebase fetch if cache fails
+            }
+
+            // 🚀 Step 2: Set up Firestore Listener (Starts immediately)
+            const q = query(collection(db, "TeacherAssignments"), where("schoolId", "==", schoolId));
+
+            const unsub = onSnapshot(
+                q,
+                (snapshot) => {
+                    const fetchedData = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+                    
+                    // Update UI state with new data
+                    setAssignments(fetchedData);
+
+                    // 🚀 Step 3: Save fresh data to localforage
+                    const dataToStore = {
+                        timestamp: Date.now(),
+                        data: fetchedData,
+                    };
+                    assignmentsStore.setItem(LOCALFORAGE_KEY, dataToStore)
+                        .catch(e => console.error("Failed to save assignments to IndexDB:", e));
+
+                    setLoading(false); // Loading is done once the first snapshot arrives (or cache loaded)
+                    console.log("Assignments updated via real-time Firestore listener.");
+                },
+                (error) => {
+                    console.error("Failed to fetch assignments from Firestore:", error);
+                    setLoading(false);
+                }
+            );
+
+            return () => unsub(); // Cleanup listener on unmount
+        };
+
+        loadAndListen();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [schoolId]);
 
-    // Group by teacher name
+    // Group by teacher name (unchanged)
     const groupedAssignments = useMemo(() => {
         const grouped = {};
         assignments.forEach((assign) => {
@@ -44,7 +103,7 @@ const TeacherAssignmentReport = () => {
         return grouped;
     }, [assignments]);
 
-    // Filter by teacher name or class name
+    // Filter by teacher name or class name (unchanged)
     const filteredTeachers = useMemo(() => {
         return Object.entries(groupedAssignments).filter(([teacher, classes]) => {
             const lowerSearch = searchTerm.toLowerCase();
@@ -55,11 +114,11 @@ const TeacherAssignmentReport = () => {
         });
     }, [groupedAssignments, searchTerm]);
 
-    // 🖨️ Handle print - open a clean version (Now includes class sorting)
+    // 🖨️ Handle print - open a clean version (unchanged)
     const handlePrint = () => {
         const printWindow = window.open("", "_blank");
         
-        // 🎯 STEP 1: Sort the filtered data for printing
+        // Sort the filtered data for printing
         const sortedFilteredTeachers = filteredTeachers.map(([teacher, classList]) => {
             return [teacher, sortClassesAlphabetically(classList)];
         });
@@ -127,10 +186,20 @@ const TeacherAssignmentReport = () => {
         printWindow.document.close();
     };
 
+    if (loading && assignments.length === 0) {
+        return (
+            <div className="p-6 text-center">
+                <p className="text-xl font-medium text-gray-700">Loading teacher assignments...</p>
+                <p className="text-sm text-gray-500 mt-2">Checking IndexDB cache or fetching live data.</p>
+            </div>
+        );
+    }
+
+
     return (
         <div className="max-w-5xl mx-auto p-6 bg-white rounded-2xl shadow-md">
             <h2 className="text-2xl font-bold text-center text-gray-800 mb-4">
-                Teacher Assignment Report
+                Teacher Assignment Report 🧑‍🏫
             </h2>
 
             <div className="text-center text-sm text-gray-500 mb-4">
@@ -157,7 +226,7 @@ const TeacherAssignmentReport = () => {
             {/* Report Table Display */}
             {filteredTeachers.length === 0 ? (
                 <p className="text-center text-gray-500 py-6">
-                    No assignments found for this school.
+                    No assignments found matching your filter criteria.
                 </p>
             ) : (
                 filteredTeachers.map(([teacher, classList], index) => (
@@ -174,7 +243,7 @@ const TeacherAssignmentReport = () => {
                                 </tr>
                             </thead>
                             <tbody>
-                                {/* 🎯 Sorting applied here for the main display */}
+                                {/* Sorting applied here for the main display */}
                                 {sortClassesAlphabetically(classList).map((cls, i) => (
                                     <tr key={i} className="hover:bg-white">
                                         <td className="border px-3 py-2 font-medium">{cls.className}</td>

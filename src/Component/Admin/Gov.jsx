@@ -40,6 +40,7 @@ import TeacherAssignmentReport from "../TeacherAssignment/TeacherAssignmentRepor
 import PastQuestions from "../Admin/PastQuestionUpload";
 import PupilIDCard from "../Voters/PupilIDCard";
 import IDCardPage from "../Voters/IDCardPage";
+import LogoutPage from "../Admin/LogoutPage"
 
 
 
@@ -65,8 +66,8 @@ const NAV_ITEMS = [
       { key: "subjects", label: "Subjects", icon: <MdPerson /> },
       { key: "TeacherAssignment", label: "Teacher Assignment", icon: <MdPerson /> },
       { key: "TeacherAssignmentReport", label: "Teacher Assignment Report ", icon: <MdPerson /> },
-        { key: "PastQuestions", label: "Upload Past Questions ", icon: <MdPerson /> },
-    
+      { key: "PastQuestions", label: "Upload Past Questions ", icon: <MdPerson /> },
+
 
 
     ],
@@ -76,11 +77,11 @@ const NAV_ITEMS = [
     label: "Pupils Results",
     icon: <MdBarChart />,
     children: [
-      { key: "GradeSheetPage", label: "Test Grade Sheet", icon: <MdPerson /> },
+      // { key: "GradeSheetPage", label: "Test Grade Sheet", icon: <MdPerson /> },
+      { key: "TeacherPupilsPageAdmin", label: "TeacherPupilsGrade", icon: <MdPerson /> },
       { key: "SubGradeMatrixPage", label: "Sub Grade Sheet", icon: <MdPerson /> },
       { key: "ClassFullTermMatrixPage", label: "Term Grade Sheet", icon: <MdPerson /> },
       { key: "GeneralReportCard", label: "ReportCard", icon: <MdPerson /> },
-      { key: "TeacherPupilsPageAdmin", label: "TeacherPupilsGrade", icon: <MdPerson /> },
       // { key: "Testing", label: "Testing", icon: <MdPerson /> },
 
     ],
@@ -90,12 +91,17 @@ const NAV_ITEMS = [
     label: "Pupils ID Cards",
     icon: <MdBarChart />,
     children: [
-      { key: "PupilIDCard", label: "PupilIDCard",icon: <MdPerson /> },
+      { key: "PupilIDCard", label: "PupilIDCard", icon: <MdPerson /> },
       { key: "IDCardPage", label: "IDCardPage", icon: <MdPerson /> },
-  
+
       // { key: "Testing", label: "Testing", icon: <MdPerson /> },
 
     ],
+  },
+  {
+    key: "LogoutPage",
+    label: "Logout",
+    icon: <MdWarning />, // 📖
   },
 
 ];
@@ -184,10 +190,11 @@ function Gov() {
       case "AdminForm": return <AdminForm />;
       case "TeacherAssignmentReport": return <TeacherAssignmentReport />;
       case "TeacherPupilsPageAdmin": return <TeacherPupilsPageAdmin />;
-        case "PastQuestions": return <PastQuestions />;
-        case "PupilIDCard": return <PupilIDCard />;
-        case "IDCardPage": return <IDCardPage />;
-      
+      case "PastQuestions": return <PastQuestions />;
+      case "PupilIDCard": return <PupilIDCard />;
+      case "IDCardPage": return <IDCardPage />;
+      case "LogoutPage": return <LogoutPage />;
+
 
 
 

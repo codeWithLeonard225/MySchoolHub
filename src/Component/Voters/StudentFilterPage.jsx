@@ -1,3 +1,4 @@
+import localforage from "localforage";
 import React, { useState, useEffect, useMemo } from "react";
 import { db } from "../../../firebase";
 import { collection, query, where, onSnapshot } from "firebase/firestore";
@@ -6,11 +7,16 @@ import { toast } from "react-toastify";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
+// Initialize localforage store for student registration data
+const studentsStore = localforage.createInstance({
+    name: "StudentRegData",
+    storeName: "pupilRegistration",
+});
+
 // --- Configuration ---
-// Key for local storage
-const LOCAL_STORAGE_KEY = "schoolStudentsData";
-// Data is considered "stale" after 5 minutes (300,000 milliseconds)
-const STALE_TIME_MS = 20 * 60 * 1000; 
+// Key for localforage storage (using a key for the specific student store)
+const LOCALFORAGE_KEY = "allStudentsData";
+// STALE_TIME_MS is removed as per request
 // ---------------------
 
 const StudentFilterPage = () => {
@@ -22,7 +28,7 @@ const StudentFilterPage = () => {
   const [yearOptions, setYearOptions] = useState([]);
   const [selectedClass, setSelectedClass] = useState("");
   const [selectedYear, setSelectedYear] = useState("");
-  const [loading, setLoading] = useState(true); // Added loading state
+  const [loading, setLoading] = useState(true);
 
   // --- Utility Functions ---
   const extractAndSetOptions = (data) => {
@@ -39,66 +45,59 @@ const StudentFilterPage = () => {
   };
   // -------------------------
 
-
-  // 1. Initial Load and Firestore Subscription
+  // 1. Initial Load from Cache and Real-Time Subscription
   useEffect(() => {
     if (!currentSchoolId || currentSchoolId === "N/A") {
       setLoading(false);
       return;
     }
 
-    const loadStudents = () => {
-      // 🚀 Step 1: Check Local Storage
-      const cachedData = localStorage.getItem(LOCAL_STORAGE_KEY);
-      const now = Date.now();
-      let shouldFetchFromFirestore = true;
-
-      if (cachedData) {
-        try {
-          const { timestamp, data } = JSON.parse(cachedData);
-          
-          if (now - timestamp < STALE_TIME_MS) {
-            // Data is fresh, use cache and skip Firestore fetch
-            processAndSetStudents(data);
-            shouldFetchFromFirestore = false;
-            setLoading(false);
-            // Optional: Show a quick message
-            // toast.info("Loaded students from cache."); 
-            console.log("Loaded students from cache.");
-          }
-        } catch (e) {
-          console.error("Failed to parse cached data:", e);
-          // If parsing fails, proceed to fetch from Firestore
+    const loadAndListen = async () => {
+      // 🚀 Step 1: Attempt to load from localforage cache (FAST initial load)
+      try {
+        const cachedData = await studentsStore.getItem(LOCALFORAGE_KEY);
+        if (cachedData && cachedData.data && cachedData.data.length > 0) {
+          // Use the cached data immediately
+          processAndSetStudents(cachedData.data);
+          setLoading(false); // Finished initial load from cache
+          console.log("Loaded initial student data from localforage cache.");
+        } else {
+          // If cache is empty, ensure loading state remains true until Firebase provides data
+          setLoading(true); 
         }
+      } catch (e) {
+        console.error("Failed to retrieve or parse cached data from localforage:", e);
+        // Fallback: keep loading state true, rely on Firestore listener
+        setLoading(true);
       }
 
-      // 🚀 Step 2: Set up Firestore Listener (Always runs for real-time updates)
+      // 🚀 Step 2: Set up Firestore Listener (Always running for real-time updates)
       const q = query(
         collection(db, "PupilsReg"),
         where("schoolId", "==", currentSchoolId)
       );
-      
-      // We set loading=true just before starting the Firestore watch, 
-      // but only if we didn't load fresh data from cache.
-      if (shouldFetchFromFirestore) {
-        setLoading(true);
-      }
 
       const unsubscribe = onSnapshot(
         q,
         (snapshot) => {
           const fetchedData = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-          
+
+          // Update UI state with new data
           processAndSetStudents(fetchedData);
           
-          // 🚀 Step 3: Save to Local Storage on every update
+          // 🚀 Step 3: Save fresh data to localforage (Overwrite cache)
           const dataToStore = {
-            timestamp: Date.now(),
+            timestamp: Date.now(), // Still useful for logging/future staling logic
             data: fetchedData,
           };
-          localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(dataToStore));
+          studentsStore.setItem(LOCALFORAGE_KEY, dataToStore)
+            .catch(e => console.error("Failed to save data to localforage:", e));
           
+          // Data is now loaded/updated, turn off loading indicator
           setLoading(false);
+          if (fetchedData.length > 0) {
+              console.log("Students updated via real-time Firestore listener and cached.");
+          }
         },
         (error) => {
           console.error("Failed to fetch students from Firestore:", error);
@@ -107,10 +106,10 @@ const StudentFilterPage = () => {
         }
       );
 
-      return () => unsubscribe();
+      return () => unsubscribe(); // Cleanup listener on unmount
     };
 
-    return loadStudents();
+    loadAndListen();
   }, [currentSchoolId]);
 
   // Filter students (remains the same)
@@ -225,7 +224,7 @@ const StudentFilterPage = () => {
     return (
       <div className="p-6 text-center">
         <p className="text-xl font-medium text-gray-700">Loading student data...</p>
-        <p className="text-sm text-gray-500 mt-2">Checking cache or fetching from database.</p>
+        <p className="text-sm text-gray-500 mt-2">Attempting to load from IndexDB or fetching live from database.</p>
       </div>
     );
   }

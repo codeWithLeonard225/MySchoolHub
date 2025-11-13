@@ -13,7 +13,19 @@ const CARDS_PER_ROW = 2;
 const ROWS_PER_PAGE = 4;
 const CARDS_PER_BROWSER_PAGE = CARDS_PER_ROW * ROWS_PER_PAGE;
 
+  const formatDate = (dateStr) => {
+  if (!dateStr) return "N/A";
+  const date = new Date(dateStr);
+  return date.toLocaleDateString("en-GB", {
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
+  });
+};
+
+
 const PupilIDCard = ({ studentData, schoolInfo }) => (
+  
   <div
     className="relative bg-white shadow-lg border rounded-lg flex flex-col justify-between print:shadow-none"
     style={{
@@ -56,11 +68,16 @@ const PupilIDCard = ({ studentData, schoolInfo }) => (
         className="w-[1.1in] h-[1.3in] object-cover border rounded-sm"
       />
       <div className="text-[8.5pt] leading-[1.9] flex flex-col justify-center space-y-[2px]">
+         <p><strong>ID:</strong> {studentData.studentID}</p>
         <p><strong>Name:</strong> {studentData.studentName}</p>
-        <p><strong>Class:</strong> {studentData.class}</p>
-        <p><strong>DOB:</strong> {studentData.dob}</p>
-        <p><strong>Year:</strong> {studentData.academicYear}</p>
-        <p><strong>Reg:</strong> {studentData.registrationDate}</p>
+      <p>
+  <strong>Class:</strong>{" "}
+  {studentData.class ? studentData.class.slice(0, 3).toUpperCase() : "N/A"}
+</p>
+
+        <p><strong>DOB:</strong> {formatDate(studentData.dob)}</p>
+   
+        <p><strong>Address:</strong> {studentData.addressLine1}</p>
       </div>
     </div>
 
@@ -70,6 +87,7 @@ const PupilIDCard = ({ studentData, schoolInfo }) => (
     </div>
   </div>
 );
+
 
 const IDCardPage = () => {
   const location = useLocation();
@@ -127,6 +145,9 @@ const IDCardPage = () => {
     schoolContact,
     email,
   };
+
+
+
 
   return (
     <div className="p-6 bg-gray-100 min-h-screen overflow-x-hidden">

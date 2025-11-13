@@ -6,10 +6,11 @@ import IndividualReportCardTerm1 from "./IndividualReportCardTerm1";
 import IndividualReportCardTerm2 from "./IndividualReportCardTerm2";
 import IndividualReportCardTerm3 from "./IndividualReportCardTerm3";
 import PupilPastQuestionViewer from "./PupilPastQuestionViewer";
+import LogoutPage from "../Admin/LogoutPage"
 
 // Navigation Items
 const NAV_ITEMS = [
- 
+
   {
     key: "result",
     label: "Result",
@@ -20,7 +21,7 @@ const NAV_ITEMS = [
       { key: "term3", label: "Term 3" },
     ],
   },
-    {
+  {
     key: "library",
     label: "Library",
     icon: <MdLibraryBooks />, // 📚
@@ -42,6 +43,11 @@ const NAV_ITEMS = [
       { key: "syllabus", label: "Study syllabus" },
     ],
   },
+  // {
+  //   key: "LogoutPage",
+  //   label: "Logout",
+  //   icon: <MdMenuBook />, // 📖
+  // },
 ];
 
 // Button component
@@ -126,15 +132,18 @@ function GovPupilDashboard() {
       case "dashboard":
         return <Dashboard />;
       case "fees":
-        return <PupilPage />; 
+        return <PupilPage />;
       case "term1":
-          return <IndividualReportCardTerm1 />;
+        return <IndividualReportCardTerm1 />;
       case "term2":
-          return <IndividualReportCardTerm2 />;
+        return <IndividualReportCardTerm2 />;
       case "term3":
-        return <IndividualReportCardTerm3 />; 
-         case "schoolPastQuestions":
-                return <PupilPastQuestionViewer />; 
+        return <IndividualReportCardTerm3 />;
+      case "schoolPastQuestions":
+        return <PupilPastQuestionViewer />;
+      case "LogoutPage":
+        return <LogoutPage />;
+
       default:
         return <div className="p-6 bg-white rounded-xl shadow-md">No content found.</div>;
     }

@@ -14,18 +14,24 @@ import {
     where
 } from "firebase/firestore";
 import { v4 as uuidv4 } from "uuid";
-// ⭐ ADDED useNavigate ⭐
 import { useLocation, useNavigate } from "react-router-dom";
-// 🚨 IMPORTANT: Make sure you import your custom useAuth hook
 import { useAuth } from "../Security/AuthContext";
+// 🚀 Import localforage for caching
+import localforage from "localforage";
 
 // Cloudinary config
-const CLOUD_NAME = "dxcrlpike"; // Cloudinary Cloud Name
-const UPLOAD_PRESET = "LeoTechSl Projects"; // Cloudinary Upload Preset
+const CLOUD_NAME = "dxcrlpike";
+const UPLOAD_PRESET = "LeoTechSl Projects";
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
 
 // Define your admin password. For a real app, this should be in an environment variable.
 const ADMIN_PASSWORD = "1234";
+
+// 💾 Initialize localforage store for students (pupils)
+const studentStore = localforage.createInstance({
+    name: "StudentRegistrationCache",
+    storeName: "pupilsData",
+});
 
 // Helper function to calculate age from DOB
 const calculateAge = (dob) => {
@@ -43,14 +49,13 @@ const calculateAge = (dob) => {
 
 const Registration = () => {
     const location = useLocation();
-    // ⭐ INITIALIZE useNavigate ⭐
     const navigate = useNavigate();
-    // 1. Get user and auth state from context
     const { user } = useAuth();
 
     // ✅ CONSOLIDATED SCHOOL ID LOGIC:
-    // Prioritize ID from route state, then fall back to the authenticated user's ID.
     const currentSchoolId = location.state?.schoolId || user?.schoolId || "N/A";
+    // 🔑 Define a unique cache key based on the schoolId
+    const CACHE_KEY = `pupils_list_${currentSchoolId}`;
 
     const [formData, setFormData] = useState({
         id: null,
@@ -87,6 +92,8 @@ const Registration = () => {
     const [accessTypeOptions, setAccessTypeOptions] = useState([]);
     // ⭐ NEW STATE 2: To prevent re-setting the default type
     const [hasSetDefaultType, setHasSetDefaultType] = useState(false);
+    // ⏳ NEW STATE for loading
+    const [loading, setLoading] = useState(true);
 
 
     // ✅ EFFECT 1: Set form data defaults (schoolId, registeredBy)
@@ -111,35 +118,67 @@ const Registration = () => {
     }, [formData.dob]);
 
 
-    // ✅ EFFECT 2: Real-Time LISTENER for Students (PupilsReg collection)
+    // 🚀 EFFECT 2: Real-Time Listener with Cache-First Strategy for PupilsReg
     useEffect(() => {
-        // Only set up the listener if we have a valid school ID
         if (!currentSchoolId || currentSchoolId === "N/A") {
             setUsers([]);
+            setLoading(false);
             return;
         }
 
-        const collectionRef = collection(db, "PupilsReg");
+        const loadAndListen = async () => {
+            setLoading(true);
 
-        // This query FILTERS the data by schoolId on the Firestore server
-        const q = query(collectionRef, where("schoolId", "==", currentSchoolId));
+            // 1. Attempt to load from localforage cache (FAST initial load)
+            try {
+                const cachedItem = await studentStore.getItem(CACHE_KEY);
+                if (cachedItem && cachedItem.data && cachedItem.data.length > 0) {
+                    setUsers(cachedItem.data);
+                    setLoading(false); // Initial load complete via cache
+                    console.log("Loaded initial students from IndexDB cache.");
+                }
+            } catch (e) {
+                console.error("Failed to retrieve cached students:", e);
+                // Continue to Firebase fetch if cache fails
+            }
 
-        const unsubscribe = onSnapshot(q, (snapshot) => {
-            const usersList = snapshot.docs.map(doc => ({
-                id: doc.id,
-                ...doc.data(),
-            }));
-            // 'users' now only contains students belonging to the currentSchoolId.
-            setUsers(usersList);
-        }, (error) => {
-            console.error("Firestore 'PupilsReg' onSnapshot failed:", error);
-            toast.error("Failed to stream student data.");
-        });
+            // 2. Set up Firestore Listener for real-time updates
+            const collectionRef = collection(db, "PupilsReg");
 
-        return () => unsubscribe();
+            // This query FILTERS the data by schoolId on the Firestore server
+            const q = query(collectionRef, where("schoolId", "==", currentSchoolId));
 
+            const unsubscribe = onSnapshot(q, (snapshot) => {
+                const fetchedData = snapshot.docs.map(doc => ({
+                    id: doc.id,
+                    ...doc.data(),
+                }));
+
+                // Update UI state with new data
+                setUsers(fetchedData);
+
+                // 3. Save fresh data to localforage
+                const dataToStore = {
+                    timestamp: Date.now(),
+                    data: fetchedData,
+                };
+                studentStore.setItem(CACHE_KEY, dataToStore)
+                    .catch(e => console.error("Failed to save students to IndexDB:", e));
+
+                setLoading(false); // Loading is done once the first snapshot arrives (or cache loaded)
+                console.log("Students list updated via real-time Firestore listener.");
+            }, (error) => {
+                console.error("Firestore 'PupilsReg' onSnapshot failed:", error);
+                toast.error("Failed to stream student data.");
+                setLoading(false);
+            });
+
+            return () => unsubscribe();
+        };
+
+        loadAndListen();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [currentSchoolId]);
-    // 🛑 The redundant useEffect that fetched all users is now removed.
 
 
     // ✅ EFFECT 3: Fetch classes based on schoolId
@@ -479,13 +518,24 @@ const Registration = () => {
             toast.error("Incorrect password.");
         }
     };
-    
+
     // ⭐ NEW FUNCTION: Handle Navigation for Print Form ⭐
     const handlePrint = (user) => {
         // Navigate to the print route, passing all student data in the state
         navigate(`/print-student/${user.studentID}`, { state: { studentData: user } });
         toast.info(`Preparing print view for ${user.studentName}...`);
     };
+
+    // ⏳ Loading Block
+    if (loading && users.length === 0) {
+        return (
+            <div className="flex flex-col items-center min-h-screen bg-gray-100 p-6 space-y-6 pt-20">
+                <p className="text-xl font-bold text-blue-600">Loading student data...</p>
+                <p className="text-sm text-gray-500 mt-2">Retrieving data from cache or server. Please wait.</p>
+                {/* Optional: Add a spinner or progress bar here */}
+            </div>
+        );
+    }
 
     // --- RENDER BLOCK ---
     return (
@@ -715,7 +765,7 @@ const Registration = () => {
             <div className="bg-white shadow-lg rounded-2xl p-6 w-full max-w-full lg:max-w-4xl">
                 <h2 className="text-2xl font-bold text-center mb-4">Registered Students ({filteredUsers.length} of {users.length})</h2>
 
-                {/* --- NEW FILTER CONTROLS --- */}
+                {/* --- FILTER CONTROLS --- */}
                 <div className="mb-6 space-y-4">
                     {/* Search Input */}
                     <input
@@ -771,10 +821,9 @@ const Registration = () => {
                                 <th scope="col" className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
                                 <th scope="col" className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
                                 <th scope="col" className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">Class</th>
-                                {/* <th scope="col" className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">Gender</th> */}
                                 <th scope="col" className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell">AcademicYear</th>
                                 <th scope="col" className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Photo</th>
-                              
+
 
                                 <th scope="col" className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                             </tr>
@@ -786,7 +835,6 @@ const Registration = () => {
                                     <td className="px-3 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{user.studentID}</td>
                                     <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-500">{user.studentName}</td>
                                     <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-500 hidden md:table-cell">{user.class}</td>
-                                    {/* <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-500 hidden md:table-cell">{user.gender}</td> */}
                                     <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-500 hidden md:table-cell">{user.academicYear}</td>
 
                                     <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-500">
@@ -794,7 +842,7 @@ const Registration = () => {
                                             <img src={user.userPhotoUrl} alt={user.studentName} className="h-10 w-10 rounded-full object-cover" />
                                         )}
                                     </td>
-                                 
+
 
                                     <td className="px-3 py-4 whitespace-nowrap text-sm font-medium flex items-center space-x-2">
                                         <button onClick={() => handleUpdate(user)} className="text-indigo-600 hover:text-indigo-900">

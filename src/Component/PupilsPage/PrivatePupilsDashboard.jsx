@@ -3,8 +3,6 @@ import React, { useState } from "react";
 import { MdDashboard, MdAttachMoney, MdAssignmentTurnedIn, MdKeyboardArrowDown, MdMenuBook, MdLibraryBooks } from "react-icons/md";
 import PupilPage from "./PupilPage";
 import IndividualReportCardTerm1 from "./IndividualReportCardTerm1";
-import IndividualReportCardTerm2 from "./IndividualReportCardTerm2";
-import IndividualReportCardTerm3 from "./IndividualReportCardTerm3";
 import PupilPastQuestionViewer from "./PupilPastQuestionViewer";
 import LogoutPage from "../Admin/LogoutPage"
 
@@ -16,15 +14,11 @@ const NAV_ITEMS = [
     label: "Fees",
     icon: <MdAttachMoney />,
   },
+
   {
     key: "result",
     label: "Result",
-    icon: <MdAssignmentTurnedIn />,
-    children: [
-      { key: "term1", label: "Term 1" },
-      { key: "term2", label: "Term 2" },
-      { key: "term3", label: "Term 3" },
-    ],
+    icon: <MdAssignmentTurnedIn />, // 📚
   },
   {
     key: "library",
@@ -40,7 +34,7 @@ const NAV_ITEMS = [
   {
     key: "WaecPastQuestions",
     label: "SmartPikin Waec Past Ques.",
-    icon: <MdAssignmentTurnedIn />,
+    icon: <MdMenuBook />,
     children: [
       { key: "npse", label: "NPSE" },
       { key: "bece", label: "BECE" },
@@ -48,6 +42,11 @@ const NAV_ITEMS = [
       { key: "Quiz", label: "Test Yourself (Quiz)" },
       { key: "syllabus", label: "Study syllabus" },
     ],
+  },
+   {
+    key: "assign",
+    label: "Assignment",
+    icon: <MdLibraryBooks />, // 📚
   },
   // {
   //   key: "LogoutPage",
@@ -139,12 +138,12 @@ function PrivatePupilsDashboard() {
         return <Dashboard />;
       case "fees":
         return <PupilPage />;
-      case "term1":
+      case "result":
         return <IndividualReportCardTerm1 />;
-      case "term2":
-        return <IndividualReportCardTerm2 />;
-      case "term3":
-        return <IndividualReportCardTerm3 />;
+      // case "term2":
+      //   return <IndividualReportCardTerm2 />;
+      // case "term3":
+      //   return <IndividualReportCardTerm3 />;
       case "schoolPastQuestions":
         return <PupilPastQuestionViewer />;
       case "LogoutPage":

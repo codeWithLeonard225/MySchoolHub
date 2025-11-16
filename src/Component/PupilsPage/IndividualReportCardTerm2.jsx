@@ -1,424 +1,347 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { db } from "../../../firebase";
-import { schooldb } from "../Database/SchoolsResults";
-import { getDocs, collection, query, where, onSnapshot } from "firebase/firestore";
+// Assuming you have a separate Firestore instance for grades/results as 'schooldb'
+import { schooldb } from "../Database/SchoolsResults"; 
+import { collection, query, where, onSnapshot, getDocs } from "firebase/firestore";
 import { useLocation } from "react-router-dom";
+import { useAuth } from "../Security/AuthContext"; 
 
+// --- Configuration ---
+// Define the term-to-test mapping outside the component
+const termTests = {
+    "Term 1": ["Term 1 T1", "Term 1 T2"],
+    "Term 2": ["Term 2 T1", "Term 2 T2"], // Defaults to these tests
+    "Term 3": ["Term 3 T1", "Term 3 T2"],
+};
 
 const IndividualReportCardTerm2 = () => {
+    // 1. Core Data Extraction (from Auth Context & Location State)
+    const { user } = useAuth();
     const location = useLocation();
-    const pupilData = location.state?.user || {};
-    const schoolId = location.state?.schoolId || "N/A";
-    const schoolName = location.state?.schoolName || "Unknown School";
 
-    // Individual pupil's grades
-    const [pupilGradesData, setPupilGradesData] = useState([]);
-    // All grades for the current class/year (used for ranking)
-    const [classGradesData, setClassGradesData] = useState([]);
-    const [latestInfo, setLatestInfo] = useState({ class: "", academicYear: "" });
+    // Determine the target pupil data
+    const authPupilData = user?.role === "pupil" ? user.data : null;
+    const navPupilData = location.state?.user || {};
+    const pupilData = authPupilData || navPupilData; 
+    
+    // Determine school context
+    const schoolId = pupilData?.schoolId || location.state?.schoolId || user?.schoolId || "N/A";
+    const schoolName = location.state?.schoolName || user?.schoolName || "Unknown School";
+
+    const studentID = pupilData.studentID; 
+    
+    // --- State Management ---
     const [loading, setLoading] = useState(true);
-    // ⭐️ NEW STATE: Cache for class configuration (including subjectPercentage)
     const [classesCache, setClassesCache] = useState([]);
+    const [pupilGradesData, setPupilGradesData] = useState([]);
+    const [classGradesData, setClassGradesData] = useState([]);
+    
+    // Auto-determined info based on pupil's current registration
+    const [latestInfo, setLatestInfo] = useState({ class: "", academicYear: "" });
     const [totalPupilsInClass, setTotalPupilsInClass] = useState(0);
 
-    const tests = ["Term 2 T1", "Term 2 T2"];
+    // ⭐ Report Card UI State: CHANGE DEFAULT TERM TO "Term 2"
+    const [selectedTerm, setSelectedTerm] = useState("Term 2"); 
 
-    // 1. 🚀 OPTIMIZED: Fetch Classes Cache using localStorage (REDUCES DB READS)
+    // Variables for useMemo dependency:
+    const selectedPupil = studentID; // The pupil being viewed
+    const selectedClass = latestInfo.class; 
+    const academicYear = latestInfo.academicYear;
+    const tests = termTests[selectedTerm];
+
+
+    // --- 2. Data Fetching Hooks (Unchanged) ---
+
+    // A. Fetch Classes Configuration Cache (for subjectPercentage)
     useEffect(() => {
-        if (!schoolId) return;
-        
-        // Use the same cache key for all reports, as the config is the same
-        const CLASSES_CACHE_KEY = `classes_config_${schoolId}`;
-        const CACHE_DURATION_MS = 24 * 60 * 60 * 1000; // 24 hours
-
-        const fetchClasses = async (useCache) => {
-            let data = [];
-            
-            // --- 1. Attempt to load from cache ---
-            if (useCache) {
-                const cachedData = localStorage.getItem(CLASSES_CACHE_KEY);
-                if (cachedData) {
-                    try {
-                        const { timestamp, data: cachedClasses } = JSON.parse(cachedData);
-                        // Check if cache is still valid
-                        if (Date.now() - timestamp < CACHE_DURATION_MS) {
-                            setClassesCache(cachedClasses);
-                            return; // 🛑 CACHE HIT! Skip Firestore read.
-                        }
-                    } catch (e) {
-                        // Proceed to fetch if parsing fails
-                    }
-                }
-            }
-            
-            // --- 2. Cache expired or not found, fetch from Firestore ---
-            try {
-                // Fetch configuration from the main database (db)
-                const snapshot = await getDocs(query(collection(db, "Classes"), where("schoolId", "==", schoolId)));
-                data = snapshot.docs.map(doc => doc.data());
-                setClassesCache(data);
-                
-                // Store new data in cache
-                localStorage.setItem(CLASSES_CACHE_KEY, JSON.stringify({
-                    timestamp: Date.now(),
-                    data: data,
-                }));
-            } catch (error) {
-                console.error("Error fetching Classes data:", error);
-            }
+        if (!schoolId || schoolId === "N/A") return;
+        const fetchClasses = async () => {
+            const snapshot = await getDocs(query(collection(db, "Classes"), where("schoolId", "==", schoolId)));
+            const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data(), className: doc.data().class })); // Ensure 'className' is present
+            setClassesCache(data);
         };
-        
-        fetchClasses(true); 
+        fetchClasses();
+    }, [schoolId]);
 
-    }, [schoolId]); // Dependency: only runs when schoolId changes
-
-
-    // 2. Fetch latest class & academic year for the pupil (Unchanged, relies on db)
+    // B. Fetch pupil’s current class & academic year (from PupilsReg)
     useEffect(() => {
-        if (!pupilData.studentID) return;
+        if (!studentID || schoolId === "N/A") {
+            setLoading(false);
+            return;
+        }
 
         const pupilRegRef = query(
             collection(db, "PupilsReg"),
-            where("studentID", "==", pupilData.studentID),
-            where("schoolId", "==", schoolId),
+            where("studentID", "==", studentID),
+            where("schoolId", "==", schoolId)
         );
 
         const unsubscribe = onSnapshot(pupilRegRef, (snapshot) => {
             if (!snapshot.empty) {
-                const data = snapshot.docs[0].data();
+                const d = snapshot.docs[0].data();
                 setLatestInfo({
-                    class: data.class,
-                    academicYear: data.academicYear,
+                    class: d.class,
+                    academicYear: d.academicYear,
                 });
+            } else {
+                 setLoading(false); 
             }
         }, (error) => {
-            console.error("Firestore Error in PupilsReg lookup:", error);
-        });
-
-        return () => unsubscribe();
-    }, [pupilData.studentID, schoolId]);
-
-    // ✅ Fetch total pupils in the same class & academic year (Unchanged, relies on db)
-    useEffect(() => {
-        if (!latestInfo.academicYear || !latestInfo.class || !schoolId) return;
-
-        const pupilsRef = query(
-            collection(db, "PupilsReg"),
-            where("academicYear", "==", latestInfo.academicYear),
-            where("class", "==", latestInfo.class),
-            where("schoolId", "==", schoolId)
-        );
-
-        const unsubscribe = onSnapshot(
-            pupilsRef,
-            (snapshot) => {
-                setTotalPupilsInClass(snapshot.size); // total number of pupils
-            },
-            (error) => {
-                console.error("Error counting pupils:", error);
-            }
-        );
-
-        return () => unsubscribe();
-    }, [latestInfo, schoolId]);
-
-
-    // 3A. Fetch individual pupil's grades (real-time - schooldb)
-    useEffect(() => {
-        if (!latestInfo.academicYear || !latestInfo.class || !pupilData.studentID) return;
-
-        const pupilGradesRef = query(
-            collection(schooldb, "PupilGrades"),
-            where("academicYear", "==", latestInfo.academicYear),
-            where("className", "==", latestInfo.class),
-            where("pupilID", "==", pupilData.studentID),
-            where("schoolId", "==", schoolId),
-        );
-
-        const unsubscribe = onSnapshot(pupilGradesRef, (snapshot) => {
-            setPupilGradesData(snapshot.docs.map((doc) => doc.data()));
-        });
-
-        return () => unsubscribe();
-    }, [latestInfo, pupilData.studentID, schoolId]);
-
-    // 3B. Fetch all class grades for ranking (real-time - schooldb)
-    useEffect(() => {
-        if (!latestInfo.academicYear || !latestInfo.class) return;
-
-        const classGradesRef = query(
-            collection(schooldb, "PupilGrades"),
-            where("academicYear", "==", latestInfo.academicYear),
-            where("className", "==", latestInfo.class),
-            where("schoolId", "==", schoolId)
-        );
-
-        const unsubscribe = onSnapshot(classGradesRef, (snapshot) => {
-            setClassGradesData(snapshot.docs.map((doc) => doc.data()));
+            console.error("Error fetching pupil registration:", error);
             setLoading(false);
         });
 
         return () => unsubscribe();
-    }, [latestInfo, schoolId]);
+    }, [studentID, schoolId]);
+
+    // C. Count total pupils in the pupil's class
+    useEffect(() => {
+        if (!academicYear || !selectedClass || schoolId === "N/A") return;
+
+        const pupilsRef = query(
+            collection(db, "PupilsReg"),
+            where("academicYear", "==", academicYear),
+            where("class", "==", selectedClass),
+            where("schoolId", "==", schoolId)
+        );
+
+        const unsubscribe = onSnapshot(pupilsRef, (snapshot) => {
+            setTotalPupilsInClass(snapshot.size);
+        });
+
+        return () => unsubscribe();
+    }, [academicYear, selectedClass, schoolId]);
+
+    // D. Fetch Pupil's and Class's Grades (from PupilGrades)
+    useEffect(() => {
+        if (!academicYear || !selectedClass || !studentID || schoolId === "N/A") return;
+
+        setLoading(true);
+
+        const classGradesRef = query(
+            collection(schooldb, "PupilGrades"), 
+            where("academicYear", "==", academicYear),
+            where("className", "==", selectedClass),
+            where("schoolId", "==", schoolId)
+        );
+
+        const unsubscribe = onSnapshot(classGradesRef, (snapshot) => {
+            const allGrades = snapshot.docs.map((doc) => doc.data());
+            
+            // Filter grades for the current pupil
+            setPupilGradesData(allGrades.filter(g => g.pupilID === studentID)); 
+            
+            // Keep all grades for the class for ranking calculation
+            setClassGradesData(allGrades); 
+            setLoading(false);
+        }, (error) => {
+             console.error("Error fetching grades:", error);
+             setLoading(false);
+        });
+
+        return () => unsubscribe();
+    }, [academicYear, selectedClass, studentID, schoolId]);
 
 
-    const { subjects, reportRows, totalMarks, overallPercentage, overallRank, totalSubjectPercentage } = useMemo(() => {
+    // --- 3. Calculation Logic (useMemo - Unchanged) ---
+    const { subjects, reportRows, totalMarks, overallPercentage, overallRank } = useMemo(() => {
         if (pupilGradesData.length === 0)
-            return { subjects: [], reportRows: [], totalMarks: 0, overallPercentage: 0, overallRank: "—", totalSubjectPercentage: 0 };
+            return { subjects: [], reportRows: [], totalMarks: 0, overallPercentage: 0, overallRank: "—" };
 
         const pupilIDs = [...new Set(classGradesData.map((d) => d.pupilID))];
+
+        // Subjects list
         const uniqueSubjects = [...new Set(pupilGradesData.map((d) => d.subject))].sort();
 
-        // ⭐️ IMPORTANT: This uses the cached classesCache state
-        const classInfo = classesCache.find(
-            (c) => c.schoolId === schoolId && c.className === latestInfo.class
-        );
-        const configuredPercentage = classInfo?.subjectPercentage;
-        
-        // Determine total possible score (max mean * number of subjects, or use configured value)
-        const totalSubjectPercentage = configuredPercentage 
-            ? configuredPercentage 
-            : (uniqueSubjects.length * 100);
+        // Fetch subjectPercentage for selected class
+        const classInfo = classesCache.find(c => c.schoolId === schoolId && c.className === selectedClass);
+        const totalSubjectPercentage = classInfo?.subjectPercentage || (uniqueSubjects.length * 100); 
 
-
-        // ----------------------------------------------------
-        // 1. Calculate Mean for ALL Students/Subjects in the Class (for subject rank)
-        // ----------------------------------------------------
+        // Compute mean per subject and rank
         const classMeansBySubject = {};
-        for (const subject of [...new Set(classGradesData.map((d) => d.subject))]) {
-            const subjectScores = [];
-
-            for (const id of pupilIDs) {
-                const studentSubjectGrades = classGradesData.filter(
-                    (g) => g.pupilID === id && g.subject === subject
-                );
-                // Note: The test names are correctly set to Term 2 T1/T2
-                const t1 = studentSubjectGrades.find((g) => g.test === "Term 2 T1")?.grade || 0;
-                const t2 = studentSubjectGrades.find((g) => g.test === "Term 2 T2")?.grade || 0;
-                const mean = (Number(t1) + Number(t2)) / 2;
-                subjectScores.push({ id, mean });
-            }
-
+        for (const subject of uniqueSubjects) {
+            const subjectScores = pupilIDs.map((id) => {
+                const g = classGradesData.filter(x => x.pupilID === id && x.subject === subject);
+                const t1 = g.find(x => x.test === tests[0])?.grade || 0;
+                const t2 = g.find(x => x.test === tests[1])?.grade || 0;
+                return { id, mean: (Number(t1) + Number(t2)) / 2 };
+            });
             subjectScores.sort((a, b) => b.mean - a.mean);
-            for (let i = 0; i < subjectScores.length; i++) {
-                if (i > 0 && subjectScores[i].mean === subjectScores[i - 1].mean) {
-                    subjectScores[i].rank = subjectScores[i - 1].rank;
-                } else {
-                    subjectScores[i].rank = i + 1;
-                }
-            }
+            subjectScores.forEach((x, i) => {
+                if (i > 0 && x.mean === subjectScores[i - 1].mean) x.rank = subjectScores[i - 1].rank;
+                else x.rank = i + 1;
+            });
             classMeansBySubject[subject] = subjectScores;
         }
 
-        // ----------------------------------------------------
-        // 2. Build the current Pupil's Report Rows (with subject rank)
-        // ----------------------------------------------------
-        let finalTotalMeanSum = 0;
-
-        const subjectData = uniqueSubjects.map((subject) => {
-            const t1 = pupilGradesData.find((g) => g.subject === subject && g.test === "Term 2 T1")?.grade || 0;
-            const t2 = pupilGradesData.find((g) => g.subject === subject && g.test === "Term 2 T2")?.grade || 0;
+        // Compute pupil reportRows
+        let totalSum = 0;
+        const subjectData = uniqueSubjects.map(subject => {
+            const t1 = pupilGradesData.find(g => g.subject === subject && g.test === tests[0])?.grade || 0;
+            const t2 = pupilGradesData.find(g => g.subject === subject && g.test === tests[1])?.grade || 0;
             const rawMean = (Number(t1) + Number(t2)) / 2;
-            const displayMean = Math.round(rawMean);
-
-            finalTotalMeanSum += rawMean;
-
-            const rankEntry = classMeansBySubject[subject]?.find(
-                (item) => item.id === pupilData.studentID
-            );
-            const rank = rankEntry ? rankEntry.rank : "—";
-
-            return {
-                subject,
-                test1: Number(t1),
-                test2: Number(t2),
-                mean: displayMean,
-                rawMean,
-                rank,
-            };
+            totalSum += rawMean;
+            const mean = Math.round(rawMean);
+            const rank = classMeansBySubject[subject]?.find(s => s.id === selectedPupil)?.rank || "—";
+            return { subject, test1: Number(t1), test2: Number(t2), mean, rank };
         });
 
-        // ----------------------------------------------------
-        // 3. Calculate Overall Total Score and Rank
-        // ----------------------------------------------------
-        const overallScores = [];
+        // Compute overall rank & percentage
+        const overallScores = pupilIDs.map(id => {
+            const pupilData = classGradesData.filter(x => x.pupilID === id);
+            const totalMean = [...new Set(pupilData.map(d => d.subject))].reduce((acc, subject) => {
+                const t1 = pupilData.find(x => x.subject === subject && x.test === tests[0])?.grade || 0;
+                const t2 = pupilData.find(x => x.subject === subject && x.test === tests[1])?.grade || 0;
+                return acc + (Number(t1) + Number(t2)) / 2;
+            }, 0);
+            return { id, totalMean };
+        });
 
-        for (const id of pupilIDs) {
-            const pupilGrades = classGradesData.filter((d) => d.pupilID === id);
-            const subjectsInClass = [...new Set(pupilGrades.map((d) => d.subject))];
-            let totalRawMeanSum = 0;
+        overallScores.sort((a, b) => b.totalMean - a.totalMean);
+        overallScores.forEach((x, i) => {
+            if (i > 0 && x.totalMean === overallScores[i - 1].totalMean) x.rank = overallScores[i - 1].rank;
+            else x.rank = i + 1;
+        });
 
-            for (const subject of subjectsInClass) {
-                const t1 = pupilGrades.find((g) => g.subject === subject && g.test === "Term 2 T1")?.grade || 0;
-                const t2 = pupilGrades.find((g) => g.subject === subject && g.test === "Term 2 T2")?.grade || 0;
-                totalRawMeanSum += (Number(t1) + Number(t2)) / 2;
-            }
+        const overallRank = overallScores.find(x => x.id === selectedPupil)?.rank || "—";
+        const totalMarks = Math.round(totalSum);
+        const overallPercentage = totalSubjectPercentage > 0 ? ((totalSum / totalSubjectPercentage) * 100).toFixed(1) : 0;
 
-            if (subjectsInClass.length > 0) {
-                overallScores.push({ id, totalRawMeanSum });
-            }
-        }
-
-        overallScores.sort((a, b) => b.totalRawMeanSum - a.totalRawMeanSum);
-
-        let overallRank = "—";
-        for (let i = 0; i < overallScores.length; i++) {
-            if (i > 0 && overallScores[i].totalRawMeanSum === overallScores[i - 1].totalRawMeanSum) {
-                overallScores[i].rank = overallScores[i - 1].rank;
-            } else {
-                overallScores[i].rank = i + 1;
-            }
-
-            if (overallScores[i].id === pupilData.studentID) {
-                overallRank = overallScores[i].rank;
-                break;
-            }
-        }
-
-        // ----------------------------------------------------
-        // 4. Final Summary Metrics
-        // ----------------------------------------------------
-        const totalMarks = Math.round(finalTotalMeanSum);
-
-        // ✅ FINAL CORRECTED PERCENTAGE CALCULATION
-        const overallPercentage =
-            totalSubjectPercentage > 0
-                ? ((finalTotalMeanSum / totalSubjectPercentage) * 100).toFixed(1)
-                : 0;
-
-        return {
-            subjects: uniqueSubjects,
-            reportRows: subjectData,
-            totalMarks,
-            overallPercentage,
-            overallRank,
-            totalSubjectPercentage,
-        };
-    }, [pupilGradesData, classGradesData, pupilData.studentID, classesCache, schoolId, latestInfo.class]);
+        return { subjects: uniqueSubjects, reportRows: subjectData, totalMarks, overallPercentage, overallRank };
+    }, [pupilGradesData, classGradesData, selectedPupil, selectedTerm, selectedClass, classesCache, schoolId, tests]);
 
 
-    // ✅ Grade color helper
+    // --- 4. Helper Function (Unchanged) ---
     const getGradeColor = (val) => {
-        if (val >= 50) return "text-green-600 font-bold";
-        return "text-red-600 font-bold";
+        const grade = Number(val);
+        if (grade >= 50) {
+            return "text-blue-600 font-bold";
+        } else if (grade <= 49) {
+            return "text-red-600 font-bold";
+        }
+        return "text-gray-900";
     };
 
-    // ✅ UI 
+    // --- 5. Render Logic (Unchanged) ---
+    
+    // Initial check for mandatory ID
+    if (!studentID) {
+        return (
+            <div className="text-center p-8 bg-white shadow-xl rounded-2xl max-w-3xl mx-auto">
+                <h2 className="text-xl text-red-600 font-bold">Error</h2>
+                <p className="text-gray-600 mt-2">Pupil ID not found. Please ensure you are logged in or navigated correctly.</p>
+            </div>
+        );
+    }
+    
+    // Loading State
+    if (loading) {
+        return (
+            <div className="text-center p-8">
+                <p className="text-indigo-600 font-medium">Loading pupil registration and grades...</p>
+            </div>
+        );
+    }
+
     return (
-        <div className="max-w-5xl mx-auto p-6 bg-white shadow-xl rounded-2xl">
+        <div className="max-w-4xl mx-auto p-6 bg-white shadow-xl rounded-2xl">
             <h2 className="text-2xl font-bold text-center text-indigo-700 mb-6">
-                {schoolName} - Term 2 Report
+                {schoolName} - Report Card
             </h2>
-
-            {/* 🧑‍🎓 Pupil Info */}
-            <div className="flex items-center gap-4 mb-6 border p-4 rounded-lg bg-gray-50 shadow-sm">
-                {pupilData.userPhotoUrl ? (
-                    <img
-                        src={pupilData.userPhotoUrl}
-                        alt="Pupil"
-                        className="w-24 h-24 object-cover rounded-full border-2 border-indigo-500"
-                        onError={(e) => { e.target.onerror = null; e.target.src = "https://via.placeholder.com/96" }}
-                    />
-                ) : (
-                    <div className="w-24 h-24 bg-gray-300 rounded-full flex items-center justify-center text-gray-700 font-bold">
-                        No Photo
+            
+            {/* 🧑‍🎓 Pupil Info & Term Selector */}
+            <div className="flex justify-between items-center gap-4 mb-6 border p-4 rounded-lg bg-gray-50 shadow-sm">
+                <div className="flex items-center gap-4">
+                    {pupilData.userPhotoUrl ? (
+                        <img
+                            src={pupilData.userPhotoUrl}
+                            alt="Pupil"
+                            className="w-20 h-20 object-cover rounded-full border-2 border-indigo-500"
+                            onError={(e) => { e.target.onerror = null; e.target.src = "https://via.placeholder.com/80"; }}
+                        />
+                    ) : (
+                        <div className="w-20 h-20 bg-gray-300 rounded-full flex items-center justify-center text-gray-700 font-bold">No Photo</div>
+                    )}
+                    <div>
+                        <p className="text-lg font-semibold text-indigo-800">
+                            {pupilData.studentName || "Name N/A"}
+                        </p>
+                        <p className="text-gray-600 text-sm">
+                            <span className="font-medium">Class:</span> {selectedClass || "N/A"} ({totalPupilsInClass} pupils)
+                        </p>
+                        <p className="text-gray-600 text-sm">
+                            <span className="font-medium">Academic Year:</span> {academicYear || "N/A"}
+                        </p>
                     </div>
-                )}
-                <div>
-                    <p className="text-lg font-semibold text-indigo-800">{pupilData.studentName}</p>
-                   <p className="text-gray-600">
-                      <span className="font-medium">Class:</span>{" "}
-                      {latestInfo.class || "N/A"}{" "}
-                      <span className="ml-2 text-sm text-gray-500">
-                        ({totalPupilsInClass} pupils)
-                      </span>
-                    </p>
+                </div>
 
-                    <p className="text-gray-600">
-                        <span className="font-medium">Academic Year:</span>{" "}
-                        {latestInfo.academicYear || "N/A"}
-                    </p>
-                    <p className="text-gray-600">
-                        <span className="font-medium">Student ID:</span> {pupilData.studentID}
-                    </p>
-                    
+                {/* Term Selector */}
+                <div className="flex flex-col items-end space-y-2">
+                    <label className="text-sm font-medium text-gray-700">Select Term:</label>
+                    <select
+                        value={selectedTerm}
+                        onChange={(e) => setSelectedTerm(e.target.value)}
+                        className="p-2 border border-indigo-300 rounded-lg bg-white shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                    >
+                        {Object.keys(termTests).map(term => (
+                            <option key={term} value={term}>{term}</option>
+                        ))}
+                    </select>
                 </div>
             </div>
 
-            {/* 📊 Grades Table */}
-            {loading ? (
-                <div className="text-center text-indigo-600 font-medium p-8 border rounded-lg">
-                    Loading report and class ranking data...
-                </div>
-            ) : subjects.length > 0 ? (
+            {/* --- Report Card Table --- */}
+            {subjects.length > 0 ? (
                 <div className="overflow-x-auto border rounded-lg shadow-md">
                     <table className="min-w-full text-sm text-center border-collapse">
                         <thead className="bg-indigo-600 text-white">
                             <tr>
                                 <th className="px-4 py-2 text-left">Subject</th>
+                                {/* Use the last part of the test name for cleaner UI headers */}
                                 {tests.map((t) => (
                                     <th key={t} className="px-4 py-2">
-                                        {t.split(" ").pop()} {/* Displays only T1 or T2 */}
+                                        {t.split(' ').pop()}
                                     </th>
                                 ))}
-
                                 <th className="px-4 py-2">Mn</th>
                                 <th className="px-4 py-2">Rnk</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {/* Subject Rows */}
                             {reportRows.map((row, idx) => (
-                                <tr key={idx} className="border-b hover:bg-gray-50 transition-colors"><td className="text-left px-4 py-2 font-semibold">
-                                    {row.subject}
-                                </td>
-                                    <td className={`px-4 py-2 ${getGradeColor(row.test1)}`}>
-                                        {row.test1}
-                                    </td>
-                                    <td className={`px-4 py-2 ${getGradeColor(row.test2)}`}>
-                                        {row.test2}
-                                    </td>
-                                    {/* Mean now displayed as a whole number (0 D.P.) */}
-                                    <td className={`px-4 py-2 font-bold ${getGradeColor(row.mean)}`}>
-                                        {row.mean}
-                                    </td>
-                                    <td className="px-4 py-2 font-bold text-indigo-700">
-                                        {row.rank}
-                                    </td>
+                                <tr key={idx} className="border-b hover:bg-gray-50 transition">
+                                    <td className="text-left px-4 py-2 font-semibold">{row.subject}</td>
+                                    <td className={`px-4 py-2 ${getGradeColor(row.test1)}`}>{row.test1}</td>
+                                    <td className={`px-4 py-2 ${getGradeColor(row.test2)}`}>{row.test2}</td>
+                                    <td className={`px-4 py-2 font-bold ${getGradeColor(row.mean)}`}>{row.mean}</td>
+                                    <td className="px-4 py-2 font-bold text-red-600">{row.rank}</td>
                                 </tr>
                             ))}
 
-                            {/* NEW FOOTER ROWS */}
-
-                            {/* 1. Combined Scores (Total Marks) */}
+                            {/* Footer rows (Summary) */}
                             <tr className="bg-indigo-100 font-bold text-indigo-800 border-t-2 border-indigo-600">
                                 <td className="text-left px-4 py-2 text-base">Combined Scores</td>
-                                <td colSpan="2" className="text-right"></td>
+                                <td colSpan="2"></td>
                                 <td className="px-4 py-2 text-base">{totalMarks}</td>
-                                <td className="px-4 py-2 text-sm text-gray-700">—</td>
+                                <td>—</td>
                             </tr>
-
-                            {/* 2. Overall Percentage (1 D.P.) */}
                             <tr className="bg-indigo-100/70 font-bold text-indigo-800">
                                 <td className="text-left px-4 py-2 text-base">Percentage</td>
                                 <td colSpan="2"></td>
                                 <td className="px-4 py-2 text-base">{overallPercentage}%</td>
-                                <td className="px-4 py-2 text-sm text-gray-700">—</td>
+                                <td>—</td>
                             </tr>
-
-                            {/* 3. Overall Position/Rank */}
                             <tr className="bg-indigo-200 font-bold text-indigo-900 border-b-2 border-indigo-600">
                                 <td className="text-left px-4 py-3 text-lg">Position</td>
                                 <td colSpan="3"></td>
-                                <td className="px-4 py-3 text-xl">{overallRank}</td>
+                                <td className="px-4 py-3 text-xl">{overallRank} / {totalPupilsInClass}</td>
                             </tr>
-
                         </tbody>
                     </table>
                 </div>
             ) : (
                 <div className="text-center p-6 text-gray-500 border rounded-lg">
-                    No grades found for this pupil.
+                    No grades found for **{pupilData.studentName}** in **{selectedTerm}** ({academicYear}).
                 </div>
             )}
         </div>

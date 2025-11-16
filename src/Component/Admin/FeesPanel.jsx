@@ -28,13 +28,9 @@ import TeacherAssignmentPage from "../TeacherAssignment/TeacherAssignmentPage";
 import TeacherRegistration from "../Voters/TeacherRegistration";
 import TeacherPupilsPage from "../TeacherAssignment/TeacherPupilsPage";
 import GradeSheetPage from "../TeacherAssignment/GradeSheetPage";
-import SubGradeMatrixPage from "../TeacherAssignment/SubGradeMatrixPage";
-import ClassFullTermMatrixPage from "../TeacherAssignment/ClassFullTermMatrixPage";
 import GeneralReportCard from "../PupilsPage/GeneralReportCard";
-import SchoolRegistration from "../CeoPanel/SchoolRegistration"
-import AdminForm from "../CeoPanel/AdminForm"
-import RegDashboard from "../Dashboard/RegDashboard"
 import StudentFilterPage from "../Voters/StudentFilterPage";
+import LogoutPage from "../Admin/LogoutPage"
 
 
 // --- Navigation Items ---
@@ -59,20 +55,11 @@ const NAV_ITEMS = [
       { key: "feesCost", label: " feesUpdate", icon: <MdPerson /> },
     ],
   },
-  // {
-  //   key: "Staff",
-  //   label: "staff",
-  //   icon: <MdBarChart />,
-  //   children: [
-  //   { key: "TeacherRegistration", label: "Teacher Regis", icon: <MdPerson /> },
-  //   { key: "subjects", label: "Subjects", icon: <MdPerson /> },
-  //   { key: "TeacherAssignment", label: "Teacher Assignment", icon: <MdPerson /> },
-  //   { key: "TeacherPupilsPage", label: "TeacherPupilsPage", icon: <MdPerson /> },
-  //   { key: "GradeSheetPage", label: "Grade Sheet", icon: <MdPerson /> },
-  //   { key: "GeneralReportCard", label: "ReportCard", icon: <MdPerson /> },
-
-  //   ],
-  // },
+  {
+    key: "LogoutPage",
+    label: "Logout",
+    icon: <MdWarning />, // 📖
+  },
 ];
 
 // --- Button component ---
@@ -154,6 +141,7 @@ function FeesPanel() {
       case "TeacherPupilsPage": return <TeacherPupilsPage />;
       case "GradeSheetPage": return <GradeSheetPage />;
       case "GeneralReportCard": return <GeneralReportCard />;
+       case "LogoutPage": return <LogoutPage />;
 
       default: return <Placeholder title={activeTab} />;
     }

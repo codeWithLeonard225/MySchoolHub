@@ -11,9 +11,8 @@ import {
     where,
 } from "firebase/firestore";
 import { useLocation } from "react-router-dom";
-// 🚀 Import localforage for caching
 import localforage from "localforage";
-import { toast } from "react-toastify"; // Assuming you have react-toastify setup
+import { toast } from "react-toastify";
 
 // 💾 Initialize localforage stores
 const classListStore = localforage.createInstance({
@@ -21,9 +20,14 @@ const classListStore = localforage.createInstance({
     storeName: "classesData",
 });
 
-const subjectsStore = localforage.createInstance({
+const subjectCategoryStore = localforage.createInstance({
+    name: "SubjectCategoryCache",
+    storeName: "subjectCategories", // Renamed for better clarity
+});
+
+const classesAndSubjectsStore = localforage.createInstance({
     name: "ClassesAndSubjectsCache",
-    storeName: "subjectsData",
+    storeName: "savedClassesAndSubjects", // Explicit store for the main list
 });
 
 
@@ -35,13 +39,14 @@ const SubjectPage = () => {
     const [selectedCategory, setSelectedCategory] = useState("");
     const [availableSubjects, setAvailableSubjects] = useState([]);
     const [subjects, setSubjects] = useState([]);
-    const [allClasses, setAllClasses] = useState([]);
-    const [classList, setClassList] = useState([]);
-    const [categories, setCategories] = useState([]);
+    const [allClasses, setAllClasses] = useState([]); // Saved ClassesAndSubjects from Firestore
+    const [classList, setClassList] = useState([]); // List of all class names from Classes collection
+    const [categories, setCategories] = useState([]); // Subject categories list
     const [editingId, setEditingId] = useState(null);
     // ⏳ NEW state for loading indicators
     const [loadingClasses, setLoadingClasses] = useState(true);
     const [loadingSubjects, setLoadingSubjects] = useState(true);
+    const [loadingCategories, setLoadingCategories] = useState(true);
 
 
     // 1. 🚀 Fetch All Classes (classList) - Cache-First
@@ -96,14 +101,16 @@ const SubjectPage = () => {
         loadAndListenClasses();
     }, [schoolId]);
 
-    // 2. ✅ Fetch all categories from SubjectCategories (No schoolId filter needed, typically)
+    // 2. ✅ Fetch all categories from SubjectCategories - Cache-First
     useEffect(() => {
         const CATEGORIES_CACHE_KEY = 'subject_categories_all';
 
         const loadCategories = async () => {
+            setLoadingCategories(true);
+
             // 1. Try to load from cache
             try {
-                const cachedCats = await subjectsStore.getItem(CATEGORIES_CACHE_KEY);
+                const cachedCats = await subjectCategoryStore.getItem(CATEGORIES_CACHE_KEY);
                 if (cachedCats && cachedCats.data) {
                     setCategories(cachedCats.data);
                     console.log("Loaded categories from cache.");
@@ -121,12 +128,15 @@ const SubjectPage = () => {
                 setCategories(fetched);
 
                 // 3. Save fresh data to localforage
-                subjectsStore.setItem(CATEGORIES_CACHE_KEY, { timestamp: Date.now(), data: fetched })
+                subjectCategoryStore.setItem(CATEGORIES_CACHE_KEY, { timestamp: Date.now(), data: fetched })
                     .catch(e => console.error("Failed to save categories to IndexDB:", e));
+                
+                setLoadingCategories(false);
 
             }, (error) => {
                 console.error("Firestore 'SubjectCategories' onSnapshot failed:", error);
                 toast.error("Failed to fetch subject categories.");
+                setLoadingCategories(false);
             });
 
             return () => unsub();
@@ -135,27 +145,19 @@ const SubjectPage = () => {
         loadCategories();
     }, []);
 
-    // 3. ✅ Fetch subjects based on selected category (No caching, as this is dependent on a selection)
+    // 3. ✨ Calculate available subjects from in-memory categories state (OPTIMIZED)
     useEffect(() => {
-        if (!selectedCategory) {
+        if (!selectedCategory || categories.length === 0) {
             setAvailableSubjects([]);
             return;
         }
 
-        const q = query(
-            collection(db, "SubjectCategories"),
-            where("categoryName", "==", selectedCategory)
-        );
-
-        const unsub = onSnapshot(q, (snapshot) => {
-            const fetchedSubjects = snapshot.docs.flatMap(
-                (doc) => doc.data().subjects || []
-            );
-            setAvailableSubjects(fetchedSubjects);
-        });
-
-        return () => unsub();
-    }, [selectedCategory]);
+        // Search the already loaded 'categories' state instead of querying Firestore again
+        const selectedCat = categories.find(cat => cat.categoryName === selectedCategory);
+        
+        setAvailableSubjects(selectedCat?.subjects || []);
+        
+    }, [selectedCategory, categories]);
 
     // 4. 🚀 Fetch Existing ClassesAndSubjects (allClasses) - Cache-First
     useEffect(() => {
@@ -170,7 +172,7 @@ const SubjectPage = () => {
 
             // 1. Try to load from cache
             try {
-                const cachedSubjects = await subjectsStore.getItem(SUBJECTS_CACHE_KEY);
+                const cachedSubjects = await classesAndSubjectsStore.getItem(SUBJECTS_CACHE_KEY);
                 if (cachedSubjects && cachedSubjects.data) {
                     setAllClasses(cachedSubjects.data);
                     console.log("Loaded saved subjects from cache.");
@@ -191,7 +193,7 @@ const SubjectPage = () => {
                 setAllClasses(data);
 
                 // 3. Save fresh data to localforage
-                subjectsStore.setItem(SUBJECTS_CACHE_KEY, { timestamp: Date.now(), data })
+                classesAndSubjectsStore.setItem(SUBJECTS_CACHE_KEY, { timestamp: Date.now(), data })
                     .catch(e => console.error("Failed to save saved subjects to IndexDB:", e));
 
                 setLoadingSubjects(false); // Done loading once first snapshot arrives
@@ -303,7 +305,7 @@ const SubjectPage = () => {
         toast.info(`Editing subjects for class: ${cls.className}`);
     };
 
-    const isLoading = loadingClasses || loadingSubjects;
+    const isLoading = loadingClasses || loadingSubjects || loadingCategories;
 
     // --- RENDER BLOCK ---
     return (
@@ -347,10 +349,10 @@ const SubjectPage = () => {
                         value={selectedCategory}
                         onChange={(e) => setSelectedCategory(e.target.value)}
                         className="w-full border rounded-md px-3 py-2 mt-1 focus:ring focus:ring-blue-300 bg-white"
-                        disabled={categories.length === 0}
+                        disabled={loadingCategories}
                     >
                         <option value="">
-                            {categories.length === 0 ? "-- Loading Categories --" : "-- Select Subject Category --"}
+                            {loadingCategories ? "-- Loading Categories --" : "-- Select Subject Category --"}
                         </option>
                         {categories.map((cat) => (
                             <option key={cat.id} value={cat.categoryName}>

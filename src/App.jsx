@@ -13,6 +13,8 @@ import PrivatePupilsDashboard from "./Component/PupilsPage/PrivatePupilsDashboar
 import GovPupilDashboard from "./Component/PupilsPage/GovPupilDashboard";
 import PupilUpdate from "./Component/TeacherAssignment/PupilUpdate";
 import PrintableStudentForm from "./Component/Voters/PrintableStudentForm";
+import TeacherDashboard from "./Component/TeacherAssignment/teacherDashboard";
+
 
 function App() {
   return (
@@ -72,7 +74,7 @@ function App() {
             path="/subjectTeacher"
             element={
               <ProtectedRoute role="teacher">
-                <TeacherGradesPage />
+                <TeacherDashboard />
               </ProtectedRoute>
             }
           />

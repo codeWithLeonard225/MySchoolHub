@@ -26,9 +26,7 @@ import localforage from "localforage";
 const TeacherGradesPage = () => {
 
   const { user } = useAuth();
-
   const location = useLocation();
-
   const schoolId = location.state?.schoolId || "N/A";
 
 

@@ -6,14 +6,16 @@ import FeesDashboard from "./Component/Dashboard/FeesDsahboard";
 import { AuthProvider } from "./Component/Security/AuthContext";
 import ProtectedRoute from "./Component/Security/ProtectedRoute";
 import TeacherGradesPage from "./Component/TeacherAssignment/TeacherPupilsPage";
-import PupilsDashboard from "./Component/PupilsPage/PupilsDashboard";
+
 import FeesPanel from "./Component/Admin/FeesPanel";
 import CeoPanel from "./Component/CeoPanel/CeoPanel";
 import PrivatePupilsDashboard from "./Component/PupilsPage/PrivatePupilsDashboard";
 import GovPupilDashboard from "./Component/PupilsPage/GovPupilDashboard";
 import PupilUpdate from "./Component/TeacherAssignment/PupilUpdate";
 import PrintableStudentForm from "./Component/Voters/PrintableStudentForm";
-import TeacherDashboard from "./Component/TeacherAssignment/teacherDashboard";
+import TeachersDashboard from "./Component/TeacherAssignment/TeachersDashboard";
+
+
 
 
 function App() {
@@ -74,7 +76,7 @@ function App() {
             path="/subjectTeacher"
             element={
               <ProtectedRoute role="teacher">
-                <TeacherDashboard />
+                <TeachersDashboard />
               </ProtectedRoute>
             }
           />

@@ -14,6 +14,7 @@ import GovPupilDashboard from "./Component/PupilsPage/GovPupilDashboard";
 import PupilUpdate from "./Component/TeacherAssignment/PupilUpdate";
 import PrintableStudentForm from "./Component/Voters/PrintableStudentForm";
 import TeachersDashboard from "./Component/TeacherAssignment/TeachersDashboard";
+import AttendancePage from "./Component/Voters/AttendancePage";
 
 
 
@@ -61,6 +62,14 @@ function App() {
             element={
               <ProtectedRoute role="admin">
                 <Gov/>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/PupilAttendance"
+            element={
+              <ProtectedRoute role="admin">
+                <AttendancePage/>
               </ProtectedRoute>
             }
           />

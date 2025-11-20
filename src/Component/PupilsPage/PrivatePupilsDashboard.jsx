@@ -5,6 +5,7 @@ import PupilPage from "./PupilPage";
 import IndividualReportCardTerm1 from "./IndividualReportCardTerm1";
 import PupilPastQuestionViewer from "./PupilPastQuestionViewer";
 import LogoutPage from "../Admin/LogoutPage"
+import PupilAttendanceNotification from "./PupilAttendanceNotification";
 
 
 // Navigation Items
@@ -135,15 +136,11 @@ function PrivatePupilsDashboard() {
   const renderContent = () => {
     switch (activeTab) {
       case "dashboard":
-        return <Dashboard />;
+        return <PupilAttendanceNotification />;
       case "fees":
         return <PupilPage />;
       case "result":
         return <IndividualReportCardTerm1 />;
-      // case "term2":
-      //   return <IndividualReportCardTerm2 />;
-      // case "term3":
-      //   return <IndividualReportCardTerm3 />;
       case "schoolPastQuestions":
         return <PupilPastQuestionViewer />;
       case "LogoutPage":

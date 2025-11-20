@@ -41,6 +41,7 @@ import PastQuestions from "../Admin/PastQuestionUpload";
 import PupilIDCard from "../Voters/PupilIDCard";
 import IDCardPage from "../Voters/IDCardPage";
 import LogoutPage from "../Admin/LogoutPage"
+import AttendancePage from "../Voters/AttendancePage";
 
 
 
@@ -98,6 +99,12 @@ const NAV_ITEMS = [
 
     ],
   },
+     {
+      key: "pupilAttendance",
+      label: "Pupil Attendance",
+      icon: <MdWarning />, // 📖
+    },
+    
   {
     key: "LogoutPage",
     label: "Logout",
@@ -194,6 +201,7 @@ function Gov() {
       case "PupilIDCard": return <PupilIDCard />;
       case "IDCardPage": return <IDCardPage />;
       case "LogoutPage": return <LogoutPage />;
+           case "pupilAttendance": return <AttendancePage />;
 
 
 

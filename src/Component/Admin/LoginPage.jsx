@@ -31,6 +31,8 @@ const LoginPage = () => {
     { name: "Teachers", idField: "teacherID", nameField: "teacherName", role: "teacher" },
     { name: "Admins", idField: "adminID", nameField: "adminName", role: "admin" },
     { name: "CEOs", idField: "ceoID", nameField: "ceoName", role: "ceo" },
+      // 🆕 New Class login collection
+    { name: "Classes", idField: "classId", nameField: "className", role: "teacher", route: "/class" },
   ];
 
   // 🔗 Dynamic routes
@@ -97,6 +99,7 @@ const LoginPage = () => {
             else if (name === "PupilsReg") navigationRoute = getPupilRoute(foundUser.pupilType);
             else if (name === "Teachers") navigationRoute = "/subjectTeacher";
             else if (name === "CEOs") navigationRoute = "/ceo";
+            else if (name === "Classes") navigationRoute = "/class";
 
             break;
           }

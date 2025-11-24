@@ -373,6 +373,8 @@ const AdminForm = () => {
                             <option value="Fees">Fees Admin</option>
                             <option value="Special">Special/Super Admin</option>
                             <option value="PupilAttendance">Pupil Attendance</option>
+                            <option value="StaffAttendanceSimple">Staff Attendance</option>
+                            <option value="General">General</option>
                         </select>
                     </div>
                       {/* ✅ UPDATED: Role is now a text input */}

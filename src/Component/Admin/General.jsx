@@ -41,11 +41,11 @@ import NationalResultPage from "../CeoPanel/NationalResultPage";
 import BECEStatementOfResult from "../CeoPanel/BECEStatementOfResult";
 import TeacherAssignmentReport from "../TeacherAssignment/TeacherAssignmentReport";
 import TeacherPupilsPageAdmin from "../TeacherAssignment/TeacherPupilsPageAdmin";
-import ExamUploader from "../Admin/PastQuestionUpload";
-import SchoolLibraryUpload from "../Admin/SchoolLibraryUpload";
+import ExamUploader from "./PastQuestionUpload";
+import SchoolLibraryUpload from "./SchoolLibraryUpload";
 import PupilIDCard from "../Voters/PupilIDCard";
 import IDCardPage from "../Voters/IDCardPage";
-import LogoutPage from "../Admin/LogoutPage"
+import LogoutPage from "./LogoutPage"
 import AttendancePage from "../Voters/AttendancePage"
 import StaffAttendance from "../TeacherAssignment/StaffAttendance";
 import StaffClocking from "../TeacherAssignment/StaffClocking";
@@ -74,31 +74,31 @@ const NAV_ITEMS = [
 
     ],
   },
-  // {
-  //   key: "Staff",
-  //   label: "staff",
-  //   icon: <MdBarChart />,
-  //   children: [
-  //     { key: "TeacherRegistration", label: "Teacher Regis", icon: <MdPerson /> },
-  //     { key: "subjects", label: "Subjects", icon: <MdPerson /> },
-  //     { key: "TeacherAssignment", label: "Teacher Assignment", icon: <MdPerson /> },
-  //     { key: "TeacherAssignmentReport", label: "Teacher Assignment Report ", icon: <MdPerson /> },
-  //     { key: "PastQuestions", label: "Upload Past Questions ", icon: <MdPerson /> },
-  //     { key: "SchoolLibraryUpload", label: "SchoolLibrary Upload ", icon: <MdPerson /> },
+  {
+    key: "Staff",
+    label: "staff",
+    icon: <MdBarChart />,
+    children: [
+      { key: "TeacherRegistration", label: "Teacher Regis", icon: <MdPerson /> },
+      { key: "subjects", label: "Subjects", icon: <MdPerson /> },
+      { key: "TeacherAssignment", label: "Teacher Assignment", icon: <MdPerson /> },
+      { key: "TeacherAssignmentReport", label: "Teacher Assignment Report ", icon: <MdPerson /> },
+      { key: "PastQuestions", label: "Upload Past Questions ", icon: <MdPerson /> },
+      { key: "SchoolLibraryUpload", label: "SchoolLibrary Upload ", icon: <MdPerson /> },
 
 
 
-  //   ],
-  // },
+    ],
+  },
   {
     key: "results",
     label: "Pupils Results",
     icon: <MdBarChart />,
     children: [
       { key: "GradeSheetPage", label: "Submitted Grades", icon: <MdPerson /> },
-      // { key: "TeacherPupilsPageAdmin", label: "TeacherPupilsGrade", icon: <MdPerson /> },
-      // { key: "SubGradeMatrixPage", label: "Sub Grade Sheet", icon: <MdPerson /> },
-      // { key: "ClassFullTermMatrixPage", label: "Term Grade Sheet", icon: <MdPerson /> },
+      { key: "TeacherPupilsPageAdmin", label: "TeacherPupilsGrade", icon: <MdPerson /> },
+      { key: "SubGradeMatrixPage", label: "Sub Grade Sheet", icon: <MdPerson /> },
+      { key: "ClassFullTermMatrixPage", label: "Term Grade Sheet", icon: <MdPerson /> },
       { key: "GeneralReportCard", label: "ReportCard", icon: <MdPerson /> },
       // { key: "Testing", label: "Testing", icon: <MdPerson /> },
 
@@ -137,7 +137,11 @@ const NAV_ITEMS = [
     label: "Staff Attendance",
     icon: <MdWarning />, // 📖
   },
- 
+    {
+    key: "staffClockin",
+    label: "Staff Clocking",
+    icon: <MdWarning />, // 📖
+  },
   {
     key: "LogoutPage",
     label: "Logout",
@@ -171,7 +175,7 @@ const Dashboard = () => (
 );
 
 // --- Main Admin Panel ---
-function AdminPanel() {
+function General() {
   const [activeTab, setActiveTab] = useState("dashboard");
   const [openDropdown, setOpenDropdown] = useState(null);
   const [openNestedDropdowns, setOpenNestedDropdowns] = useState({});
@@ -290,4 +294,4 @@ function AdminPanel() {
   );
 }
 
-export default AdminPanel;
+export default General;

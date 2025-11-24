@@ -42,7 +42,9 @@ const LoginPage = () => {
       case "Private": return "/admin";
       case "Fees": return "/registra";
       case "Special": return "/special";
+      case "General": return "/General";
       case "PupilAttendance": return "/PupilAttendance";
+      case "StaffAttendanceSimple": return "/StaffAttendanceSimple";
       default: return "/admin";
     }
   };

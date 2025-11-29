@@ -44,6 +44,8 @@ import LogoutPage from "../Admin/LogoutPage"
 import AttendancePage from "../Voters/AttendancePage";
 import AttendancePageClass from "../TeacherAssignment/AttendancePageClass";
 import StaffAttendanceSimple from "../TeacherAssignment/StaffAttendance";
+import IDCardBackSection from "../Voters/IDCardBackSection";
+import ModelSchoolIdCard from "../Voters/ModelSchoolIdCard";
 
 
 
@@ -94,8 +96,9 @@ const NAV_ITEMS = [
     label: "Pupils ID Cards",
     icon: <MdBarChart />,
     children: [
-      { key: "PupilIDCard", label: "PupilIDCard", icon: <MdPerson /> },
+      { key: "ModelSchoolIdCard", label: "ModelSchoolIdCard", icon: <MdPerson /> },
       { key: "IDCardPage", label: "IDCardPage", icon: <MdPerson /> },
+      { key: "IDCardBackSection", label: "IDCardBackSection", icon: <MdPerson /> },
 
       // { key: "Testing", label: "Testing", icon: <MdPerson /> },
 
@@ -205,8 +208,9 @@ function Gov() {
       case "TeacherAssignmentReport": return <TeacherAssignmentReport />;
       case "TeacherPupilsPageAdmin": return <TeacherPupilsPageAdmin />;
       case "PastQuestions": return <PastQuestions />;
-      case "PupilIDCard": return <PupilIDCard />;
+      case "ModelSchoolIdCard": return <ModelSchoolIdCard />;
       case "IDCardPage": return <IDCardPage />;
+      case "IDCardBackSection": return <IDCardBackSection />;
       case "LogoutPage": return <LogoutPage />;
       case "staffAttendance": return <StaffAttendanceSimple />;
       case "pupilAttendance": return <AttendancePage />;

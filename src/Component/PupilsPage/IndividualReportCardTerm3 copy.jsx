@@ -12,7 +12,7 @@ const IndividualReportCardTerm3 = () => {
     const schoolId = location.state?.schoolId || "N/A";
     const schoolName = location.state?.schoolName || "Unknown School";
 
-    // Individual pupil's grades
+    // Individual pupil's grades 
     const [pupilGradesData, setPupilGradesData] = useState([]);
     // All grades for the current class/year (used for ranking)
     const [classGradesData, setClassGradesData] = useState([]);

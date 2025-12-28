@@ -49,6 +49,10 @@ import LogoutPage from "../Admin/LogoutPage"
 import AttendancePage from "../Voters/AttendancePage"
 import StaffAttendance from "../TeacherAssignment/StaffAttendance";
 import StaffClocking from "../TeacherAssignment/StaffClocking";
+import TimetableEntry from "../TeacherAssignment/TimetableEntry";
+import TimeTableTeacherAtt from "../TeacherAssignment/TimeTableTeacherAtt";
+import TimeTableDailyAttendanceReport from "../TeacherAssignment/TimeTableDailyAttendanceReport";
+import TimeTableTeacherReport from "../TeacherAssignment/TimeTableTeacherReport";
 
 
 // --- Navigation Items ---
@@ -137,6 +141,18 @@ const NAV_ITEMS = [
     label: "Staff Attendance",
     icon: <MdWarning />, // 📖
   },
+    {
+      key: "timetable",
+      label: "TimeTable",
+      icon: <MdBarChart />,
+      children: [
+        { key: "TimetableEntry", label: "TimetableEntry", icon: <MdPerson /> },
+        { key: "TimeTableTeacherAtt", label: "TimeTableTeacherAtt", icon: <MdPerson /> },
+        { key: "TimeTableDailyAttendanceReport", label: "DailyAttendanceReport", icon: <MdPerson /> },
+        { key: "TimeTableTeacherReport", label: "TimeTableTeacherReport", icon: <MdPerson /> },
+  
+      ],
+    },
  
   {
     key: "LogoutPage",
@@ -238,9 +254,13 @@ function FeesPanel() {
       case "PupilIDCard": return <PupilIDCard />;
       case "IDCardPage": return <IDCardPage />;
       case "schoolreg": return <SchoolRegistration />;
-        case "staffAttendance": return <StaffAttendance />;
-        case "pupilAttendance": return <AttendancePage />;
-        case "staffClockin": return <StaffClocking />;
+      case "staffAttendance": return <StaffAttendance />;
+      case "pupilAttendance": return <AttendancePage />;
+      case "staffClockin": return <StaffClocking />;
+      case "TimetableEntry": return <TimetableEntry />;
+      case "TimeTableTeacherAtt": return <TimeTableTeacherAtt />;
+      case "TimeTableDailyAttendanceReport": return <TimeTableDailyAttendanceReport />;
+      case "TimeTableTeacherReport": return <TimeTableTeacherReport />;
       case "LogoutPage": return <LogoutPage />;
 
       default: return <Placeholder title={activeTab} />;

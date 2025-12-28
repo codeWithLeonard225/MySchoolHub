@@ -46,6 +46,10 @@ import AttendancePageClass from "../TeacherAssignment/AttendancePageClass";
 import StaffAttendanceSimple from "../TeacherAssignment/StaffAttendance";
 import IDCardBackSection from "../Voters/IDCardBackSection";
 import ModelSchoolIdCard from "../Voters/ModelSchoolIdCard";
+import TimetableEntry from "../TeacherAssignment/TimetableEntry";
+import TimeTableTeacherAtt from "../TeacherAssignment/TimeTableTeacherAtt";
+import TimeTableDailyAttendanceReport from "../TeacherAssignment/TimeTableDailyAttendanceReport";
+import TimeTableTeacherReport from "../TeacherAssignment/TimeTableTeacherReport";
 
 
 
@@ -113,6 +117,19 @@ const NAV_ITEMS = [
     key: "staffAttendance",
     label: "Staff Attendance",
     icon: <MdWarning />, // 📖
+  },
+
+  {
+    key: "timetable",
+    label: "TimeTable",
+    icon: <MdBarChart />,
+    children: [
+      { key: "TimetableEntry", label: "TimetableEntry", icon: <MdPerson /> },
+      { key: "TimeTableTeacherAtt", label: "TimeTableTeacherAtt", icon: <MdPerson /> },
+      { key: "TimeTableDailyAttendanceReport", label: "DailyAttendanceReport", icon: <MdPerson /> },
+      { key: "TimeTableTeacherReport", label: "TimeTableTeacherReport", icon: <MdPerson /> },
+
+    ],
   },
 
   {
@@ -213,6 +230,10 @@ function Gov() {
       case "IDCardBackSection": return <IDCardBackSection />;
       case "LogoutPage": return <LogoutPage />;
       case "staffAttendance": return <StaffAttendanceSimple />;
+      case "TimetableEntry": return <TimetableEntry />;
+      case "TimeTableTeacherAtt": return <TimeTableTeacherAtt />;
+      case "TimeTableDailyAttendanceReport": return <TimeTableDailyAttendanceReport />;
+      case "TimeTableTeacherReport": return <TimeTableTeacherReport />;
       case "pupilAttendance": return <AttendancePage />;
 
 

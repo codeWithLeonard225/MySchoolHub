@@ -50,6 +50,7 @@ import AttendancePage from "../Voters/AttendancePage"
 import StaffAttendance from "../TeacherAssignment/StaffAttendance";
 import StaffClocking from "../TeacherAssignment/StaffClocking";
 import TimetableEntry from "../TeacherAssignment/TimetableEntry";
+import WeeklyTimetableReport from "../TeacherAssignment/WeeklyTimetableReport";
 import TimeTableTeacherAtt from "../TeacherAssignment/TimeTableTeacherAtt";
 import TimeTableDailyAttendanceReport from "../TeacherAssignment/TimeTableDailyAttendanceReport";
 import TimeTableTeacherReport from "../TeacherAssignment/TimeTableTeacherReport";
@@ -141,18 +142,19 @@ const NAV_ITEMS = [
     icon: <MdWarning />, // 📖
   },
 
- {
-      key: "timetable",
-      label: "TimeTable",
-      icon: <MdBarChart />,
-      children: [
-        { key: "TimetableEntry", label: "TimetableEntry", icon: <MdPerson /> },
-        { key: "TimeTableTeacherAtt", label: "TimeTableTeacherAtt", icon: <MdPerson /> },
-        { key: "TimeTableDailyAttendanceReport", label: "DailyAttendanceReport", icon: <MdPerson /> },
-        { key: "TimeTableTeacherReport", label: "TimeTableTeacherReport", icon: <MdPerson /> },
-  
-      ],
-    },
+  {
+    key: "timetable",
+    label: "TimeTable",
+    icon: <MdBarChart />,
+    children: [
+      { key: "TimetableEntry", label: "TimetableEntry", icon: <MdPerson /> },
+      { key: "WeeklyTimetableReport", label: "WeeklyTimetableReport", icon: <MdPerson /> },
+      { key: "TimeTableTeacherAtt", label: "TimeTableTeacherAtt", icon: <MdPerson /> },
+      { key: "TimeTableDailyAttendanceReport", label: "DailyAttendanceReport", icon: <MdPerson /> },
+      { key: "TimeTableTeacherReport", label: "TimeTableTeacherReport", icon: <MdPerson /> },
+
+    ],
+  },
   
   {
     key: "LogoutPage",
@@ -258,6 +260,7 @@ function AdminPanel() {
         case "pupilAttendance": return <AttendancePage />;
         case "staffClockin": return <StaffClocking />;
       case "TimetableEntry": return <TimetableEntry />;
+      case "WeeklyTimetableReport": return <WeeklyTimetableReport />;
       case "TimeTableTeacherAtt": return <TimeTableTeacherAtt />;
       case "TimeTableDailyAttendanceReport": return <TimeTableDailyAttendanceReport />;
       case "TimeTableTeacherReport": return <TimeTableTeacherReport />;

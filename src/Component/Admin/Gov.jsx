@@ -51,6 +51,7 @@ import WeeklyTimetableReport from "../TeacherAssignment/WeeklyTimetableReport";
 import TimeTableTeacherAtt from "../TeacherAssignment/TimeTableTeacherAtt";
 import TimeTableDailyAttendanceReport from "../TeacherAssignment/TimeTableDailyAttendanceReport";
 import TimeTableTeacherReport from "../TeacherAssignment/TimeTableTeacherReport";
+import RestoreTimetable from "../TeacherAssignment/RestoreTimetable";
 
 
 
@@ -129,7 +130,7 @@ const NAV_ITEMS = [
       { key: "WeeklyTimetableReport", label: "WeeklyTimetableReport", icon: <MdPerson /> },
       { key: "TimeTableTeacherAtt", label: "TimeTableTeacherAtt", icon: <MdPerson /> },
       { key: "TimeTableDailyAttendanceReport", label: "DailyAttendanceReport", icon: <MdPerson /> },
-      { key: "TimeTableTeacherReport", label: "TimeTableTeacherReport", icon: <MdPerson /> },
+      { key: "TimeTableTeacherReport", label: "MonthlyAttendanceReport", icon: <MdPerson /> },
 
     ],
   },
@@ -137,6 +138,11 @@ const NAV_ITEMS = [
   {
     key: "LogoutPage",
     label: "Logout",
+    icon: <MdWarning />, // 📖
+  },
+  {
+    key: "RestoreTimetable",
+    label: "RestoreTimetable",
     icon: <MdWarning />, // 📖
   },
 
@@ -238,6 +244,7 @@ function Gov() {
       case "TimeTableDailyAttendanceReport": return <TimeTableDailyAttendanceReport />;
       case "TimeTableTeacherReport": return <TimeTableTeacherReport />;
       case "pupilAttendance": return <AttendancePage />;
+      case "RestoreTimetable": return <RestoreTimetable />;
 
 
 

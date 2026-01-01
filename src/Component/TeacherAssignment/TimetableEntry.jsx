@@ -76,34 +76,34 @@ const TimetableManager = () => {
   }, [schoolId]);
 
   // 2️⃣ Fetch Timetable Entries (With Cache & ID De-duplication)
-  useEffect(() => {
-    if (schoolId === "N/A") return;
+ // 2️⃣ Fetch Timetable Entries (Fixed)
+useEffect(() => {
+  if (schoolId === "N/A") return;
 
-    // Load cached timetable first
-    timetableCache
-      .getItem("timetableList")
-      .then((cachedData) => {
-        if (cachedData) setTimetableList(cachedData);
-      })
-      .catch((err) => console.error("Cache load failed:", err));
+  // Load cached timetable first
+  timetableCache
+    .getItem("timetableList")
+    .then((cachedData) => {
+      if (cachedData) setTimetableList(cachedData);
+    })
+    .catch((err) => console.error("Cache load failed:", err));
 
-    const q = query(collection(schoollpq, "Timetables"), where("schoolId", "==", schoolId));
-    const unsub = onSnapshot(q, (snapshot) => {
-      const uniqueMap = new Map();
-      snapshot.docs.forEach((doc) => {
-        uniqueMap.set(doc.id, { id: doc.id, ...doc.data() });
-      });
-      const timetableArray = Array.from(uniqueMap.values());
-      setTimetableList(timetableArray);
-
-      // Save to localforage cache
-      timetableCache.setItem("timetableList", timetableArray).catch((err) =>
-        console.error("Cache save failed:", err)
-      );
+  const q = query(collection(schoollpq, "Timetables"), where("schoolId", "==", schoolId));
+  const unsub = onSnapshot(q, (snapshot) => {
+    const timetableArray = snapshot.docs.map((doc) => {
+      const { id: _ignored, ...rest } = doc.data(); // Ignore any existing `id` field in Firestore data
+      return { id: doc.id, ...rest }; // Use Firestore doc ID as unique identifier
     });
 
-    return () => unsub();
-  }, [schoolId]);
+    setTimetableList(timetableArray);
+
+    // Save to localforage cache
+    timetableCache.setItem("timetableList", timetableArray).catch(console.error);
+  });
+
+  return () => unsub();
+}, [schoolId]);
+
 
   // 3️⃣ Auto-update Subjects & Handle Lunch
   useEffect(() => {
@@ -185,48 +185,50 @@ const TimetableManager = () => {
 
   // 6️⃣ Add / Update Timetable
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!formData.className) return toast.error("Please select a class");
+  e.preventDefault();
+  if (!formData.className) return toast.error("Please select a class");
 
-    setLoading(true);
-    const payload = {
-      ...formData,
-      schoolId,
-      time: `${formData.startTime} - ${formData.endTime}`,
-      updatedAt: serverTimestamp(),
-    };
-
-    try {
-      if (editId) {
-        await updateDoc(doc(schoollpq, "Timetables", editId), payload);
-        toast.success("Updated Successfully");
-      } else {
-        await addDoc(collection(schoollpq, "Timetables"), {
-          ...payload,
-          createdAt: serverTimestamp(),
-        });
-        toast.success("Added to Timetable");
-      }
-      setEditId(null);
-      setFormData({ ...formData, subject: "", teacher: "" });
-    } catch (err) {
-      toast.error("Error saving schedule");
-    } finally {
-      setLoading(false);
-    }
+  setLoading(true);
+  const payload = {
+    ...formData,
+    schoolId,
+    time: `${formData.startTime} - ${formData.endTime}`,
+    updatedAt: serverTimestamp(),
   };
+
+  try {
+    if (editId) {
+      await updateDoc(doc(schoollpq, "Timetables", editId), payload);
+      toast.success("Updated Successfully");
+    } else {
+      await addDoc(collection(schoollpq, "Timetables"), {
+        ...payload,
+        createdAt: serverTimestamp(),
+      });
+      toast.success("Added to Timetable");
+    }
+    setEditId(null);
+    setFormData({ ...formData, subject: "", teacher: "" });
+  } catch (err) {
+    toast.error("Error saving schedule");
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   // 7️⃣ Delete Entry
   const handleDelete = async (id) => {
-    if (window.confirm("Are you sure you want to delete this period?")) {
-      try {
-        await deleteDoc(doc(schoollpq, "Timetables", id));
-        toast.info("Entry Deleted");
-      } catch (err) {
-        toast.error("Delete failed");
-      }
+  if (window.confirm("Are you sure you want to delete this period?")) {
+    try {
+      await deleteDoc(doc(schoollpq, "Timetables", id)); // id is now Firestore doc ID
+      toast.info("Entry Deleted");
+    } catch (err) {
+      toast.error("Delete failed");
     }
-  };
+  }
+};
+
 
   // ---------------- JSX ----------------
   return (

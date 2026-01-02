@@ -110,7 +110,6 @@ const handleDownloadLandscapePDF = (className, classData) => {
   });
 
   const pageWidth = doc.internal.pageSize.getWidth();
-  const pageHeight = doc.internal.pageSize.getHeight();
 
   // ---------- HEADER ----------
   doc.setFontSize(22);
@@ -121,24 +120,18 @@ const handleDownloadLandscapePDF = (className, classData) => {
   });
 
   // ---------- DATA PREPARATION ----------
-  const tableColumn = [
-    "DAY",
-    ...periods.map((p) => (p === "Lunch" ? "LUNCH" : `P${p}`)),
-  ];
+  const tableColumn = ["DAY", ...periods.map((p) => (p === "Lunch" ? "LUNCH" : `P${p}`))];
 
   const tableRows = days.map((day) => {
     const row = [day.toUpperCase()];
     periods.forEach((p) => {
-      const entry = classData.find(
-        (item) => item.day === day && item.period === p
-      );
+      const entry = classData.find((item) => item.day === day && item.period === p);
 
       if (p === "Lunch") {
-        // Explicitly adding the time for Lunch Break
-        row.push(`BREAK\n15:40 - 16:10`); 
+        row.push(`BREAK\n15:40 - 16:10`);
       } else if (entry) {
-        // Adding Subject, Teacher, and Time
-        row.push(`${entry.subject}\n${entry.teacher}\n${entry.time || ""}`);
+        // Separate Subject and Teacher for styling
+        row.push(`${entry.subject}\n${entry.teacher || ""}\n${entry.time || ""}`);
       } else {
         row.push("");
       }
@@ -152,10 +145,7 @@ const handleDownloadLandscapePDF = (className, classData) => {
     head: [tableColumn],
     body: tableRows,
     theme: "grid",
-    
-    // Stretch to fill width
     margin: { left: 10, right: 10, bottom: 10 },
-    
     styles: {
       fontSize: 9,
       cellPadding: 3,
@@ -163,11 +153,8 @@ const handleDownloadLandscapePDF = (className, classData) => {
       valign: "middle",
       textColor: [40, 40, 40],
       overflow: 'linebreak',
-      // 🔥 STRETCH VERTICALLY: 
-      // pageHeight (210) - startY (28) - margins / (5 days + header)
-      minCellHeight: 32, 
+      minCellHeight: 32,
     },
-
     headStyles: {
       fillColor: [13, 148, 136],
       textColor: 255,
@@ -175,27 +162,40 @@ const handleDownloadLandscapePDF = (className, classData) => {
       fontSize: 11,
       minCellHeight: 12,
     },
-
     columnStyles: {
-      0: {
-        fontStyle: "bold",
-        fillColor: [245, 245, 245],
-        cellWidth: 25,
-      },
+      0: { fontStyle: "bold", fillColor: [245, 245, 245], cellWidth: 25 },
     },
-
     didParseCell: (data) => {
-      // Style the Lunch/Break specifically
-      if (data.cell.text.some(t => t.includes("BREAK"))) {
+      const text = data.cell.text;
+
+      // 🔹 Lunch/Break styling
+      if (text.some(t => t.includes("BREAK"))) {
         data.cell.styles.fillColor = [255, 247, 237];
         data.cell.styles.textColor = [234, 88, 12];
         data.cell.styles.fontStyle = "bold";
+      }
+
+      // 🔹 Bold the subject, shrink the teacher font
+      if (text.length === 3) {
+        // text[0] = subject, text[1] = teacher, text[2] = time
+        if (text[0]) {
+          data.cell.styles.fontStyle = "bold"; // Bold subject
+        }
+        if (text[1]) {
+          data.cell.styles.fontSize = 7;       // Smaller teacher
+          data.cell.styles.textColor = [80, 80, 80];
+          // Keep fontStyle normal for teacher
+          if (data.cell.styles.fontStyle === "bold") data.cell.styles.fontStyle = "normal";
+        }
       }
     },
   });
 
   doc.save(`${className}_Full_Landscape_Timetable.pdf`);
 };
+
+
+
 
 
     // ---------------- RENDER ----------------

@@ -44,7 +44,12 @@ const LoginPage = () => {
       case "Special": return "/special";
       case "General": return "/General";
       case "PupilAttendance": return "/PupilAttendance";
-      case "StaffAttendanceSimple": return "/StaffAttendanceSimple";
+      case "StaffAttendanceSimple": return "/StaffAttDashboard";
+      case "SupervisorOne": return "/SupervisorOneDashboard";
+      case "SupervisorTwo": return "/SupervisorTwoDashboard";
+      case "SupervisorThree": return "/SupervisorThreeDashboard";
+      case "SupervisorFour": return "/StaffAttDashboard";
+      case "SupervisorFive": return "/StaffAttDashboard";
       default: return "/admin";
     }
   };

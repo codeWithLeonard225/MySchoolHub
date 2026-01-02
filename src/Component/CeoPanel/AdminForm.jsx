@@ -16,7 +16,7 @@ const ADMIN_PASSWORD = "superadmin";
 
 // Define the available access types for the new form
 const ACCESS_TYPES = [
-   
+
     "DEVELOPER",
     "Private",
     "PrivateSpecial",
@@ -30,10 +30,11 @@ const AdminForm = () => {
     const [adminID, setAdminID] = useState("");
     const [adminName, setAdminName] = useState("");
     const [schoolId, setSchoolId] = useState("");
+    const [schoolName, setSchoolName] = useState("");
     const [adminType, setAdminType] = useState("");
     const [editingId, setEditingId] = useState(null);
     const [admins, setAdmins] = useState([]);
-     const [role, setRole] = useState(""); // Role state remains a string
+    const [role, setRole] = useState(""); // Role state remains a string
 
     // --- 2. SCHOOL ACCESS FORM STATES (NEW - MODIFIED) ---
     const [accessSchoolId, setAccessSchoolId] = useState("");
@@ -52,9 +53,10 @@ const AdminForm = () => {
         setAdminID("");
         setAdminName("");
         setSchoolId("");
+        setSchoolName(""); // ✅ added
         setAdminType("");
         setEditingId(null);
-           setRole(""); // Reset role to empty string
+        setRole(""); // Reset role to empty string
     };
 
     // Helper to reset the School Access form fields (MODIFIED)
@@ -100,9 +102,10 @@ const AdminForm = () => {
         const adminData = {
             adminID,
             adminName,
+            schoolName, // ✅ added
             schoolId,
             adminType,
-             role, // Role value comes from the text input state
+            role, // Role value comes from the text input state
         };
 
         try {
@@ -144,8 +147,9 @@ const AdminForm = () => {
         setAdminID(admin.adminID);
         setAdminName(admin.adminName);
         setSchoolId(admin.schoolId);
+         setSchoolName(admin.schoolName || "");
         setAdminType(admin.adminType);
-           setRole(admin.role || ""); // Load existing role string
+        setRole(admin.role || ""); // Load existing role string
     };
 
     // 4. Function to delete an admin record
@@ -357,6 +361,21 @@ const AdminForm = () => {
                             placeholder="Enter school ID"
                         />
                     </div>
+                    {/* School Name Field */}
+                    <div>
+                        <label className="block font-semibold mb-1 text-gray-700">
+                            School Name
+                        </label>
+                        <input
+                            type="text"
+                            value={schoolName}
+                            onChange={(e) => setSchoolName(e.target.value)}
+                            className="w-full border px-4 py-2 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 transition duration-150"
+                            placeholder="Enter full school name"
+                            required
+                        />
+                    </div>
+
 
                     {/* Admin Type Selection Field */}
                     <div>
@@ -374,10 +393,16 @@ const AdminForm = () => {
                             <option value="Special">Special/Super Admin</option>
                             <option value="PupilAttendance">Pupil Attendance</option>
                             <option value="StaffAttendanceSimple">Staff Attendance</option>
+                            <option value="SupervisorOne">Supervisor One</option>
+                            <option value="SupervisorTwo">Supervisor Two</option>
+                            <option value="SupervisorThree">Supervisor Three</option>
+                            <option value="SupervisorFour">Supervisor Four</option>
+                            <option value="SupervisorFive">Supervisor Five</option>
+                          
                             <option value="General">General</option>
                         </select>
                     </div>
-                      {/* ✅ UPDATED: Role is now a text input */}
+                    {/* ✅ UPDATED: Role is now a text input */}
                     <div className="flex-1">
                         <label className="block font-semibold mb-1 text-gray-700">Role</label>
                         <input
@@ -497,6 +522,7 @@ const AdminForm = () => {
                         />
                         {editingAccessId && <p className="text-sm text-red-500 mt-1">School ID cannot be changed when updating access.</p>}
                     </div>
+
 
                     {/* Access Type Checkboxes (MODIFIED) */}
                     <div>

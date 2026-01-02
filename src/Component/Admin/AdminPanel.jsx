@@ -48,6 +48,7 @@ import IDCardPage from "../Voters/IDCardPage";
 import LogoutPage from "../Admin/LogoutPage"
 import AttendancePage from "../Voters/AttendancePage"
 import StaffAttendance from "../TeacherAssignment/StaffAttendance";
+import GeneralStaffAttendanceReport from "../TeacherAssignment/GeneralStaffAttendanceReport";
 import StaffClocking from "../TeacherAssignment/StaffClocking";
 import TimetableEntry from "../TeacherAssignment/TimetableEntry";
 import WeeklyTimetableReport from "../TeacherAssignment/WeeklyTimetableReport";
@@ -131,15 +132,21 @@ const NAV_ITEMS = [
     ],
   },
 
-    {
+  {
     key: "pupilAttendance",
     label: "Pupil Attendance",
     icon: <MdWarning />, // 📖
   },
-    {
+  {
     key: "staffAttendance",
-    label: "Staff Attendance",
-    icon: <MdWarning />, // 📖
+    label: "Staff  Record",
+    icon: <MdBarChart />,
+    children: [
+      { key: "staffAttendance", label: "Staff Attendance", icon: <MdPerson /> },
+      { key: "GeneralStaffAttendanceReport", label: "Staff Attendance Report", icon: <MdPerson /> },
+
+
+    ],
   },
 
   {
@@ -155,7 +162,7 @@ const NAV_ITEMS = [
 
     ],
   },
-  
+
   {
     key: "LogoutPage",
     label: "Logout",
@@ -256,9 +263,10 @@ function AdminPanel() {
       case "PupilIDCard": return <PupilIDCard />;
       case "IDCardPage": return <IDCardPage />;
       case "schoolreg": return <SchoolRegistration />;
-        case "staffAttendance": return <StaffAttendance />;
-        case "pupilAttendance": return <AttendancePage />;
-        case "staffClockin": return <StaffClocking />;
+      case "staffAttendance": return <StaffAttendance />;
+      case "GeneralStaffAttendanceReport": return <GeneralStaffAttendanceReport />;
+      case "pupilAttendance": return <AttendancePage />;
+      case "staffClockin": return <StaffClocking />;
       case "TimetableEntry": return <TimetableEntry />;
       case "WeeklyTimetableReport": return <WeeklyTimetableReport />;
       case "TimeTableTeacherAtt": return <TimeTableTeacherAtt />;

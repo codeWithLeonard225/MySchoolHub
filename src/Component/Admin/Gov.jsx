@@ -152,11 +152,7 @@ const NAV_ITEMS = [
     label: "Logout",
     icon: <MdWarning />, // 📖
   },
-  {
-    key: "RestoreTimetable",
-    label: "RestoreTimetable",
-    icon: <MdWarning />, // 📖
-  },
+ 
 
 ];
 

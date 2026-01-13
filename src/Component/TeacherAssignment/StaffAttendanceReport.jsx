@@ -28,7 +28,7 @@ const StaffSelfAttendanceReport = () => {
           collection(schoollpq, "StaffAttendanceSimple"),
           where("schoolId", "==", schoolId),
           where("staffID", "==", teacherID),
-          orderBy("date", "desc")
+       
         );
         const querySnapshot = await getDocs(q);
         const records = querySnapshot.docs.map(doc => ({

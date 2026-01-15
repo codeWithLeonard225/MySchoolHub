@@ -53,7 +53,7 @@ import TimeTableTeacherAtt from "../TeacherAssignment/TimeTableTeacherAtt";
 import TimeTableDailyAttendanceReport from "../TeacherAssignment/TimeTableDailyAttendanceReport";
 import TimeTableTeacherReport from "../TeacherAssignment/TimeTableTeacherReport";
 import RestoreTimetable from "../TeacherAssignment/RestoreTimetable";
-import SSS1periodAtt from "../TeacherAssignment/SSS2periodAtt";
+import EditAttendancePage from "../TeacherAssignment/EditAttendancePage";
 
 
 
@@ -114,11 +114,7 @@ const NAV_ITEMS = [
     label: "Pupil Attendance",
     icon: <MdWarning />, // 📖
   },
-  {
-    key: "staffAttendance",
-    label: "Staff Attendance",
-    icon: <MdWarning />, // 📖
-  },
+ 
 
    {
     key: "staffAttendance",
@@ -142,7 +138,7 @@ const NAV_ITEMS = [
       { key: "TimeTableTeacherAtt", label: "TimeTableTeacherAtt", icon: <MdPerson /> },
       { key: "TimeTableDailyAttendanceReport", label: "DailyAttendanceReport", icon: <MdPerson /> },
       { key: "TimeTableTeacherReport", label: "MonthlyAttendanceReport", icon: <MdPerson /> },
-      { key: "SSS1periodAtt", label: "SSS1periodAtt", icon: <MdPerson /> },
+      // { key: "EditAttendancePage", label: "EditAttendancePage", icon: <MdPerson /> },
 
     ],
   },
@@ -254,7 +250,7 @@ function Gov() {
       case "TimeTableTeacherReport": return <TimeTableTeacherReport />;
       case "pupilAttendance": return <AttendancePage />;
       case "RestoreTimetable": return <RestoreTimetable />;
-      case "SSS1periodAtt": return <SSS1periodAtt />;
+      case "EditAttendancePage": return <EditAttendancePage />;
 
 
 

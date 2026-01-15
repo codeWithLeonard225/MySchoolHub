@@ -45,7 +45,9 @@ const SSS3periodAtt = () => {
     };
 
     const [currentMonday, setCurrentMonday] = useState(getMonday(new Date()));
-    const [activeDay, setActiveDay] = useState(days[new Date().getDay() - 1] || "Monday");
+    const [activeDay, setActiveDay] = useState(
+        days[new Date().getDay() - 1] || "Monday"
+    );
 
     const getFriday = (monday) => {
         const friday = new Date(monday);
@@ -130,9 +132,8 @@ const SSS3periodAtt = () => {
                 const topics = {};
                 querySnapshot.forEach((doc) => {
                     const data = doc.data();
-                    const key = `${data.teacherName}-${data.className}-${data.period}-${data.date}`;
-                    marks[key] = data.status;
-                    if (data.topic) topics[key] = data.topic;
+                    marks[data.timetableId] = data.status;
+                    if (data.topic) topics[data.timetableId] = data.topic;
                 });
                 setAttendanceLog(marks);
                 setTopicLog(topics);
@@ -147,25 +148,29 @@ const SSS3periodAtt = () => {
     const availableClasses = useMemo(() => {
         return [...new Set(timetableToday
             .map((t) => t.className)
-            .filter((className) => className && className.startsWith("SSS 3"))
+            .filter((className) => className && className.startsWith("SSS 3")) // Only SSS 2 in dropdown
         )];
     }, [timetableToday]);
 
     const filteredList = useMemo(() => {
         return timetableToday.filter((t) => {
+            // 1. Basic check: Must be an SSS 1 class
             const isSSS3 = t.className && t.className.startsWith("SSS 3");
+
+            // 2. Filter check: If a specific class is selected in dropdown, match it. 
+            // Otherwise, just ensure it's any SSS 2 class.
             const matchesFilter = filterClass === "" ? isSSS3 : t.className === filterClass;
+
+            // 3. Logic check: Not lunch and matches our SSS 1 criteria
             return t.period !== "Lunch" && matchesFilter;
         });
     }, [timetableToday, filterClass]);
 
     // ---------------- MARK ATTENDANCE ----------------
     const handleMarkStatus = async (item, status) => {
-        const key = `${item.teacher}-${item.className}-${item.period}-${activeCalendarDate}`;
         try {
             await addDoc(collection(schoollpq, "TeacherAttendance"), {
                 schoolId,
-                attendanceKey: key,
                 timetableId: item.id,
                 teacherName: item.teacher,
                 subject: item.subject,
@@ -175,16 +180,14 @@ const SSS3periodAtt = () => {
                 date: activeCalendarDate,
                 day: activeDay,
                 status,
-                topic: topicLog[key] || "",
+                topic: topicLog[item.id] || "",
                 markedAt: serverTimestamp(),
                 markedBy: user?.fullName || "Admin",
             });
 
-            // Update state
-            const updated = { ...attendanceLog, [key]: status };
+            const updated = { ...attendanceLog, [item.id]: status };
             setAttendanceLog(updated);
             attendanceCache.setItem(`${schoolId}-${activeCalendarDate}`, updated).catch(console.error);
-
             toast.success(`Marked ${status}`);
         } catch (err) {
             console.error(err);
@@ -253,10 +256,9 @@ const SSS3periodAtt = () => {
                                 <div className="text-center py-10 text-gray-300 italic">No periods scheduled for this filter.</div>
                             ) : (
                                 filteredList.map((item) => {
-                                    const key = `${item.teacher}-${item.className}-${item.period}-${activeCalendarDate}`;
-                                    const currentStatus = attendanceLog[key];
+                                    const currentStatus = attendanceLog[item.id];
                                     return (
-                                        <div key={`period-${key}`} className={`flex flex-col md:flex-row items-center justify-between p-4 rounded-2xl border-2 transition-all ${currentStatus ? 'bg-gray-50 border-transparent shadow-none' : 'bg-white border-gray-50 shadow-sm'}`}>
+                                        <div key={`period-${item.id}`} className={`flex flex-col md:flex-row items-center justify-between p-4 rounded-2xl border-2 transition-all ${currentStatus ? 'bg-gray-50 border-transparent shadow-none' : 'bg-white border-gray-50 shadow-sm'}`}>
                                             <div className="flex items-center gap-4 w-full md:w-auto">
                                                 <div className="h-10 w-10 rounded-lg bg-teal-50 text-teal-600 flex items-center justify-center font-black text-sm">
                                                     {item.period}
@@ -267,8 +269,8 @@ const SSS3periodAtt = () => {
                                                     <input
                                                         type="text"
                                                         placeholder="Enter Topic"
-                                                        value={topicLog[key] || ""}
-                                                        onChange={(e) => setTopicLog((prev) => ({ ...prev, [key]: e.target.value }))}
+                                                        value={topicLog[item.id] || ""}
+                                                        onChange={(e) => setTopicLog((prev) => ({ ...prev, [item.id]: e.target.value }))}
                                                         className="mt-1 w-full border px-2 py-1 rounded-lg text-[10px] outline-teal-500"
                                                     />
                                                 </div>
@@ -283,8 +285,8 @@ const SSS3periodAtt = () => {
                                                 ) : (
                                                     <div className="flex items-center gap-2">
                                                         <span className={`px-4 py-1.5 rounded-lg font-black text-[9px] uppercase tracking-wider ${currentStatus === "Present" ? "text-green-600 bg-green-100" :
-                                                            currentStatus === "Late" ? "text-yellow-600 bg-yellow-100" :
-                                                                "text-red-600 bg-red-100"
+                                                                currentStatus === "Late" ? "text-yellow-600 bg-yellow-100" :
+                                                                    "text-red-600 bg-red-100"
                                                             }`}>
                                                             ● {currentStatus}
                                                         </span>

@@ -53,6 +53,7 @@ import TimetableEntry from "../TeacherAssignment/TimetableEntry";
 import TimeTableTeacherAtt from "../TeacherAssignment/TimeTableTeacherAtt";
 import TimeTableDailyAttendanceReport from "../TeacherAssignment/TimeTableDailyAttendanceReport";
 import TimeTableTeacherReport from "../TeacherAssignment/TimeTableTeacherReport";
+import TermResult from "../TeacherAssignment/TermResult";
 
 
 // --- Navigation Items ---
@@ -104,6 +105,7 @@ const NAV_ITEMS = [
       { key: "SubGradeMatrixPage", label: "Sub Grade Sheet", icon: <MdPerson /> },
       { key: "ClassFullTermMatrixPage", label: "Term Grade Sheet", icon: <MdPerson /> },
       { key: "GeneralReportCard", label: "ReportCard", icon: <MdPerson /> },
+      { key: "TermResult", label: "TermResult", icon: <MdPerson /> },
       // { key: "Testing", label: "Testing", icon: <MdPerson /> },
 
     ],
@@ -242,6 +244,7 @@ function FeesPanel() {
       case "TeacherPupilsPage": return <TeacherPupilsPage />;
       case "SubGradeMatrixPage": return <SubGradeMatrixPage />;
       case "ClassFullTermMatrixPage": return <ClassFullTermMatrixPage />;
+      case "TermResult": return <TermResult />;
       case "GradeSheetPage": return <GradeSheetPage />;
       case "GeneralReportCard": return <GeneralReportCard />;
       case "AdminForm": return <AdminForm />;

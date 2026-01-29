@@ -54,6 +54,7 @@ import TimeTableDailyAttendanceReport from "../TeacherAssignment/TimeTableDailyA
 import TimeTableTeacherReport from "../TeacherAssignment/TimeTableTeacherReport";
 import RestoreTimetable from "../TeacherAssignment/RestoreTimetable";
 import EditAttendancePage from "../TeacherAssignment/EditAttendancePage";
+import TermResult from "../TeacherAssignment/TermResult";
 
 
 
@@ -95,6 +96,7 @@ const NAV_ITEMS = [
       { key: "SubGradeMatrixPage", label: "Sub Grade Sheet", icon: <MdPerson /> },
       { key: "ClassFullTermMatrixPage", label: "Term Grade Sheet", icon: <MdPerson /> },
       { key: "GeneralReportCard", label: "ReportCard", icon: <MdPerson /> },
+      { key: "TermResult", label: "TermResult", icon: <MdPerson /> },
       // { key: "Testing", label: "Testing", icon: <MdPerson /> },
 
     ],
@@ -232,6 +234,7 @@ function Gov() {
       case "GeneralReportCard": return <GeneralReportCard />;
       case "SubGradeMatrixPage": return <SubGradeMatrixPage />;
       case "ClassFullTermMatrixPage": return <ClassFullTermMatrixPage />;
+      case "TermResult": return <TermResult />;
       case "Testing": return <Testing />;
       case "AdminForm": return <AdminForm />;
       case "TeacherAssignmentReport": return <TeacherAssignmentReport />;

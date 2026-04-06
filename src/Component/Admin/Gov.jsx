@@ -55,6 +55,8 @@ import TimeTableTeacherReport from "../TeacherAssignment/TimeTableTeacherReport"
 import RestoreTimetable from "../TeacherAssignment/RestoreTimetable";
 import EditAttendancePage from "../TeacherAssignment/EditAttendancePage";
 import TermResult from "../TeacherAssignment/TermResult";
+import YearlyResult from "../TeacherAssignment/YearlyResult";
+import StudentIDCardData from "../Voters/StudentIDCardData";
 
 
 
@@ -97,6 +99,7 @@ const NAV_ITEMS = [
       { key: "ClassFullTermMatrixPage", label: "Term Grade Sheet", icon: <MdPerson /> },
       { key: "GeneralReportCard", label: "ReportCard", icon: <MdPerson /> },
       { key: "TermResult", label: "TermResult", icon: <MdPerson /> },
+      { key: "YearlyResult", label: "Yearly Result", icon: <MdPerson /> },
       // { key: "Testing", label: "Testing", icon: <MdPerson /> },
 
     ],
@@ -109,6 +112,7 @@ const NAV_ITEMS = [
       { key: "ModelSchoolIdCard", label: "ModelSchoolIdCard", icon: <MdPerson /> },
       { key: "IDCardPage", label: "IDCardPage", icon: <MdPerson /> },
       { key: "IDCardBackSection", label: "IDCardBackSection", icon: <MdPerson /> },
+      { key: "StudentIDCardData", label: "StudentIDCardData", icon: <MdPerson /> },
     ],
   },
   {
@@ -235,6 +239,7 @@ function Gov() {
       case "SubGradeMatrixPage": return <SubGradeMatrixPage />;
       case "ClassFullTermMatrixPage": return <ClassFullTermMatrixPage />;
       case "TermResult": return <TermResult />;
+      case "YearlyResult": return <YearlyResult />;
       case "Testing": return <Testing />;
       case "AdminForm": return <AdminForm />;
       case "TeacherAssignmentReport": return <TeacherAssignmentReport />;
@@ -254,6 +259,7 @@ function Gov() {
       case "pupilAttendance": return <AttendancePage />;
       case "RestoreTimetable": return <RestoreTimetable />;
       case "EditAttendancePage": return <EditAttendancePage />;
+      case "StudentIDCardData": return <StudentIDCardData />;
 
 
 

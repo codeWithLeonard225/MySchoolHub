@@ -57,6 +57,7 @@ import EditAttendancePage from "../TeacherAssignment/EditAttendancePage";
 import TermResult from "../TeacherAssignment/TermResult";
 import YearlyResult from "../TeacherAssignment/YearlyResult";
 import StudentIDCardData from "../Voters/StudentIDCardData";
+import WASCEForm from "../Voters/WASCEForm";
 
 
 
@@ -70,6 +71,7 @@ const NAV_ITEMS = [
       { key: "Form", label: " Pupils", icon: <MdPerson /> },
       { key: "class", label: " Class", icon: <MdPerson /> },
       { key: "classList", label: "Class List", icon: <MdPerson /> },
+      { key: "WASCEForm", label: "Wasce Entering", icon: <MdPerson /> },
     ],
   },
 
@@ -227,6 +229,7 @@ function Gov() {
     switch (activeTab) {
       case "dashboard": return <RegDashboard />;
       case "Form": return <Registration />;
+      case "WASCEForm": return <WASCEForm />;
       case "class": return <ClassRegistration />;
       case "classList": return <StudentFilterPage />;
       case "fees": return <FeeReceipt />;

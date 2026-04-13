@@ -6,10 +6,6 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { useLocation } from "react-router-dom";
 
-
-// Ensure you have installed these packages:
-// npm install jspdf jspdf-autotable
-
 const GeneralReportCard = () => {
   const [academicYear, setAcademicYear] = useState("");
   const [academicYears, setAcademicYears] = useState([]);

@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { toast } from "react-toastify";
 import { db } from "../../../firebase";
-import { collection, addDoc, onSnapshot, doc, deleteDoc, updateDoc } from "firebase/firestore";
+// ADDED query and where here
+import { collection, addDoc, onSnapshot, doc, deleteDoc, updateDoc, query, where } from "firebase/firestore";
 import { v4 as uuidv4 } from "uuid";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../Security/AuthContext";
@@ -11,6 +12,12 @@ import "jspdf-autotable";
 
 const CLOUD_NAME = "dxcrlpike";
 const UPLOAD_PRESET = "LeoTechSl Projects";
+
+const FACULTY_SUBJECTS = {
+    Art: ["Mathematics", "English", "Health Science", "Literature", "Geography", "CRS", "History", "MIL", "Politics & Governance"],
+    Science: ["Agricultural Science", "Biology", "Chemistry", "Engineering Science", "English", "Mathematics", "Physics", "Science Core"],
+    Commercial: ["Mathematics", "English", "Health Science", "Business Accounting", "Principles of Account", "Commerce", "Economics", "Business Management", "Clerical Office Duties"]
+};
 
 const WasceReg = () => {
     const location = useLocation();
@@ -23,19 +30,22 @@ const WasceReg = () => {
     const [uploadProgress, setUploadProgress] = useState(0);
     const [students, setStudents] = useState([]);
     const [searchTerm, setSearchTerm] = useState("");
-    const [selectedImage, setSelectedImage] = useState(null); // For Modal
-    const [editingId, setEditingId] = useState(null); // For Edit Mode
+    const [selectedImage, setSelectedImage] = useState(null);
+    const [editingId, setEditingId] = useState(null);
 
-  
+    // Filter states
+    const [classList, setClassList] = useState([]);
+    const [selectedClassName, setSelectedClassName] = useState("");
+    const [availablePupils, setAvailablePupils] = useState([]);
 
-const {
-    schoolName,
-    schoolLogoUrl,
-    schoolAddress,
-    schoolMotto,
-    schoolContact,
-    email,
-} = location.state || {};
+    const {
+        schoolName,
+        schoolLogoUrl,
+        schoolAddress,
+        schoolMotto,
+        schoolContact,
+        email,
+    } = location.state || {};
 
     const [formData, setFormData] = useState({
         studentID: uuidv4().slice(0, 8),
@@ -53,8 +63,71 @@ const {
         photoNo: "",
         pupilPhoto: null,
         beceResultPhoto: null,
+        faculty: "",
+        selectedSubjects: [],
         schoolId: currentSchoolId,
     });
+
+    // 1. Fetch Classes
+    useEffect(() => {
+        if (currentSchoolId === "N/A") return;
+        const q = query(collection(db, "ClassesAndSubjects"), where("schoolId", "==", currentSchoolId));
+        const unsub = onSnapshot(q, (snapshot) => {
+            const data = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+            setClassList(data);
+        });
+        return () => unsub();
+    }, [currentSchoolId]);
+
+    // 2. Fetch Pupils in selected class
+    useEffect(() => {
+        if (!selectedClassName || currentSchoolId === "N/A") {
+            setAvailablePupils([]);
+            return;
+        }
+        const q = query(
+            collection(db, "PupilsReg"),
+            where("class", "==", selectedClassName),
+            where("schoolId", "==", currentSchoolId)
+        );
+        const unsub = onSnapshot(q, (snapshot) => {
+            const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            setAvailablePupils(data);
+        });
+        return () => unsub();
+    }, [selectedClassName, currentSchoolId]);
+
+    // 3. Sync Registered Wassce Candidates
+    useEffect(() => {
+        const q = query(collection(db, "WassceRegistrations"), where("schoolId", "==", currentSchoolId));
+        const unsub = onSnapshot(q, (snapshot) => {
+            const list = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+            setStudents(list);
+        });
+        return () => unsub();
+    }, [currentSchoolId]);
+
+    // Age Calculation
+    useEffect(() => {
+        if (formData.dob) {
+            const birthDate = new Date(formData.dob);
+            const today = new Date();
+            let calculatedAge = today.getFullYear() - birthDate.getFullYear();
+            setFormData(prev => ({ ...prev, age: calculatedAge.toString() }));
+        }
+    }, [formData.dob]);
+
+    const handleInputChange = (e) => {
+        const { name, value } = e.target;
+        setFormData((prev) => ({ ...prev, [name]: value }));
+    };
+
+    const handleSelectPupilFromList = (e) => {
+        const pupilName = e.target.value;
+        if (pupilName) {
+            setFormData(prev => ({ ...prev, studentName: pupilName.toUpperCase() }));
+        }
+    };
 
     useEffect(() => {
         const unsub = onSnapshot(collection(db, "WassceRegistrations"), (snapshot) => {
@@ -73,10 +146,7 @@ const {
         }
     }, [formData.dob]);
 
-    const handleInputChange = (e) => {
-        const { name, value } = e.target;
-        setFormData((prev) => ({ ...prev, [name]: value }));
-    };
+
 
     const handleFileUpload = async (e, fieldType) => {
         const file = e.target.files[0];
@@ -108,6 +178,10 @@ const {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        if (formData.selectedSubjects.length < 9) {
+        toast.error("Please select at least 9 subjects!");
+        return;
+    }
         setIsSubmitting(true);
         try {
             if (editingId) {
@@ -130,15 +204,26 @@ const {
         }
     };
 
-    const resetForm = () => {
-        setFormData({
-            studentID: uuidv4().slice(0, 8),
-            studentName: "", dob: "", age: "", gender: "", address: "",
-            mobileNumber: "", academicYear: "", previousSchool: "",
-            beceIndexNo: "", aggregate: "", photoNo: "",
-            pupilPhoto: null, beceResultPhoto: null, schoolId: currentSchoolId,
+    const handleSubjectToggle = (subject) => {
+        setFormData(prev => {
+            const isSelected = prev.selectedSubjects.includes(subject);
+            const updatedSubjects = isSelected
+                ? prev.selectedSubjects.filter(s => s !== subject)
+                : [...prev.selectedSubjects, subject];
+            return { ...prev, selectedSubjects: updatedSubjects };
         });
     };
+
+    // Update resetForm to include these new fields
+    const resetForm = () => {
+        setFormData({
+            // ... existing reset fields
+            faculty: "",
+            selectedSubjects: [],
+        });
+    };
+
+
 
     const handleDelete = async (id) => {
         if (window.confirm("Delete this student permanently?")) {
@@ -147,31 +232,31 @@ const {
         }
     };
 
- const handleEdit = (stu) => {
-    setFormData({
-        studentID: stu.studentID || "",
-        studentName: stu.studentName || "",
-        dob: stu.dob || "",
-        age: stu.age || "",
-        gender: stu.gender || "",
-        address: stu.address || "",
-        mobileNumber: stu.mobileNumber || "",
-        previousClass: stu.previousClass || "",
-        academicYear: stu.academicYear || "",
-        previousSchool: stu.previousSchool || "",
-        beceIndexNo: stu.beceIndexNo || "",
-        aggregate: stu.aggregate || "",
-        photoNo: stu.photoNo || "",
-        pupilPhoto: stu.pupilPhoto || null,
-        beceResultPhoto: stu.beceResultPhoto || null,
-        schoolId: stu.schoolId || "",
-    });
+    const handleEdit = (stu) => {
+        setFormData({
+            studentID: stu.studentID || "",
+            studentName: stu.studentName || "",
+            dob: stu.dob || "",
+            age: stu.age || "",
+            gender: stu.gender || "",
+            address: stu.address || "",
+            mobileNumber: stu.mobileNumber || "",
+            previousClass: stu.previousClass || "",
+            academicYear: stu.academicYear || "",
+            previousSchool: stu.previousSchool || "",
+            beceIndexNo: stu.beceIndexNo || "",
+            aggregate: stu.aggregate || "",
+            photoNo: stu.photoNo || "",
+            pupilPhoto: stu.pupilPhoto || null,
+            beceResultPhoto: stu.beceResultPhoto || null,
+            schoolId: stu.schoolId || "",
+        });
 
-    setEditingId(stu.id);
-    window.scrollTo({ top: 0, behavior: "smooth" });
-};
+        setEditingId(stu.id);
+        window.scrollTo({ top: 0, behavior: "smooth" });
+    };
 
-const generatePDF = async (stu) => {
+   const generatePDF = async (stu) => {
     const doc = new jsPDF();
 
     // Helper to load image
@@ -190,10 +275,7 @@ const generatePDF = async (stu) => {
 
     let y = 20;
 
-    // ===============================
     // 🏫 SCHOOL HEADER
-    // ===============================
-
     doc.setFontSize(18);
     doc.setFont(undefined, "bold");
     doc.text(schoolName || "SCHOOL NAME", 105, y, { align: "center" });
@@ -201,18 +283,19 @@ const generatePDF = async (stu) => {
     y += 5;
     doc.setDrawColor(0);
     doc.line(20, y, 190, y);
-
     y += 10;
 
-    // Logo (Left)
+
+    // 🖼 LOGOS (Left and Right Corners)
     if (logo) {
+        // Left Logo
         doc.addImage(logo, "PNG", 20, y, 25, 25);
+        // Right Logo (210mm total width - 20mm margin - 25mm image width = 165)
+        doc.addImage(logo, "PNG", 165, y, 25, 25);
     }
 
-    // School Details (Center)
     doc.setFontSize(10);
     doc.setFont(undefined, "normal");
-
     doc.text(schoolAddress || "Address", 105, y + 5, { align: "center" });
     doc.text(schoolMotto || "Motto", 105, y + 12, { align: "center" });
     doc.text(schoolContact || "Contact", 105, y + 19, { align: "center" });
@@ -223,28 +306,29 @@ const generatePDF = async (stu) => {
 
     y += 35;
 
-    // ===============================
     // 📄 TITLE
-    // ===============================
     doc.setFontSize(14);
     doc.setFont(undefined, "bold");
     doc.text("WASSCE REGISTRATION FORM", 105, y, { align: "center" });
 
-    y += 30;
+    y += 20; // Reduced gap slightly to fit subjects better
 
     doc.setFontSize(11);
     doc.setFont(undefined, "normal");
 
-    // ===============================
     // 📋 STUDENT DATA
-    // ===============================
+    const startDataY = y; 
     const addLine = (label, value) => {
-        doc.text(`${label}: ${value || ""}`, 20, y);
+        doc.setFont(undefined, "bold");
+        doc.text(`${label}:`, 20, y);
+        doc.setFont(undefined, "normal");
+        doc.text(`${value || ""}`, 55, y); // Aligned values for better look
         y += 8;
     };
 
     addLine("Student ID", stu.studentID);
     addLine("Full Name", stu.studentName);
+    addLine("Faculty", stu.faculty);
     addLine("Gender", stu.gender);
     addLine("DOB", stu.dob);
     addLine("Age", stu.age);
@@ -256,29 +340,39 @@ const generatePDF = async (stu) => {
     addLine("Aggregate", stu.aggregate);
     addLine("Photo No", stu.photoNo);
 
-    // ===============================
-    // 🖼 IMAGES
-    // ===============================
+    // 🖼 IMAGES (Aligned with the data block)
+    if (stu.pupilPhoto) {
+        doc.addImage(stu.pupilPhoto, "JPEG", 140, startDataY, 50, 50);
+    }
 
-   const imageY = y - 100; // align with top of student info
+    if (stu.beceResultPhoto) {
+        doc.addImage(stu.beceResultPhoto, "JPEG", 140, startDataY + 55, 50, 60);
+    }
 
-if (stu.pupilPhoto) {
-    doc.addImage(stu.pupilPhoto, "JPEG", 140, imageY, 50, 50);
-}
+    // ✨ ADDED: SUBJECTS SECTION
+    // We check if y is high enough to move past the images
+    const subjectsY = Math.max(y, startDataY + 115) + 10; 
+    
+    doc.setDrawColor(200);
+    doc.line(20, subjectsY - 5, 190, subjectsY - 5); // Decorative separator
 
-if (stu.beceResultPhoto) {
-    doc.addImage(stu.beceResultPhoto, "JPEG", 140, imageY + 60, 50, 60);
-}
+    doc.setFont(undefined, "bold");
+    doc.text("REGISTERED SUBJECTS:", 20, subjectsY);
+    
+    doc.setFont(undefined, "normal");
+    const subjectList = stu.selectedSubjects?.join(", ") || "No subjects selected";
+    
+    // splitTextToSize ensures the text wraps if it's longer than the page width
+    const splitSubjects = doc.splitTextToSize(subjectList, 170);
+    doc.text(splitSubjects, 20, subjectsY + 7);
 
-    // ===============================
     // 💾 SAVE
-    // ===============================
     doc.save(`${stu.studentName}_WASSCE_FORM.pdf`);
 };
 
     const filteredStudents = students.filter(s =>
-        s.studentName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        s.beceIndexNo.includes(searchTerm)
+        s.studentName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        s.beceIndexNo?.includes(searchTerm)
     );
 
     return (
@@ -306,10 +400,100 @@ if (stu.beceResultPhoto) {
                                 <label className="text-xs font-bold uppercase">Photo No:</label>
                                 <input type="text" name="photoNo" value={formData.photoNo} onChange={handleInputChange} className="p-2 border-b-2 border-black outline-none" />
                             </div>
-                            <div className="flex flex-col md:col-span-2">
-                                <label className="text-xs font-bold uppercase">Full Student Name</label>
-                                <input type="text" name="studentName"value={formData.studentName} onChange={handleInputChange} className="p-2 border-b-2 border-black uppercase" required />
+                            {/* SELECT SECTION */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:col-span-2 bg-blue-50 p-3 border border-blue-200">
+                                <div className="flex flex-col">
+                                    <label className="text-xs font-bold uppercase text-blue-700">1. Filter by Class</label>
+                                    <select
+                                        className="p-2 border-b-2 border-blue-700 bg-white"
+                                        value={selectedClassName}
+                                        onChange={(e) => setSelectedClassName(e.target.value)}
+                                    >
+                                        <option value="">-- Select Class --</option>
+                                        {classList.map((cls) => (
+                                            <option key={cls.id} value={cls.className}>{cls.className}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div className="flex flex-col">
+                                    <label className="text-xs font-bold uppercase text-blue-700">2. Select Registered Pupil</label>
+                                    <select
+                                        className="p-2 border-b-2 border-blue-700 bg-white"
+                                        onChange={handleSelectPupilFromList}
+                                        disabled={!selectedClassName}
+                                    >
+                                        <option value="">-- Choose Name --</option>
+                                        {availablePupils.map((p) => (
+                                            <option key={p.id} value={p.fullName || p.studentName}>
+                                                {p.fullName || p.studentName}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
                             </div>
+
+                            <div className="flex flex-col md:col-span-2">
+                                <label className="text-xs font-bold uppercase">Full Student Name (Verified)</label>
+                                <input
+                                    type="text"
+                                    name="studentName"
+                                    value={formData.studentName}
+                                    onChange={handleInputChange}
+                                    className="p-2 border-b-2 border-black uppercase font-bold text-blue-900 bg-yellow-50"
+                                    required
+                                />
+                            </div>
+
+                            {/* FACULTY & SUBJECT SELECTION */}
+<div className="grid grid-cols-1 md:grid-cols-3 gap-6 bg-gray-50 p-4 border-2 border-black mt-4">
+    {/* Faculty Column */}
+    <div className="flex flex-col">
+        <label className="text-xs font-bold uppercase text-red-700">3. Select Faculty</label>
+        <select 
+            name="faculty"
+            value={formData.faculty}
+            onChange={(e) => setFormData(prev => ({...prev, faculty: e.target.value, selectedSubjects: []}))}
+            className="p-2 border-b-2 border-red-700 bg-white font-bold"
+            required
+        >
+            <option value="">-- Choose Faculty --</option>
+            <option value="Art">ART</option>
+            <option value="Science">SCIENCE</option>
+            <option value="Commercial">COMMERCIAL</option>
+        </select>
+    </div>
+
+    {/* Subjects Column */}
+    <div className="md:col-span-2">
+        <label className="text-xs font-bold uppercase text-red-700">
+            4. Select Subjects (Selected: {formData.selectedSubjects.length})
+        </label>
+        {!formData.faculty ? (
+            <div className="text-sm text-gray-400 italic mt-2 text-center p-4 border border-dashed border-gray-300">
+                Please select a faculty first
+            </div>
+        ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
+                {FACULTY_SUBJECTS[formData.faculty].map((sub) => (
+                    <label key={sub} className="flex items-center space-x-2 text-sm cursor-pointer hover:bg-white p-1 rounded">
+                        <input 
+                            type="checkbox"
+                            checked={formData.selectedSubjects.includes(sub)}
+                            onChange={() => handleSubjectToggle(sub)}
+                            className="w-4 h-4 accent-black"
+                        />
+                        <span>{sub}</span>
+                    </label>
+                ))}
+            </div>
+        )}
+        {formData.selectedSubjects.length < 9 && formData.faculty && (
+            <p className="text-[10px] text-red-600 font-bold mt-2 animate-pulse">
+                ⚠️ Min. 9 subjects required for WASSCE
+            </p>
+        )}
+    </div>
+</div>
                             <div className="flex flex-col">
                                 <label className="text-xs font-bold uppercase">Date of Birth</label>
                                 <input type="date" name="dob" value={formData.dob} onChange={handleInputChange} className="p-2 border-b-2 border-black" />
@@ -381,10 +565,10 @@ if (stu.beceResultPhoto) {
                     </div>
 
                     <div className="pt-8">
-                       <button type="submit" className="w-full bg-black text-white p-3 font-bold">
-                        {editingId ? "UPDATE RECORD" : "REGISTER STUDENT"}
-                    </button>
-                    {editingId && <button onClick={() => {setEditingId(null); resetForm();}} className="w-full bg-red-600 text-white p-2 mt-2">CANCEL EDIT</button>}
+                        <button type="submit" className="w-full bg-black text-white p-3 font-bold">
+                            {editingId ? "UPDATE RECORD" : "REGISTER STUDENT"}
+                        </button>
+                        {editingId && <button onClick={() => { setEditingId(null); resetForm(); }} className="w-full bg-red-600 text-white p-2 mt-2">CANCEL EDIT</button>}
                     </div>
                 </form>
 
@@ -392,9 +576,9 @@ if (stu.beceResultPhoto) {
                 <div className="mt-12">
                     <div className="flex flex-col md:flex-row justify-between mb-4 gap-4">
                         <h2 className="font-black uppercase">Registered Candidates</h2>
-                        <input 
-                            type="text" 
-                            placeholder="🔍 Search Name or Index..." 
+                        <input
+                            type="text"
+                            placeholder="🔍 Search Name or Index..."
                             className="p-2 border-2 border-black w-full md:w-64"
                             onChange={(e) => setSearchTerm(e.target.value)}
                         />
@@ -416,11 +600,11 @@ if (stu.beceResultPhoto) {
                                     <tr key={stu.id} className="text-sm border-b border-black hover:bg-gray-50">
                                         <td className="p-2 border">{stu.studentID}</td>
                                         <td className="p-2 border">
-                                            <img 
-                                                src={stu.pupilPhoto} 
+                                            <img
+                                                src={stu.pupilPhoto}
                                                 onClick={() => setSelectedImage(stu.pupilPhoto)}
-                                                className="w-10 h-10 object-cover cursor-zoom-in" 
-                                                alt="thumb" 
+                                                className="w-10 h-10 object-cover cursor-zoom-in"
+                                                alt="thumb"
                                             />
                                         </td>
                                         <td className="p-2 border font-bold">{stu.studentName}</td>

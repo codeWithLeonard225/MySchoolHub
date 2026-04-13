@@ -98,15 +98,24 @@ const WasceReg = () => {
     }, [selectedClassName, currentSchoolId]);
 
     // 3. Sync Registered Wassce Candidates
-    useEffect(() => {
-        const q = query(collection(db, "WassceRegistrations"), where("schoolId", "==", currentSchoolId));
-        const unsub = onSnapshot(q, (snapshot) => {
-            const list = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-            setStudents(list);
-        });
-        return () => unsub();
-    }, [currentSchoolId]);
+    // KEEP AND UPDATE THIS ONE
+useEffect(() => {
+    // Ensure we don't fetch if the school ID isn't loaded yet
+    if (!currentSchoolId || currentSchoolId === "N/A") return;
 
+    const q = query(
+        collection(db, "WassceRegistrations"), 
+        where("schoolId", "==", currentSchoolId)
+    );
+
+    const unsub = onSnapshot(q, (snapshot) => {
+        const list = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+        console.log("Fetched Students:", list); // Add this to debug
+        setStudents(list);
+    });
+
+    return () => unsub();
+}, [currentSchoolId]); // It will re-run correctly when the user/schoolId loads
     // Age Calculation
     useEffect(() => {
         if (formData.dob) {
@@ -129,13 +138,7 @@ const WasceReg = () => {
         }
     };
 
-    useEffect(() => {
-        const unsub = onSnapshot(collection(db, "WassceRegistrations"), (snapshot) => {
-            const list = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-            setStudents(list);
-        });
-        return () => unsub();
-    }, []);
+   
 
     useEffect(() => {
         if (formData.dob) {
@@ -176,34 +179,39 @@ const WasceReg = () => {
         }
     };
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        if (formData.selectedSubjects.length < 9) {
+   const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (formData.selectedSubjects.length < 9) {
         toast.error("Please select at least 9 subjects!");
         return;
     }
-        setIsSubmitting(true);
-        try {
-            if (editingId) {
-                await updateDoc(doc(db, "WassceRegistrations", editingId), formData);
-                toast.success("Record Updated!");
-                setEditingId(null);
-            } else {
-                await addDoc(collection(db, "WassceRegistrations"), {
-                    ...formData,
-                    studentName: formData.studentName.toUpperCase(),
-                    timestamp: new Date(),
-                });
-                toast.success("Registered Successfully!");
-            }
-            resetForm();
-        } catch (err) {
-            toast.error("Error saving data");
-        } finally {
-            setIsSubmitting(false);
-        }
+    setIsSubmitting(true);
+    
+    // Ensure we use the latest school ID, not just what was in state at start
+    const finalData = {
+        ...formData,
+        schoolId: currentSchoolId, 
+        studentName: formData.studentName.toUpperCase(),
+        timestamp: new Date(),
     };
 
+    try {
+        if (editingId) {
+            await updateDoc(doc(db, "WassceRegistrations", editingId), finalData);
+            toast.success("Record Updated!");
+            setEditingId(null);
+        } else {
+            await addDoc(collection(db, "WassceRegistrations"), finalData);
+            toast.success("Registered Successfully!");
+        }
+        resetForm();
+    } catch (err) {
+        console.error(err);
+        toast.error("Error saving data");
+    } finally {
+        setIsSubmitting(false);
+    }
+};
     const handleSubjectToggle = (subject) => {
         setFormData(prev => {
             const isSelected = prev.selectedSubjects.includes(subject);
@@ -215,13 +223,29 @@ const WasceReg = () => {
     };
 
     // Update resetForm to include these new fields
-    const resetForm = () => {
-        setFormData({
-            // ... existing reset fields
-            faculty: "",
-            selectedSubjects: [],
-        });
-    };
+   const resetForm = () => {
+    setFormData({
+        studentID: uuidv4().slice(0, 8), // Generate a new ID for the next registration
+        studentName: "",
+        dob: "",
+        age: "",
+        gender: "",
+        address: "",
+        mobileNumber: "",
+        previousClass: "",
+        academicYear: "",
+        previousSchool: "",
+        beceIndexNo: "",
+        aggregate: "",
+        photoNo: "",
+        pupilPhoto: null,
+        beceResultPhoto: null,
+        faculty: "",
+        selectedSubjects: [],
+        schoolId: currentSchoolId, // Keep the school ID so the next entry is valid
+    });
+    setEditingId(null); // Ensure editing mode is turned off
+};
 
 
 
@@ -250,6 +274,8 @@ const WasceReg = () => {
             pupilPhoto: stu.pupilPhoto || null,
             beceResultPhoto: stu.beceResultPhoto || null,
             schoolId: stu.schoolId || "",
+            faculty: stu.faculty || "",
+        selectedSubjects: stu.selectedSubjects || [],
         });
 
         setEditingId(stu.id);

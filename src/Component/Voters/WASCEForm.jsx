@@ -8,7 +8,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../Security/AuthContext";
 import imageCompression from "browser-image-compression";
 import jsPDF from "jspdf";
-import "jspdf-autotable";
+import autoTable from "jspdf-autotable";
 
 const CLOUD_NAME = "dxcrlpike";
 const UPLOAD_PRESET = "LeoTechSl Projects";
@@ -56,7 +56,7 @@ const WasceReg = () => {
         address: "",
         mobileNumber: "",
         previousClass: "",
-        academicYear: "",
+        beceYear: "",
         previousSchool: "",
         beceIndexNo: "",
         aggregate: "",
@@ -99,23 +99,23 @@ const WasceReg = () => {
 
     // 3. Sync Registered Wassce Candidates
     // KEEP AND UPDATE THIS ONE
-useEffect(() => {
-    // Ensure we don't fetch if the school ID isn't loaded yet
-    if (!currentSchoolId || currentSchoolId === "N/A") return;
+    useEffect(() => {
+        // Ensure we don't fetch if the school ID isn't loaded yet
+        if (!currentSchoolId || currentSchoolId === "N/A") return;
 
-    const q = query(
-        collection(db, "WassceRegistrations"), 
-        where("schoolId", "==", currentSchoolId)
-    );
+        const q = query(
+            collection(db, "WassceRegistrations"),
+            where("schoolId", "==", currentSchoolId)
+        );
 
-    const unsub = onSnapshot(q, (snapshot) => {
-        const list = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-        console.log("Fetched Students:", list); // Add this to debug
-        setStudents(list);
-    });
+        const unsub = onSnapshot(q, (snapshot) => {
+            const list = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+            console.log("Fetched Students:", list); // Add this to debug
+            setStudents(list);
+        });
 
-    return () => unsub();
-}, [currentSchoolId]); // It will re-run correctly when the user/schoolId loads
+        return () => unsub();
+    }, [currentSchoolId]); // It will re-run correctly when the user/schoolId loads
     // Age Calculation
     useEffect(() => {
         if (formData.dob) {
@@ -138,7 +138,7 @@ useEffect(() => {
         }
     };
 
-   
+
 
     useEffect(() => {
         if (formData.dob) {
@@ -179,39 +179,39 @@ useEffect(() => {
         }
     };
 
-   const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (formData.selectedSubjects.length < 9) {
-        toast.error("Please select at least 9 subjects!");
-        return;
-    }
-    setIsSubmitting(true);
-    
-    // Ensure we use the latest school ID, not just what was in state at start
-    const finalData = {
-        ...formData,
-        schoolId: currentSchoolId, 
-        studentName: formData.studentName.toUpperCase(),
-        timestamp: new Date(),
-    };
-
-    try {
-        if (editingId) {
-            await updateDoc(doc(db, "WassceRegistrations", editingId), finalData);
-            toast.success("Record Updated!");
-            setEditingId(null);
-        } else {
-            await addDoc(collection(db, "WassceRegistrations"), finalData);
-            toast.success("Registered Successfully!");
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        if (formData.selectedSubjects.length < 9) {
+            toast.error("Please select at least 9 subjects!");
+            return;
         }
-        resetForm();
-    } catch (err) {
-        console.error(err);
-        toast.error("Error saving data");
-    } finally {
-        setIsSubmitting(false);
-    }
-};
+        setIsSubmitting(true);
+
+        // Ensure we use the latest school ID, not just what was in state at start
+        const finalData = {
+            ...formData,
+            schoolId: currentSchoolId,
+            studentName: formData.studentName.toUpperCase(),
+            timestamp: new Date(),
+        };
+
+        try {
+            if (editingId) {
+                await updateDoc(doc(db, "WassceRegistrations", editingId), finalData);
+                toast.success("Record Updated!");
+                setEditingId(null);
+            } else {
+                await addDoc(collection(db, "WassceRegistrations"), finalData);
+                toast.success("Registered Successfully!");
+            }
+            resetForm();
+        } catch (err) {
+            console.error(err);
+            toast.error("Error saving data");
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
     const handleSubjectToggle = (subject) => {
         setFormData(prev => {
             const isSelected = prev.selectedSubjects.includes(subject);
@@ -223,29 +223,29 @@ useEffect(() => {
     };
 
     // Update resetForm to include these new fields
-   const resetForm = () => {
-    setFormData({
-        studentID: uuidv4().slice(0, 8), // Generate a new ID for the next registration
-        studentName: "",
-        dob: "",
-        age: "",
-        gender: "",
-        address: "",
-        mobileNumber: "",
-        previousClass: "",
-        academicYear: "",
-        previousSchool: "",
-        beceIndexNo: "",
-        aggregate: "",
-        photoNo: "",
-        pupilPhoto: null,
-        beceResultPhoto: null,
-        faculty: "",
-        selectedSubjects: [],
-        schoolId: currentSchoolId, // Keep the school ID so the next entry is valid
-    });
-    setEditingId(null); // Ensure editing mode is turned off
-};
+    const resetForm = () => {
+        setFormData({
+            studentID: uuidv4().slice(0, 8), // Generate a new ID for the next registration
+            studentName: "",
+            dob: "",
+            age: "",
+            gender: "",
+            address: "",
+            mobileNumber: "",
+            previousClass: "",
+            beceYear: "",
+            previousSchool: "",
+            beceIndexNo: "",
+            aggregate: "",
+            photoNo: "",
+            pupilPhoto: null,
+            beceResultPhoto: null,
+            faculty: "",
+            selectedSubjects: [],
+            schoolId: currentSchoolId, // Keep the school ID so the next entry is valid
+        });
+        setEditingId(null); // Ensure editing mode is turned off
+    };
 
 
 
@@ -266,7 +266,7 @@ useEffect(() => {
             address: stu.address || "",
             mobileNumber: stu.mobileNumber || "",
             previousClass: stu.previousClass || "",
-            academicYear: stu.academicYear || "",
+            beceYear: stu.beceYear || "",
             previousSchool: stu.previousSchool || "",
             beceIndexNo: stu.beceIndexNo || "",
             aggregate: stu.aggregate || "",
@@ -275,17 +275,138 @@ useEffect(() => {
             beceResultPhoto: stu.beceResultPhoto || null,
             schoolId: stu.schoolId || "",
             faculty: stu.faculty || "",
-        selectedSubjects: stu.selectedSubjects || [],
+            selectedSubjects: stu.selectedSubjects || [],
         });
 
         setEditingId(stu.id);
         window.scrollTo({ top: 0, behavior: "smooth" });
     };
 
-   const generatePDF = async (stu) => {
-    const doc = new jsPDF();
 
-    // Helper to load image
+
+    const generatePDF = async (stu) => {
+        const doc = new jsPDF();
+
+        // Helper to load image
+        const loadImage = (url) =>
+            new Promise((resolve) => {
+                const img = new Image();
+                img.src = url;
+                img.crossOrigin = "anonymous";
+                img.onload = () => resolve(img);
+                img.onerror = () => resolve(null);
+            });
+
+        const [logo] = await Promise.all([
+            loadImage(schoolLogoUrl),
+        ]);
+
+        let y = 20;
+
+        // 🏫 SCHOOL HEADER
+        doc.setFontSize(18);
+        doc.setFont(undefined, "bold");
+        doc.text(schoolName || "SCHOOL NAME", 105, y, { align: "center" });
+
+        y += 5;
+        doc.setDrawColor(0);
+        doc.line(20, y, 190, y);
+        y += 10;
+
+
+        // 🖼 LOGOS (Left and Right Corners)
+        if (logo) {
+            // Left Logo
+            doc.addImage(logo, "PNG", 20, y, 25, 25);
+            // Right Logo (210mm total width - 20mm margin - 25mm image width = 165)
+            doc.addImage(logo, "PNG", 165, y, 25, 25);
+        }
+
+        doc.setFontSize(10);
+        doc.setFont(undefined, "normal");
+        doc.text(schoolAddress || "Address", 105, y + 5, { align: "center" });
+        doc.text(schoolMotto || "Motto", 105, y + 12, { align: "center" });
+        doc.text(schoolContact || "Contact", 105, y + 19, { align: "center" });
+
+        if (email) {
+            doc.text(email, 105, y + 26, { align: "center" });
+        }
+
+        y += 35;
+
+        // 📄 TITLE
+        doc.setFontSize(14);
+        doc.setFont(undefined, "bold");
+        doc.text("WASSCE REGISTRATION FORM", 105, y, { align: "center" });
+
+        y += 20; // Reduced gap slightly to fit subjects better
+
+        doc.setFontSize(11);
+        doc.setFont(undefined, "normal");
+
+        // 📋 STUDENT DATA
+        const startDataY = y;
+        const addLine = (label, value) => {
+            doc.setFont(undefined, "bold");
+            doc.text(`${label}:`, 20, y);
+            doc.setFont(undefined, "normal");
+            doc.text(`${value || ""}`, 55, y); // Aligned values for better look
+            y += 8;
+        };
+
+        addLine("Student ID", stu.studentID);
+        addLine("Full Name", stu.studentName);
+        addLine("Faculty", stu.faculty);
+        addLine("Gender", stu.gender);
+        addLine("DOB", stu.dob);
+        addLine("Age", stu.age);
+        addLine("Address", stu.address);
+        addLine("Mobile", stu.mobileNumber);
+        addLine("Previous School", stu.previousSchool);
+        addLine("Bece Year", stu.beceYear);
+        addLine("BECE Index No", stu.beceIndexNo);
+        addLine("Aggregate", stu.aggregate);
+        addLine("Photo No", stu.photoNo);
+
+        // 🖼 IMAGES (Aligned with the data block)
+        if (stu.pupilPhoto) {
+            doc.addImage(stu.pupilPhoto, "JPEG", 140, startDataY, 50, 50);
+        }
+
+        if (stu.beceResultPhoto) {
+            doc.addImage(stu.beceResultPhoto, "JPEG", 140, startDataY + 55, 50, 60);
+        }
+
+        // ✨ ADDED: SUBJECTS SECTION
+        // We check if y is high enough to move past the images
+        const subjectsY = Math.max(y, startDataY + 115) + 10;
+
+        doc.setDrawColor(200);
+        doc.line(20, subjectsY - 5, 190, subjectsY - 5); // Decorative separator
+
+        doc.setFont(undefined, "bold");
+        doc.text("REGISTERED SUBJECTS:", 20, subjectsY);
+
+        doc.setFont(undefined, "normal");
+        const subjectList = stu.selectedSubjects?.join(", ") || "No subjects selected";
+
+        // splitTextToSize ensures the text wraps if it's longer than the page width
+        const splitSubjects = doc.splitTextToSize(subjectList, 170);
+        doc.text(splitSubjects, 20, subjectsY + 7);
+
+        // 💾 SAVE
+        doc.save(`${stu.studentName}_WASSCE_FORM.pdf`);
+    };
+
+    const generateGeneralReport = async () => {
+    if (students.length === 0) {
+        toast.error("No data to export!");
+        return;
+    }
+
+    const doc = new jsPDF({ orientation: "landscape" });
+
+    // 🖼 Helper to load image
     const loadImage = (url) =>
         new Promise((resolve) => {
             const img = new Image();
@@ -295,39 +416,36 @@ useEffect(() => {
             img.onerror = () => resolve(null);
         });
 
-    const [logo] = await Promise.all([
-        loadImage(schoolLogoUrl),
-    ]);
+    const logo = await loadImage(schoolLogoUrl);
 
-    let y = 20;
+    let y = 15;
 
-    // 🏫 SCHOOL HEADER
+    // 🏫 SCHOOL NAME
     doc.setFontSize(18);
     doc.setFont(undefined, "bold");
-    doc.text(schoolName || "SCHOOL NAME", 105, y, { align: "center" });
+    doc.text(schoolName || "SCHOOL NAME", 148, y, { align: "center" });
 
     y += 5;
+
     doc.setDrawColor(0);
-    doc.line(20, y, 190, y);
+    doc.line(20, y, 280, y); // full width for landscape
     y += 10;
 
-
-    // 🖼 LOGOS (Left and Right Corners)
+    // 🖼 LOGOS (Left & Right)
     if (logo) {
-        // Left Logo
-        doc.addImage(logo, "PNG", 20, y, 25, 25);
-        // Right Logo (210mm total width - 20mm margin - 25mm image width = 165)
-        doc.addImage(logo, "PNG", 165, y, 25, 25);
+        doc.addImage(logo, "PNG", 20, y, 25, 25);   // left
+        doc.addImage(logo, "PNG", 260, y, 25, 25);  // right (adjusted for landscape)
     }
 
+    // 📍 SCHOOL DETAILS
     doc.setFontSize(10);
     doc.setFont(undefined, "normal");
-    doc.text(schoolAddress || "Address", 105, y + 5, { align: "center" });
-    doc.text(schoolMotto || "Motto", 105, y + 12, { align: "center" });
-    doc.text(schoolContact || "Contact", 105, y + 19, { align: "center" });
+    doc.text(schoolAddress || "Address", 148, y + 5, { align: "center" });
+    doc.text(schoolMotto || "Motto", 148, y + 12, { align: "center" });
+    doc.text(schoolContact || "Contact", 148, y + 19, { align: "center" });
 
     if (email) {
-        doc.text(email, 105, y + 26, { align: "center" });
+        doc.text(email, 148, y + 26, { align: "center" });
     }
 
     y += 35;
@@ -335,65 +453,88 @@ useEffect(() => {
     // 📄 TITLE
     doc.setFontSize(14);
     doc.setFont(undefined, "bold");
-    doc.text("WASSCE REGISTRATION FORM", 105, y, { align: "center" });
+    doc.text("WASSCE GENERAL REGISTRATION REPORT", 148, y, { align: "center" });
 
-    y += 20; // Reduced gap slightly to fit subjects better
+    y += 10;
 
-    doc.setFontSize(11);
+    // 👥 TOTAL COUNT
+    doc.setFontSize(10);
     doc.setFont(undefined, "normal");
+    doc.text(`Total Students: ${students.length}`, 20, y);
 
-    // 📋 STUDENT DATA
-    const startDataY = y; 
-    const addLine = (label, value) => {
-        doc.setFont(undefined, "bold");
-        doc.text(`${label}:`, 20, y);
-        doc.setFont(undefined, "normal");
-        doc.text(`${value || ""}`, 55, y); // Aligned values for better look
-        y += 8;
+    y += 5;
+
+    // 🧠 SPLIT NAME FUNCTION
+    const splitName = (fullName) => {
+        if (!fullName) return { surname: "", otherNames: "" };
+
+        const parts = fullName.trim().split(" ");
+        return {
+            surname: parts[0] || "",
+            otherNames: parts.slice(1).join(" ")
+        };
     };
 
-    addLine("Student ID", stu.studentID);
-    addLine("Full Name", stu.studentName);
-    addLine("Faculty", stu.faculty);
-    addLine("Gender", stu.gender);
-    addLine("DOB", stu.dob);
-    addLine("Age", stu.age);
-    addLine("Address", stu.address);
-    addLine("Mobile", stu.mobileNumber);
-    addLine("Previous School", stu.previousSchool);
-    addLine("Academic Year", stu.academicYear);
-    addLine("BECE Index No", stu.beceIndexNo);
-    addLine("Aggregate", stu.aggregate);
-    addLine("Photo No", stu.photoNo);
+    // 📊 TABLE DATA
+    const tableData = students.map((stu, index) => {
+        const { surname, otherNames } = splitName(stu.studentName);
 
-    // 🖼 IMAGES (Aligned with the data block)
-    if (stu.pupilPhoto) {
-        doc.addImage(stu.pupilPhoto, "JPEG", 140, startDataY, 50, 50);
-    }
+        return [
+            index + 1,
+            surname,
+            otherNames,
+            stu.gender || "",
+            stu.beceYear || "",
+            stu.beceIndexNo || "",
+            stu.address || "",
+            stu.mobileNumber || "",
+            stu.previousSchool || ""
+        ];
+    });
 
-    if (stu.beceResultPhoto) {
-        doc.addImage(stu.beceResultPhoto, "JPEG", 140, startDataY + 55, 50, 60);
-    }
+    // 📋 HEADERS
+    const headers = [[
+        "No",
+        "Surname",
+        "Other Name",
+        "Sex",
+        "BECE Year",
+        "Index Number",
+        "Address",
+        "Mobile",
+        "Previous School"
+    ]];
 
-    // ✨ ADDED: SUBJECTS SECTION
-    // We check if y is high enough to move past the images
-    const subjectsY = Math.max(y, startDataY + 115) + 10; 
-    
-    doc.setDrawColor(200);
-    doc.line(20, subjectsY - 5, 190, subjectsY - 5); // Decorative separator
-
-    doc.setFont(undefined, "bold");
-    doc.text("REGISTERED SUBJECTS:", 20, subjectsY);
-    
-    doc.setFont(undefined, "normal");
-    const subjectList = stu.selectedSubjects?.join(", ") || "No subjects selected";
-    
-    // splitTextToSize ensures the text wraps if it's longer than the page width
-    const splitSubjects = doc.splitTextToSize(subjectList, 170);
-    doc.text(splitSubjects, 20, subjectsY + 7);
+    // 🧾 TABLE
+    autoTable(doc, {
+        startY: y + 5,
+        head: headers,
+        body: tableData,
+        theme: "grid",
+        styles: {
+            fontSize: 9,
+            cellPadding: 3,
+        },
+        headStyles: {
+            fillColor: [0, 0, 0],
+            textColor: [255, 255, 255],
+            fontStyle: "bold"
+        },
+        columnStyles: {
+            0: { cellWidth: 20 },
+            1: { cellWidth: 40 },
+            2: { cellWidth: 50 },
+            3: { cellWidth: 25 },
+            4: { cellWidth: 30 },
+            5: { cellWidth: 50 },
+            6: { cellWidth: 70 },
+            7: { cellWidth: 45 },
+            8: { cellWidth: 60 }
+        }
+    });
 
     // 💾 SAVE
-    doc.save(`${stu.studentName}_WASSCE_FORM.pdf`);
+    doc.save("WASSCE_General_Report.pdf");
 };
 
     const filteredStudents = students.filter(s =>
@@ -471,55 +612,55 @@ useEffect(() => {
                             </div>
 
                             {/* FACULTY & SUBJECT SELECTION */}
-<div className="grid grid-cols-1 md:grid-cols-3 gap-6 bg-gray-50 p-4 border-2 border-black mt-4">
-    {/* Faculty Column */}
-    <div className="flex flex-col">
-        <label className="text-xs font-bold uppercase text-red-700">3. Select Faculty</label>
-        <select 
-            name="faculty"
-            value={formData.faculty}
-            onChange={(e) => setFormData(prev => ({...prev, faculty: e.target.value, selectedSubjects: []}))}
-            className="p-2 border-b-2 border-red-700 bg-white font-bold"
-            required
-        >
-            <option value="">-- Choose Faculty --</option>
-            <option value="Art">ART</option>
-            <option value="Science">SCIENCE</option>
-            <option value="Commercial">COMMERCIAL</option>
-        </select>
-    </div>
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 bg-gray-50 p-4 border-2 border-black mt-4">
+                                {/* Faculty Column */}
+                                <div className="flex flex-col">
+                                    <label className="text-xs font-bold uppercase text-red-700">3. Select Faculty</label>
+                                    <select
+                                        name="faculty"
+                                        value={formData.faculty}
+                                        onChange={(e) => setFormData(prev => ({ ...prev, faculty: e.target.value, selectedSubjects: [] }))}
+                                        className="p-2 border-b-2 border-red-700 bg-white font-bold"
+                                        required
+                                    >
+                                        <option value="">-- Choose Faculty --</option>
+                                        <option value="Art">ART</option>
+                                        <option value="Science">SCIENCE</option>
+                                        <option value="Commercial">COMMERCIAL</option>
+                                    </select>
+                                </div>
 
-    {/* Subjects Column */}
-    <div className="md:col-span-2">
-        <label className="text-xs font-bold uppercase text-red-700">
-            4. Select Subjects (Selected: {formData.selectedSubjects.length})
-        </label>
-        {!formData.faculty ? (
-            <div className="text-sm text-gray-400 italic mt-2 text-center p-4 border border-dashed border-gray-300">
-                Please select a faculty first
-            </div>
-        ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
-                {FACULTY_SUBJECTS[formData.faculty].map((sub) => (
-                    <label key={sub} className="flex items-center space-x-2 text-sm cursor-pointer hover:bg-white p-1 rounded">
-                        <input 
-                            type="checkbox"
-                            checked={formData.selectedSubjects.includes(sub)}
-                            onChange={() => handleSubjectToggle(sub)}
-                            className="w-4 h-4 accent-black"
-                        />
-                        <span>{sub}</span>
-                    </label>
-                ))}
-            </div>
-        )}
-        {formData.selectedSubjects.length < 9 && formData.faculty && (
-            <p className="text-[10px] text-red-600 font-bold mt-2 animate-pulse">
-                ⚠️ Min. 9 subjects required for WASSCE
-            </p>
-        )}
-    </div>
-</div>
+                                {/* Subjects Column */}
+                                <div className="md:col-span-2">
+                                    <label className="text-xs font-bold uppercase text-red-700">
+                                        4. Select Subjects (Selected: {formData.selectedSubjects.length})
+                                    </label>
+                                    {!formData.faculty ? (
+                                        <div className="text-sm text-gray-400 italic mt-2 text-center p-4 border border-dashed border-gray-300">
+                                            Please select a faculty first
+                                        </div>
+                                    ) : (
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
+                                            {FACULTY_SUBJECTS[formData.faculty].map((sub) => (
+                                                <label key={sub} className="flex items-center space-x-2 text-sm cursor-pointer hover:bg-white p-1 rounded">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={formData.selectedSubjects.includes(sub)}
+                                                        onChange={() => handleSubjectToggle(sub)}
+                                                        className="w-4 h-4 accent-black"
+                                                    />
+                                                    <span>{sub}</span>
+                                                </label>
+                                            ))}
+                                        </div>
+                                    )}
+                                    {formData.selectedSubjects.length < 9 && formData.faculty && (
+                                        <p className="text-[10px] text-red-600 font-bold mt-2 animate-pulse">
+                                            ⚠️ Min. 9 subjects required for WASSCE
+                                        </p>
+                                    )}
+                                </div>
+                            </div>
                             <div className="flex flex-col">
                                 <label className="text-xs font-bold uppercase">Date of Birth</label>
                                 <input type="date" name="dob" value={formData.dob} onChange={handleInputChange} className="p-2 border-b-2 border-black" />
@@ -563,7 +704,7 @@ useEffect(() => {
                             <div className="flex flex-col"><label className="text-xs font-bold">ADDRESS</label><input type="text" name="address" value={formData.address} onChange={handleInputChange} className="p-2 border-b border-black outline-none" /></div>
                             <div className="flex flex-col"><label className="text-xs font-bold">MOBILE NUMBER</label><input type="text" name="mobileNumber" value={formData.mobileNumber} onChange={handleInputChange} className="p-2 border-b border-black outline-none" /></div>
                             <div className="flex flex-col"><label className="text-xs font-bold">PREVIOUS SCHOOL</label><input type="text" name="previousSchool" value={formData.previousSchool} onChange={handleInputChange} className="p-2 border-b border-black outline-none" /></div>
-                            <div className="flex flex-col"><label className="text-xs font-bold">ACADEMIC YEAR</label><input type="text" name="academicYear" placeholder="2025/2026" value={formData.academicYear} onChange={handleInputChange} className="p-2 border-b border-black outline-none" /></div>
+                            <div className="flex flex-col"><label className="text-xs font-bold">BECE YEAR</label><input type="text" name="beceYear" placeholder="ex. 2002" value={formData.beceYear} onChange={handleInputChange} className="p-2 border-b border-black outline-none" /></div>
                             <div className="flex flex-col bg-blue-50 p-2"><label className="text-xs font-bold text-blue-800">BECE INDEX NO:</label><input type="text" name="beceIndexNo" value={formData.beceIndexNo} onChange={handleInputChange} className="p-1 border-b border-blue-800 bg-transparent outline-none" /></div>
                             <div className="flex flex-col bg-blue-50 p-2"><label className="text-xs font-bold text-blue-800">AGGREGATE</label><input type="number" name="aggregate" value={formData.aggregate} onChange={handleInputChange} className="p-1 border-b border-blue-800 bg-transparent outline-none" /></div>
                         </div>
@@ -602,6 +743,12 @@ useEffect(() => {
                 <div className="mt-12">
                     <div className="flex flex-col md:flex-row justify-between mb-4 gap-4">
                         <h2 className="font-black uppercase">Registered Candidates</h2>
+                        <button
+    onClick={generateGeneralReport}
+    className="bg-green-700 text-white px-4 py-2 text-sm font-bold"
+>
+    📄 Print General Report
+</button>
                         <input
                             type="text"
                             placeholder="🔍 Search Name or Index..."

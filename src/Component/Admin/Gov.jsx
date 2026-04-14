@@ -72,6 +72,7 @@ const NAV_ITEMS = [
       { key: "class", label: " Class", icon: <MdPerson /> },
       { key: "classList", label: "Class List", icon: <MdPerson /> },
       { key: "WASCEForm", label: "Wasce Entering", icon: <MdPerson /> },
+      // { key: "SchoolRegistration", label: "SchoolRegistration", icon: <MdPerson /> },
     ],
   },
 
@@ -230,6 +231,7 @@ function Gov() {
       case "dashboard": return <RegDashboard />;
       case "Form": return <Registration />;
       case "WASCEForm": return <WASCEForm />;
+      case "SchoolRegistration": return <SchoolRegistration />;
       case "class": return <ClassRegistration />;
       case "classList": return <StudentFilterPage />;
       case "fees": return <FeeReceipt />;

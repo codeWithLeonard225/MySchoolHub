@@ -813,14 +813,13 @@ const WasceReg = () => {
                         {editingId && <button onClick={() => { setEditingId(null); resetForm(); }} className="w-full bg-red-600 text-white p-2 mt-2">CANCEL EDIT</button>}
                     </div>
                 </form>
-
-        {showCamera && (
-    <CameraCapture
-        setPhoto={handleCameraCapture}
-        onClose={() => setShowCamera(false)}
-        // If "environment" fails, the fix in step 1 will handle the fallback
-        initialFacingMode="environment" 
-    />
+{showCamera && (
+  <CameraCapture
+    key={cameraTarget} // 🔥 VERY IMPORTANT
+    setPhoto={handleCameraCapture}
+    onClose={() => setShowCamera(false)}
+    initialFacingMode="environment"
+  />
 )}
 
                 {/* REGISTERED STUDENTS TABLE */}

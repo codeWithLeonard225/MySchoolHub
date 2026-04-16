@@ -10,12 +10,13 @@ import imageCompression from "browser-image-compression";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
+
 const CLOUD_NAME = "dxcrlpike";
 const UPLOAD_PRESET = "LeoTechSl Projects";
 
 const FACULTY_SUBJECTS = {
     Art: ["Mathematics", "English", "Health Science", "Literature", "Geography", "CRS", "History", "MIL", "Politics & Governance"],
-    Science: ["Agricultural Science", "Biology", "Chemistry", "Engineering Science", "English", "Mathematics", "Physics", "Science Core"],
+    Science: ["Agricultural Science", "Biology", "Chemistry", "Engineering Science", "English", "Mathematics", "Physics", "Science Core", "Further Mathematics"],
     Commercial: ["Mathematics", "English", "Health Science", "Business Accounting", "Principles of Account", "Commerce", "Economics", "Business Management", "Clerical Office Duties"]
 };
 
@@ -294,37 +295,12 @@ const WasceReg = () => {
         }
     };
 
-    const handleEdit = (stu) => {
-        setFormData({
-            studentID: stu.studentID || "",
-            studentName: stu.studentName || "",
-            dob: stu.dob || "",
-            age: stu.age || "",
-            gender: stu.gender || "",
-            address: stu.address || "",
-            mobileNumber: stu.mobileNumber || "",
-            previousClass: stu.previousClass || "",
-            beceYear: stu.beceYear || "",
-            previousSchool: stu.previousSchool || "",
-            beceIndexNo: stu.beceIndexNo || "",
-            aggregate: stu.aggregate || "",
-            photoNo: stu.photoNo || "",
-            pupilPhoto: stu.pupilPhoto || null,
-            beceResultPhoto: stu.beceResultPhoto || null,
-            schoolId: stu.schoolId || "",
-            faculty: stu.faculty || "",
-            selectedSubjects: stu.selectedSubjects || [],
-        });
-
-        setEditingId(stu.id);
-        window.scrollTo({ top: 0, behavior: "smooth" });
-    };
-
+   
 
 
   
 
-  
+    
 
     const filteredStudents = students.filter(s =>
         s.studentName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -573,7 +549,8 @@ const WasceReg = () => {
     />
 )}
 
-             
+                {/* REGISTERED STUDENTS TABLE */}
+                
             </div>
         </div>
     );

@@ -16,7 +16,7 @@ const UPLOAD_PRESET = "LeoTechSl Projects";
 
 const FACULTY_SUBJECTS = {
     Art: ["Mathematics", "English", "Health Science", "Literature", "Geography", "CRS", "History", "MIL", "Politics & Governance"],
-    Science: ["Agricultural Science", "Biology", "Chemistry", "Engineering Science", "English", "Mathematics", "Physics", "Science Core"],
+    Science: ["Agricultural Science", "Biology", "Chemistry", "Engineering Science", "English", "Mathematics", "Physics", "Science Core", "Further Mathematics"],
     Commercial: ["Mathematics", "English", "Health Science", "Business Accounting", "Principles of Account", "Commerce", "Economics", "Business Management", "Clerical Office Duties"]
 };
 

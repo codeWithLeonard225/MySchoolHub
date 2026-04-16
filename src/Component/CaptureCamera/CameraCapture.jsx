@@ -1,5 +1,4 @@
 import React, { useRef, useEffect, useState } from "react";
-import { toast } from "react-toastify";
 
 const CameraCapture = ({ setPhoto, onClose, initialFacingMode }) => {
   const videoRef = useRef(null);
@@ -7,49 +6,33 @@ const CameraCapture = ({ setPhoto, onClose, initialFacingMode }) => {
   const [facingMode, setFacingMode] = useState(initialFacingMode);
   const [cameraError, setCameraError] = useState(null);
 
- useEffect(() => {
-  let stream = null;
+  useEffect(() => {
+    let stream = null;
 
-  const startCamera = async () => {
-    const constraints = {
-      video: {
-        facingMode: { ideal: facingMode || "user" },
-        width: { ideal: 1280 },
-        height: { ideal: 720 }
-      }
-    };
-
-    try {
-      stream = await navigator.mediaDevices.getUserMedia(constraints);
-
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-      }
-    } catch (err) {
-      console.warn("Camera mode failed, fallback:", err);
-
+    const startCamera = async () => {
       try {
-        stream = await navigator.mediaDevices.getUserMedia({ video: true });
-
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode },
+        });
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
         }
-      } catch (fallbackErr) {
-        console.error("No camera found:", fallbackErr);
-        toast.error("No camera device available");
+      } catch (err) {
+        console.error("Camera access denied:", err);
+        setCameraError("Camera access was denied or no camera found.");
         onClose();
       }
-    }
-  };
+    };
 
-  startCamera();
+    startCamera();
 
-  return () => {
-    if (stream) {
-      stream.getTracks().forEach(track => track.stop());
-    }
-  };
-}, [facingMode, onClose]);
+    return () => {
+      if (stream) {
+        const tracks = stream.getTracks();
+        tracks.forEach((track) => track.stop());
+      }
+    };
+  }, [facingMode, onClose]);
 
   const capturePhoto = () => {
     if (!videoRef.current || !canvasRef.current) return;

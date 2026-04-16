@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { toast } from "react-toastify";
 import { db } from "../../../firebase";
-// ADDED query and where here
+import CameraCapture from "../CaptureCamera/CameraCapture";// ADDED query and where here
 import { collection, addDoc, onSnapshot, doc, deleteDoc, updateDoc, query, where } from "firebase/firestore";
 import { v4 as uuidv4 } from "uuid";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -9,6 +9,7 @@ import { useAuth } from "../Security/AuthContext";
 import imageCompression from "browser-image-compression";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+
 
 const CLOUD_NAME = "dxcrlpike";
 const UPLOAD_PRESET = "LeoTechSl Projects";
@@ -24,7 +25,9 @@ const WasceReg = () => {
     const navigate = useNavigate();
     const { user } = useAuth();
     const currentSchoolId = location.state?.schoolId || user?.schoolId || "N/A";
-
+    const [showCamera, setShowCamera] = useState(false);
+    const [cameraTarget, setCameraTarget] = useState("");
+    // "pupil" or "bece"
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [uploadingField, setUploadingField] = useState(null);
     const [uploadProgress, setUploadProgress] = useState(0);
@@ -137,6 +140,42 @@ const WasceReg = () => {
             setFormData(prev => ({ ...prev, studentName: pupilName.toUpperCase() }));
         }
     };
+
+    const handleCameraCapture = async (base64Image) => {
+    try {
+        setUploadingField(cameraTarget);
+
+        const res = await fetch(base64Image);
+        const blob = await res.blob();
+
+        const formDataObj = new FormData();
+        formDataObj.append("file", blob);
+        formDataObj.append("upload_preset", UPLOAD_PRESET);
+
+        const uploadRes = await fetch(
+            `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`,
+            {
+                method: "POST",
+                body: formDataObj,
+            }
+        );
+
+        const data = await uploadRes.json();
+
+        setFormData((prev) => ({
+            ...prev,
+            [cameraTarget === "pupil" ? "pupilPhoto" : "beceResultPhoto"]: data.secure_url,
+        }));
+
+        toast.success("Captured & Uploaded!");
+    } catch (err) {
+        console.error(err);
+        toast.error("Camera upload failed");
+    } finally {
+        setUploadingField(null);
+        setShowCamera(false);
+    }
+};
 
 
 
@@ -399,143 +438,143 @@ const WasceReg = () => {
     };
 
     const generateGeneralReport = async () => {
-    if (students.length === 0) {
-        toast.error("No data to export!");
-        return;
-    }
+        if (students.length === 0) {
+            toast.error("No data to export!");
+            return;
+        }
 
-    const doc = new jsPDF({ orientation: "landscape" });
+        const doc = new jsPDF({ orientation: "landscape" });
 
-    // 🖼 Helper to load image
-    const loadImage = (url) =>
-        new Promise((resolve) => {
-            const img = new Image();
-            img.src = url;
-            img.crossOrigin = "anonymous";
-            img.onload = () => resolve(img);
-            img.onerror = () => resolve(null);
+        // 🖼 Helper to load image
+        const loadImage = (url) =>
+            new Promise((resolve) => {
+                const img = new Image();
+                img.src = url;
+                img.crossOrigin = "anonymous";
+                img.onload = () => resolve(img);
+                img.onerror = () => resolve(null);
+            });
+
+        const logo = await loadImage(schoolLogoUrl);
+
+        let y = 15;
+
+        // 🏫 SCHOOL NAME
+        doc.setFontSize(18);
+        doc.setFont(undefined, "bold");
+        doc.text(schoolName || "SCHOOL NAME", 148, y, { align: "center" });
+
+        y += 5;
+
+        doc.setDrawColor(0);
+        doc.line(20, y, 280, y); // full width for landscape
+        y += 10;
+
+        // 🖼 LOGOS (Left & Right)
+        if (logo) {
+            doc.addImage(logo, "PNG", 20, y, 25, 25);   // left
+            doc.addImage(logo, "PNG", 260, y, 25, 25);  // right (adjusted for landscape)
+        }
+
+        // 📍 SCHOOL DETAILS
+        doc.setFontSize(10);
+        doc.setFont(undefined, "normal");
+        doc.text(schoolAddress || "Address", 148, y + 5, { align: "center" });
+        doc.text(schoolMotto || "Motto", 148, y + 12, { align: "center" });
+        doc.text(schoolContact || "Contact", 148, y + 19, { align: "center" });
+
+        if (email) {
+            doc.text(email, 148, y + 26, { align: "center" });
+        }
+
+        y += 35;
+
+        // 📄 TITLE
+        doc.setFontSize(14);
+        doc.setFont(undefined, "bold");
+        doc.text("WASSCE GENERAL REGISTRATION REPORT", 148, y, { align: "center" });
+
+        y += 10;
+
+        // 👥 TOTAL COUNT
+        doc.setFontSize(10);
+        doc.setFont(undefined, "normal");
+        doc.text(`Total Students: ${students.length}`, 20, y);
+
+        y += 5;
+
+        // 🧠 SPLIT NAME FUNCTION
+        const splitName = (fullName) => {
+            if (!fullName) return { surname: "", otherNames: "" };
+
+            const parts = fullName.trim().split(" ");
+            return {
+                surname: parts[0] || "",
+                otherNames: parts.slice(1).join(" ")
+            };
+        };
+
+        // 📊 TABLE DATA
+        const tableData = students.map((stu, index) => {
+            const { surname, otherNames } = splitName(stu.studentName);
+
+            return [
+                index + 1,
+                surname,
+                otherNames,
+                stu.gender || "",
+                stu.beceYear || "",
+                stu.beceIndexNo || "",
+                stu.address || "",
+                stu.mobileNumber || "",
+                stu.previousSchool || ""
+            ];
         });
 
-    const logo = await loadImage(schoolLogoUrl);
+        // 📋 HEADERS
+        const headers = [[
+            "No",
+            "Surname",
+            "Other Name",
+            "Sex",
+            "BECE Year",
+            "Index Number",
+            "Address",
+            "Mobile",
+            "Previous School"
+        ]];
 
-    let y = 15;
+        // 🧾 TABLE
+        autoTable(doc, {
+            startY: y + 5,
+            head: headers,
+            body: tableData,
+            theme: "grid",
+            styles: {
+                fontSize: 9,
+                cellPadding: 3,
+            },
+            headStyles: {
+                fillColor: [0, 0, 0],
+                textColor: [255, 255, 255],
+                fontStyle: "bold"
+            },
+            columnStyles: {
+                0: { cellWidth: 20 },
+                1: { cellWidth: 40 },
+                2: { cellWidth: 50 },
+                3: { cellWidth: 25 },
+                4: { cellWidth: 30 },
+                5: { cellWidth: 50 },
+                6: { cellWidth: 70 },
+                7: { cellWidth: 45 },
+                8: { cellWidth: 60 }
+            }
+        });
 
-    // 🏫 SCHOOL NAME
-    doc.setFontSize(18);
-    doc.setFont(undefined, "bold");
-    doc.text(schoolName || "SCHOOL NAME", 148, y, { align: "center" });
-
-    y += 5;
-
-    doc.setDrawColor(0);
-    doc.line(20, y, 280, y); // full width for landscape
-    y += 10;
-
-    // 🖼 LOGOS (Left & Right)
-    if (logo) {
-        doc.addImage(logo, "PNG", 20, y, 25, 25);   // left
-        doc.addImage(logo, "PNG", 260, y, 25, 25);  // right (adjusted for landscape)
-    }
-
-    // 📍 SCHOOL DETAILS
-    doc.setFontSize(10);
-    doc.setFont(undefined, "normal");
-    doc.text(schoolAddress || "Address", 148, y + 5, { align: "center" });
-    doc.text(schoolMotto || "Motto", 148, y + 12, { align: "center" });
-    doc.text(schoolContact || "Contact", 148, y + 19, { align: "center" });
-
-    if (email) {
-        doc.text(email, 148, y + 26, { align: "center" });
-    }
-
-    y += 35;
-
-    // 📄 TITLE
-    doc.setFontSize(14);
-    doc.setFont(undefined, "bold");
-    doc.text("WASSCE GENERAL REGISTRATION REPORT", 148, y, { align: "center" });
-
-    y += 10;
-
-    // 👥 TOTAL COUNT
-    doc.setFontSize(10);
-    doc.setFont(undefined, "normal");
-    doc.text(`Total Students: ${students.length}`, 20, y);
-
-    y += 5;
-
-    // 🧠 SPLIT NAME FUNCTION
-    const splitName = (fullName) => {
-        if (!fullName) return { surname: "", otherNames: "" };
-
-        const parts = fullName.trim().split(" ");
-        return {
-            surname: parts[0] || "",
-            otherNames: parts.slice(1).join(" ")
-        };
+        // 💾 SAVE
+        doc.save("WASSCE_General_Report.pdf");
     };
-
-    // 📊 TABLE DATA
-    const tableData = students.map((stu, index) => {
-        const { surname, otherNames } = splitName(stu.studentName);
-
-        return [
-            index + 1,
-            surname,
-            otherNames,
-            stu.gender || "",
-            stu.beceYear || "",
-            stu.beceIndexNo || "",
-            stu.address || "",
-            stu.mobileNumber || "",
-            stu.previousSchool || ""
-        ];
-    });
-
-    // 📋 HEADERS
-    const headers = [[
-        "No",
-        "Surname",
-        "Other Name",
-        "Sex",
-        "BECE Year",
-        "Index Number",
-        "Address",
-        "Mobile",
-        "Previous School"
-    ]];
-
-    // 🧾 TABLE
-    autoTable(doc, {
-        startY: y + 5,
-        head: headers,
-        body: tableData,
-        theme: "grid",
-        styles: {
-            fontSize: 9,
-            cellPadding: 3,
-        },
-        headStyles: {
-            fillColor: [0, 0, 0],
-            textColor: [255, 255, 255],
-            fontStyle: "bold"
-        },
-        columnStyles: {
-            0: { cellWidth: 20 },
-            1: { cellWidth: 40 },
-            2: { cellWidth: 50 },
-            3: { cellWidth: 25 },
-            4: { cellWidth: 30 },
-            5: { cellWidth: 50 },
-            6: { cellWidth: 70 },
-            7: { cellWidth: 45 },
-            8: { cellWidth: 60 }
-        }
-    });
-
-    // 💾 SAVE
-    doc.save("WASSCE_General_Report.pdf");
-};
 
     const filteredStudents = students.filter(s =>
         s.studentName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -690,10 +729,28 @@ const WasceReg = () => {
                                     </div>
                                 )}
                             </div>
-                            <label className="mt-3 cursor-pointer bg-black text-white px-3 py-1 text-[10px] font-bold uppercase hover:bg-gray-800">
-                                {uploadingField === "pupil" ? "Uploading..." : "Select Photo"}
-                                <input type="file" className="hidden" accept="image/*" onChange={(e) => handleFileUpload(e, "pupil")} disabled={uploadingField !== null} />
-                            </label>
+                           <div className="flex gap-2 mt-3">
+    <label className="cursor-pointer bg-black text-white px-3 py-1 text-[10px] font-bold uppercase hover:bg-gray-800">
+        Upload
+        <input
+            type="file"
+            className="hidden"
+            accept="image/*"
+            onChange={(e) => handleFileUpload(e, "pupil")}
+        />
+    </label>
+
+    <button
+        type="button"
+        onClick={() => {
+            setCameraTarget("pupil");
+            setShowCamera(true);
+        }}
+        className="bg-green-600 text-white px-3 py-1 text-[10px] font-bold uppercase"
+    >
+        📷 Camera
+    </button>
+</div>
                         </div>
                     </div>
 
@@ -724,10 +781,28 @@ const WasceReg = () => {
                                     </div>
                                 )}
                             </div>
-                            <label className="mt-3 cursor-pointer bg-blue-800 text-white px-3 py-1 text-center text-[10px] font-bold uppercase hover:bg-blue-900">
-                                {uploadingField === "bece" ? "Uploading..." : "Upload Result Slip"}
-                                <input type="file" className="hidden" accept="image/*" onChange={(e) => handleFileUpload(e, "bece")} disabled={uploadingField !== null} />
-                            </label>
+                           <div className="flex gap-2 mt-3">
+    <label className="cursor-pointer bg-blue-800 text-white px-3 py-1 text-[10px] font-bold uppercase">
+        Upload
+        <input
+            type="file"
+            className="hidden"
+            accept="image/*"
+            onChange={(e) => handleFileUpload(e, "bece")}
+        />
+    </label>
+
+    <button
+        type="button"
+        onClick={() => {
+            setCameraTarget("bece");
+            setShowCamera(true);
+        }}
+        className="bg-green-600 text-white px-3 py-1 text-[10px] font-bold uppercase"
+    >
+        📷 Camera
+    </button>
+</div>
                         </div>
                     </div>
 
@@ -739,16 +814,25 @@ const WasceReg = () => {
                     </div>
                 </form>
 
+        {showCamera && (
+    <CameraCapture
+        setPhoto={handleCameraCapture}
+        onClose={() => setShowCamera(false)}
+        // If "environment" fails, the fix in step 1 will handle the fallback
+        initialFacingMode="environment" 
+    />
+)}
+
                 {/* REGISTERED STUDENTS TABLE */}
                 <div className="mt-12">
                     <div className="flex flex-col md:flex-row justify-between mb-4 gap-4">
                         <h2 className="font-black uppercase">Registered Candidates</h2>
                         <button
-    onClick={generateGeneralReport}
-    className="bg-green-700 text-white px-4 py-2 text-sm font-bold"
->
-    📄 Print General Report
-</button>
+                            onClick={generateGeneralReport}
+                            className="bg-green-700 text-white px-4 py-2 text-sm font-bold"
+                        >
+                            📄 Print General Report
+                        </button>
                         <input
                             type="text"
                             placeholder="🔍 Search Name or Index..."

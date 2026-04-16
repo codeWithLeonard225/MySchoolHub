@@ -39,24 +39,32 @@ const CameraCapture = ({ setPhoto, onClose, initialFacingMode }) => {
       }
     };
   }, [facingMode]); // Remove onClose from dependencies to prevent unnecessary restarts
+  
+const capturePhoto = () => {
+  if (!videoRef.current || !canvasRef.current) return;
 
-  const capturePhoto = () => {
-    if (!videoRef.current || !canvasRef.current) return;
-    const video = videoRef.current;
-    const canvas = canvasRef.current;
-    const context = canvas.getContext("2d");
+  const video = videoRef.current;
+  const canvas = canvasRef.current;
+  const context = canvas.getContext("2d");
 
-    // Ensure video is actually playing/ready
-    if (video.videoWidth === 0) return;
+  const WIDTH = 400;
+  const HEIGHT = 400;
 
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+  canvas.width = WIDTH;
+  canvas.height = HEIGHT;
 
-    const imageData = canvas.toDataURL("image/png");
-    setPhoto(imageData); // This calls handleCameraCapture in your parent
-  };
+  context.drawImage(video, 0, 0, WIDTH, HEIGHT);
 
+  const imageData = canvas.toDataURL("image/jpeg", 0.9);
+
+  // 🔥 STOP CAMERA BEFORE EXIT
+  if (streamRef.current) {
+    streamRef.current.getTracks().forEach(track => track.stop());
+    streamRef.current = null;
+  }
+
+  setPhoto(imageData);
+};
   const toggleCamera = () => {
     setFacingMode((prev) => (prev === "user" ? "environment" : "user"));
   };

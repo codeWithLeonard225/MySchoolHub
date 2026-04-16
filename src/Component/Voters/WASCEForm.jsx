@@ -142,40 +142,40 @@ const WasceReg = () => {
     };
 
     const handleCameraCapture = async (base64Image) => {
-    try {
-        setUploadingField(cameraTarget);
+        try {
+            setUploadingField(cameraTarget);
 
-        const res = await fetch(base64Image);
-        const blob = await res.blob();
+            const res = await fetch(base64Image);
+            const blob = await res.blob();
 
-        const formDataObj = new FormData();
-        formDataObj.append("file", blob);
-        formDataObj.append("upload_preset", UPLOAD_PRESET);
+            const formDataObj = new FormData();
+            formDataObj.append("file", blob);
+            formDataObj.append("upload_preset", UPLOAD_PRESET);
 
-        const uploadRes = await fetch(
-            `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`,
-            {
-                method: "POST",
-                body: formDataObj,
-            }
-        );
+            const uploadRes = await fetch(
+                `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`,
+                {
+                    method: "POST",
+                    body: formDataObj,
+                }
+            );
 
-        const data = await uploadRes.json();
+            const data = await uploadRes.json();
 
-        setFormData((prev) => ({
-            ...prev,
-            [cameraTarget === "pupil" ? "pupilPhoto" : "beceResultPhoto"]: data.secure_url,
-        }));
+            setFormData((prev) => ({
+                ...prev,
+                [cameraTarget === "pupil" ? "pupilPhoto" : "beceResultPhoto"]: data.secure_url,
+            }));
 
-        toast.success("Captured & Uploaded!");
-    } catch (err) {
-        console.error(err);
-        toast.error("Camera upload failed");
-    } finally {
-        setUploadingField(null);
-        setShowCamera(false);
-    }
-};
+            toast.success("Captured & Uploaded!");
+        } catch (err) {
+            console.error(err);
+            toast.error("Camera upload failed");
+        } finally {
+            setUploadingField(null);
+            setShowCamera(false);
+        }
+    };
 
 
 
@@ -729,28 +729,28 @@ const WasceReg = () => {
                                     </div>
                                 )}
                             </div>
-                           <div className="flex gap-2 mt-3">
-    <label className="cursor-pointer bg-black text-white px-3 py-1 text-[10px] font-bold uppercase hover:bg-gray-800">
-        Upload
-        <input
-            type="file"
-            className="hidden"
-            accept="image/*"
-            onChange={(e) => handleFileUpload(e, "pupil")}
-        />
-    </label>
+                            <div className="flex gap-2 mt-3">
+                                <label className="cursor-pointer bg-black text-white px-3 py-1 text-[10px] font-bold uppercase hover:bg-gray-800">
+                                    Upload
+                                    <input
+                                        type="file"
+                                        className="hidden"
+                                        accept="image/*"
+                                        onChange={(e) => handleFileUpload(e, "pupil")}
+                                    />
+                                </label>
 
-    <button
-        type="button"
-        onClick={() => {
-            setCameraTarget("pupil");
-            setShowCamera(true);
-        }}
-        className="bg-green-600 text-white px-3 py-1 text-[10px] font-bold uppercase"
-    >
-        📷 Camera
-    </button>
-</div>
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setCameraTarget("pupil");
+                                        setShowCamera(true);
+                                    }}
+                                    className="bg-green-600 text-white px-3 py-1 text-[10px] font-bold uppercase"
+                                >
+                                    📷 Camera
+                                </button>
+                            </div>
                         </div>
                     </div>
 
@@ -781,28 +781,28 @@ const WasceReg = () => {
                                     </div>
                                 )}
                             </div>
-                           <div className="flex gap-2 mt-3">
-    <label className="cursor-pointer bg-blue-800 text-white px-3 py-1 text-[10px] font-bold uppercase">
-        Upload
-        <input
-            type="file"
-            className="hidden"
-            accept="image/*"
-            onChange={(e) => handleFileUpload(e, "bece")}
-        />
-    </label>
+                            <div className="flex gap-2 mt-3">
+                                <label className="cursor-pointer bg-blue-800 text-white px-3 py-1 text-[10px] font-bold uppercase">
+                                    Upload
+                                    <input
+                                        type="file"
+                                        className="hidden"
+                                        accept="image/*"
+                                        onChange={(e) => handleFileUpload(e, "bece")}
+                                    />
+                                </label>
 
-    <button
-        type="button"
-        onClick={() => {
-            setCameraTarget("bece");
-            setShowCamera(true);
-        }}
-        className="bg-green-600 text-white px-3 py-1 text-[10px] font-bold uppercase"
-    >
-        📷 Camera
-    </button>
-</div>
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setCameraTarget("bece");
+                                        setShowCamera(true);
+                                    }}
+                                    className="bg-green-600 text-white px-3 py-1 text-[10px] font-bold uppercase"
+                                >
+                                    📷 Camera
+                                </button>
+                            </div>
                         </div>
                     </div>
 
@@ -814,13 +814,13 @@ const WasceReg = () => {
                     </div>
                 </form>
 
-        {showCamera && (
-    <CameraCapture
-        setPhoto={handleCameraCapture}
-        onClose={() => setShowCamera(false)}
-        // If "environment" fails, the fix in step 1 will handle the fallback
-        initialFacingMode="environment" 
-    />
+              {showCamera && (
+  <CameraCapture
+    key={cameraTarget + Date.now()} // 🔥 FORCE NEW INSTANCE
+    setPhoto={handleCameraCapture}
+    onClose={() => setShowCamera(false)}
+    initialFacingMode="environment"
+  />
 )}
 
                 {/* REGISTERED STUDENTS TABLE */}

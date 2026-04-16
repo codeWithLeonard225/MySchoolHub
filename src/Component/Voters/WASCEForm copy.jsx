@@ -295,12 +295,286 @@ const WasceReg = () => {
         }
     };
 
-   
+    const handleEdit = (stu) => {
+        setFormData({
+            studentID: stu.studentID || "",
+            studentName: stu.studentName || "",
+            dob: stu.dob || "",
+            age: stu.age || "",
+            gender: stu.gender || "",
+            address: stu.address || "",
+            mobileNumber: stu.mobileNumber || "",
+            previousClass: stu.previousClass || "",
+            beceYear: stu.beceYear || "",
+            previousSchool: stu.previousSchool || "",
+            beceIndexNo: stu.beceIndexNo || "",
+            aggregate: stu.aggregate || "",
+            photoNo: stu.photoNo || "",
+            pupilPhoto: stu.pupilPhoto || null,
+            beceResultPhoto: stu.beceResultPhoto || null,
+            schoolId: stu.schoolId || "",
+            faculty: stu.faculty || "",
+            selectedSubjects: stu.selectedSubjects || [],
+        });
+
+        setEditingId(stu.id);
+        window.scrollTo({ top: 0, behavior: "smooth" });
+    };
 
 
-  
 
-    
+    const generatePDF = async (stu) => {
+        const doc = new jsPDF();
+
+        // Helper to load image
+        const loadImage = (url) =>
+            new Promise((resolve) => {
+                const img = new Image();
+                img.src = url;
+                img.crossOrigin = "anonymous";
+                img.onload = () => resolve(img);
+                img.onerror = () => resolve(null);
+            });
+
+        const [logo] = await Promise.all([
+            loadImage(schoolLogoUrl),
+        ]);
+
+        let y = 20;
+
+        // 🏫 SCHOOL HEADER
+        doc.setFontSize(18);
+        doc.setFont(undefined, "bold");
+        doc.text(schoolName || "SCHOOL NAME", 105, y, { align: "center" });
+
+        y += 5;
+        doc.setDrawColor(0);
+        doc.line(20, y, 190, y);
+        y += 10;
+
+
+        // 🖼 LOGOS (Left and Right Corners)
+        if (logo) {
+            // Left Logo
+            doc.addImage(logo, "PNG", 20, y, 25, 25);
+            // Right Logo (210mm total width - 20mm margin - 25mm image width = 165)
+            doc.addImage(logo, "PNG", 165, y, 25, 25);
+        }
+
+        doc.setFontSize(10);
+        doc.setFont(undefined, "normal");
+        doc.text(schoolAddress || "Address", 105, y + 5, { align: "center" });
+        doc.text(schoolMotto || "Motto", 105, y + 12, { align: "center" });
+        doc.text(schoolContact || "Contact", 105, y + 19, { align: "center" });
+
+        if (email) {
+            doc.text(email, 105, y + 26, { align: "center" });
+        }
+
+        y += 35;
+
+        // 📄 TITLE
+        doc.setFontSize(14);
+        doc.setFont(undefined, "bold");
+        doc.text("WASSCE REGISTRATION FORM", 105, y, { align: "center" });
+
+        y += 20; // Reduced gap slightly to fit subjects better
+
+        doc.setFontSize(11);
+        doc.setFont(undefined, "normal");
+
+        // 📋 STUDENT DATA
+        const startDataY = y;
+        const addLine = (label, value) => {
+            doc.setFont(undefined, "bold");
+            doc.text(`${label}:`, 20, y);
+            doc.setFont(undefined, "normal");
+            doc.text(`${value || ""}`, 55, y); // Aligned values for better look
+            y += 8;
+        };
+
+        addLine("Student ID", stu.studentID);
+        addLine("Full Name", stu.studentName);
+        addLine("Faculty", stu.faculty);
+        addLine("Gender", stu.gender);
+        addLine("DOB", stu.dob);
+        addLine("Age", stu.age);
+        addLine("Address", stu.address);
+        addLine("Mobile", stu.mobileNumber);
+        addLine("Previous School", stu.previousSchool);
+        addLine("Bece Year", stu.beceYear);
+        addLine("BECE Index No", stu.beceIndexNo);
+        addLine("Aggregate", stu.aggregate);
+        addLine("Photo No", stu.photoNo);
+
+        // 🖼 IMAGES (Aligned with the data block)
+        if (stu.pupilPhoto) {
+            doc.addImage(stu.pupilPhoto, "JPEG", 140, startDataY, 50, 50);
+        }
+
+        if (stu.beceResultPhoto) {
+            doc.addImage(stu.beceResultPhoto, "JPEG", 140, startDataY + 55, 50, 60);
+        }
+
+        // ✨ ADDED: SUBJECTS SECTION
+        // We check if y is high enough to move past the images
+        const subjectsY = Math.max(y, startDataY + 115) + 10;
+
+        doc.setDrawColor(200);
+        doc.line(20, subjectsY - 5, 190, subjectsY - 5); // Decorative separator
+
+        doc.setFont(undefined, "bold");
+        doc.text("REGISTERED SUBJECTS:", 20, subjectsY);
+
+        doc.setFont(undefined, "normal");
+        const subjectList = stu.selectedSubjects?.join(", ") || "No subjects selected";
+
+        // splitTextToSize ensures the text wraps if it's longer than the page width
+        const splitSubjects = doc.splitTextToSize(subjectList, 170);
+        doc.text(splitSubjects, 20, subjectsY + 7);
+
+        // 💾 SAVE
+        doc.save(`${stu.studentName}_WASSCE_FORM.pdf`);
+    };
+
+    const generateGeneralReport = async () => {
+        if (students.length === 0) {
+            toast.error("No data to export!");
+            return;
+        }
+
+        const doc = new jsPDF({ orientation: "landscape" });
+
+        // 🖼 Helper to load image
+        const loadImage = (url) =>
+            new Promise((resolve) => {
+                const img = new Image();
+                img.src = url;
+                img.crossOrigin = "anonymous";
+                img.onload = () => resolve(img);
+                img.onerror = () => resolve(null);
+            });
+
+        const logo = await loadImage(schoolLogoUrl);
+
+        let y = 15;
+
+        // 🏫 SCHOOL NAME
+        doc.setFontSize(18);
+        doc.setFont(undefined, "bold");
+        doc.text(schoolName || "SCHOOL NAME", 148, y, { align: "center" });
+
+        y += 5;
+
+        doc.setDrawColor(0);
+        doc.line(20, y, 280, y); // full width for landscape
+        y += 10;
+
+        // 🖼 LOGOS (Left & Right)
+        if (logo) {
+            doc.addImage(logo, "PNG", 20, y, 25, 25);   // left
+            doc.addImage(logo, "PNG", 260, y, 25, 25);  // right (adjusted for landscape)
+        }
+
+        // 📍 SCHOOL DETAILS
+        doc.setFontSize(10);
+        doc.setFont(undefined, "normal");
+        doc.text(schoolAddress || "Address", 148, y + 5, { align: "center" });
+        doc.text(schoolMotto || "Motto", 148, y + 12, { align: "center" });
+        doc.text(schoolContact || "Contact", 148, y + 19, { align: "center" });
+
+        if (email) {
+            doc.text(email, 148, y + 26, { align: "center" });
+        }
+
+        y += 35;
+
+        // 📄 TITLE
+        doc.setFontSize(14);
+        doc.setFont(undefined, "bold");
+        doc.text("WASSCE GENERAL REGISTRATION REPORT", 148, y, { align: "center" });
+
+        y += 10;
+
+        // 👥 TOTAL COUNT
+        doc.setFontSize(10);
+        doc.setFont(undefined, "normal");
+        doc.text(`Total Students: ${students.length}`, 20, y);
+
+        y += 5;
+
+        // 🧠 SPLIT NAME FUNCTION
+        const splitName = (fullName) => {
+            if (!fullName) return { surname: "", otherNames: "" };
+
+            const parts = fullName.trim().split(" ");
+            return {
+                surname: parts[0] || "",
+                otherNames: parts.slice(1).join(" ")
+            };
+        };
+
+        // 📊 TABLE DATA
+        const tableData = students.map((stu, index) => {
+            const { surname, otherNames } = splitName(stu.studentName);
+
+            return [
+                index + 1,
+                surname,
+                otherNames,
+                stu.gender || "",
+                stu.beceYear || "",
+                stu.beceIndexNo || "",
+                stu.address || "",
+                stu.mobileNumber || "",
+                stu.previousSchool || ""
+            ];
+        });
+
+        // 📋 HEADERS
+        const headers = [[
+            "No",
+            "Surname",
+            "Other Name",
+            "Sex",
+            "BECE Year",
+            "Index Number",
+            "Address",
+            "Mobile",
+            "Previous School"
+        ]];
+
+        // 🧾 TABLE
+        autoTable(doc, {
+            startY: y + 5,
+            head: headers,
+            body: tableData,
+            theme: "grid",
+            styles: {
+                fontSize: 9,
+                cellPadding: 3,
+            },
+            headStyles: {
+                fillColor: [0, 0, 0],
+                textColor: [255, 255, 255],
+                fontStyle: "bold"
+            },
+            columnStyles: {
+                0: { cellWidth: 20 },
+                1: { cellWidth: 40 },
+                2: { cellWidth: 50 },
+                3: { cellWidth: 25 },
+                4: { cellWidth: 30 },
+                5: { cellWidth: 50 },
+                6: { cellWidth: 70 },
+                7: { cellWidth: 45 },
+                8: { cellWidth: 60 }
+            }
+        });
+
+        // 💾 SAVE
+        doc.save("WASSCE_General_Report.pdf");
+    };
 
     const filteredStudents = students.filter(s =>
         s.studentName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -550,7 +824,59 @@ const WasceReg = () => {
 )}
 
                 {/* REGISTERED STUDENTS TABLE */}
-                
+                <div className="mt-12">
+                    <div className="flex flex-col md:flex-row justify-between mb-4 gap-4">
+                        <h2 className="font-black uppercase">Registered Candidates</h2>
+                        <button
+                            onClick={generateGeneralReport}
+                            className="bg-green-700 text-white px-4 py-2 text-sm font-bold"
+                        >
+                            📄 Print General Report
+                        </button>
+                        <input
+                            type="text"
+                            placeholder="🔍 Search Name or Index..."
+                            className="p-2 border-2 border-black w-full md:w-64"
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                        />
+                    </div>
+
+                    <div className="overflow-x-auto">
+                        <table className="w-full border border-black">
+                            <thead className="bg-black text-white text-xs">
+                                <tr>
+                                    <th className="p-2 border">ID</th>
+                                    <th className="p-2 border">Photo</th>
+                                    <th className="p-2 border">Name</th>
+                                    <th className="p-2 border">Index</th>
+                                    <th className="p-2 border">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {filteredStudents.map((stu) => (
+                                    <tr key={stu.id} className="text-sm border-b border-black hover:bg-gray-50">
+                                        <td className="p-2 border">{stu.studentID}</td>
+                                        <td className="p-2 border">
+                                            <img
+                                                src={stu.pupilPhoto}
+                                                onClick={() => setSelectedImage(stu.pupilPhoto)}
+                                                className="w-10 h-10 object-cover cursor-zoom-in"
+                                                alt="thumb"
+                                            />
+                                        </td>
+                                        <td className="p-2 border font-bold">{stu.studentName}</td>
+                                        <td className="p-2 border">{stu.beceIndexNo}</td>
+                                        <td className="p-2 border flex gap-2">
+                                            <button onClick={() => generatePDF(stu)} className="bg-blue-600 text-white px-2 py-1 text-xs">📄 PDF</button>
+                                            <button onClick={() => handleEdit(stu)} className="bg-yellow-500 text-black px-2 py-1 text-xs">Edit</button>
+                                            <button onClick={() => handleDelete(stu.id)} className="bg-red-600 text-white px-2 py-1 text-xs">Del</button>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
         </div>
     );

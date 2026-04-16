@@ -3,135 +3,83 @@ import React, { useRef, useEffect, useState } from "react";
 const CameraCapture = ({ setPhoto, onClose, initialFacingMode }) => {
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
-  const streamRef = useRef(null); // ✅ STORE STREAM HERE
-  const [facingMode, setFacingMode] = useState(initialFacingMode);
+  const streamRef = useRef(null); // Use a ref to track the stream accurately
+  const [facingMode, setFacingMode] = useState(initialFacingMode || "environment");
   const [cameraError, setCameraError] = useState(null);
 
-  const stopCamera = () => {
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach(track => track.stop());
-      streamRef.current = null;
-    }
-  };
-
   useEffect(() => {
- const startCamera = async () => {
-  try {
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach(track => track.stop());
-    }
+    const startCamera = async () => {
+      // Always stop existing tracks before starting new ones
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach((track) => track.stop());
+      }
 
-    let stream;
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: { ideal: facingMode } }, // Use ideal for better compatibility
+        });
+        
+        streamRef.current = stream;
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+        }
+      } catch (err) {
+        console.error("Camera access denied:", err);
+        setCameraError("Camera access denied or device not found.");
+      }
+    };
 
-    try {
-      // Try requested camera (mobile mostly)
-      stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode },
-      });
-    } catch {
-      // Fallback for laptop
-      stream = await navigator.mediaDevices.getUserMedia({
-        video: true,
-      });
-    }
+    startCamera();
 
-    streamRef.current = stream;
+    // CLEANUP: This is the most important part
+    return () => {
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach((track) => track.stop());
+        streamRef.current = null;
+      }
+    };
+  }, [facingMode]); // Remove onClose from dependencies to prevent unnecessary restarts
 
-    if (videoRef.current) {
-      videoRef.current.srcObject = stream;
-    }
+  const capturePhoto = () => {
+    if (!videoRef.current || !canvasRef.current) return;
+    const video = videoRef.current;
+    const canvas = canvasRef.current;
+    const context = canvas.getContext("2d");
 
-  } catch (err) {
-    console.error("Camera error:", err);
-    setCameraError("No camera found or permission denied.");
-  }
-};
+    // Ensure video is actually playing/ready
+    if (video.videoWidth === 0) return;
 
-  startCamera();
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-  return () => {
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach(track => track.stop());
-      streamRef.current = null;
-    }
-  };
-}, [facingMode]);
-
- const capturePhoto = () => {
-  if (!videoRef.current || !canvasRef.current) return;
-
-  const video = videoRef.current;
-  const canvas = canvasRef.current;
-  const context = canvas.getContext("2d");
-
-  canvas.width = video.videoWidth;
-  canvas.height = video.videoHeight;
-  context.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-  const imageData = canvas.toDataURL("image/png");
-
-  // 🔴 STOP CAMERA HERE
-  if (streamRef.current) {
-    streamRef.current.getTracks().forEach(track => track.stop());
-    streamRef.current = null;
-  }
-
-  setPhoto(imageData);
-  onClose();
-};
-
-  const handleClose = () => {
-    stopCamera(); // ✅ FIX cancel issue
-    onClose();
+    const imageData = canvas.toDataURL("image/png");
+    setPhoto(imageData); // This calls handleCameraCapture in your parent
   };
 
   const toggleCamera = () => {
-    setFacingMode(prev => (prev === "user" ? "environment" : "user"));
+    setFacingMode((prev) => (prev === "user" ? "environment" : "user"));
   };
 
   return (
-    <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50 }}>
-      <div style={{ backgroundColor: 'white', padding: '1rem', borderRadius: '0.5rem', maxWidth: '24rem', width: '100%' }}>
+    <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0, 0, 0, 0.9)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
+      <div style={{ backgroundColor: 'white', padding: '1rem', borderRadius: '0.5rem', width: '90%', maxWidth: '500px' }}>
+        {cameraError ? (
+          <div className="p-4 bg-red-100 text-red-700 mb-4 rounded">{cameraError}</div>
+        ) : (
+          <video 
+            ref={videoRef} 
+            autoPlay 
+            playsInline // Crucial for iOS/Mobile browsers
+            style={{ width: '100%', borderRadius: '0.5rem', transform: facingMode === "user" ? "scaleX(-1)" : "none" }} 
+          />
+        )}
+        <canvas ref={canvasRef} style={{ display: 'none' }} />
         
-      {cameraError ? (
-  <div style={{ color: "red", textAlign: "center", marginBottom: "10px" }}>
-    {cameraError}
-  </div>
-) : (
-  <h3 style={{ textAlign: "center", marginBottom: "10px" }}>
-    {facingMode === "user" ? "Front Camera" : "Back Camera"}
-  </h3>
-)}
-
-        <video
-          ref={videoRef}
-          autoPlay
-          playsInline
-          style={{ width: "100%", borderRadius: "8px" }}
-        />
-
-        <canvas ref={canvasRef} hidden />
-
-        <div style={{ display: "flex", justifyContent: "space-around", marginTop: "10px" }}>
-          <button onClick={capturePhoto} style={{ background: "green", color: "#fff", padding: "8px" }}>
-            Capture
-          </button>
-
-          <button onClick={toggleCamera} style={{ background: "orange", color: "#fff", padding: "8px" }}>
-            Switch
-          </button>
-
-         <button
-  onClick={() => {
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach(track => track.stop());
-      streamRef.current = null;
-    }
-    onClose();
-  }}
->
-  Cancel
-</button>
+        <div style={{ display: 'flex', gap: '10px', marginTop: '1rem', justifyContent: 'center' }}>
+          <button onClick={capturePhoto} style={{ background: '#16a34a', color: 'white', padding: '10px 20px', borderRadius: '5px' }}>Capture</button>
+          <button onClick={toggleCamera} style={{ background: '#eab308', color: 'white', padding: '10px 20px', borderRadius: '5px' }}>Switch</button>
+          <button onClick={onClose} style={{ background: '#dc2626', color: 'white', padding: '10px 20px', borderRadius: '5px' }}>Cancel</button>
         </div>
       </div>
     </div>

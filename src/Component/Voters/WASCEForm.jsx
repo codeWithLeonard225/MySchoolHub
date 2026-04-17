@@ -191,33 +191,56 @@ const WasceReg = () => {
 
 
     const handleFileUpload = async (e, fieldType) => {
-        const file = e.target.files[0];
-        if (!file) return;
-        setUploadingField(fieldType);
-        try {
-            const options = { maxSizeMB: 1, maxWidthOrHeight: 1024, useWebWorker: true };
-            const compressedFile = await imageCompression(file, options);
-            const uploadData = new FormData();
-            uploadData.append("file", compressedFile);
-            uploadData.append("upload_preset", UPLOAD_PRESET);
+    const file = e.target.files[0];
+    if (!file) return;
 
-            const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, {
+    setUploadingField(fieldType);
+
+    try {
+        // ✅ 1. SHOW INSTANT PREVIEW (VERY IMPORTANT)
+        const previewUrl = URL.createObjectURL(file);
+
+        setFormData(prev => ({
+            ...prev,
+            [fieldType === "pupil" ? "pupilPhoto" : "beceResultPhoto"]: previewUrl
+        }));
+
+        // ✅ 2. COMPRESS IMAGE
+        const compressedFile = await imageCompression(file, {
+            maxSizeMB: 1,
+            maxWidthOrHeight: 1024,
+            useWebWorker: true,
+        });
+
+        // ✅ 3. UPLOAD TO CLOUDINARY
+        const uploadData = new FormData();
+        uploadData.append("file", compressedFile);
+        uploadData.append("upload_preset", UPLOAD_PRESET);
+
+        const res = await fetch(
+            `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`,
+            {
                 method: "POST",
                 body: uploadData,
-            });
-            const data = await res.json();
-            setFormData(prev => ({
-                ...prev,
-                [fieldType === "pupil" ? "pupilPhoto" : "beceResultPhoto"]: data.secure_url
-            }));
-            toast.success("Image Uploaded");
-        } catch (err) {
-            toast.error("Upload failed");
-        } finally {
-            setUploadingField(null);
-        }
-    };
+            }
+        );
 
+        const data = await res.json();
+
+        // ✅ 4. REPLACE PREVIEW WITH REAL URL
+        setFormData(prev => ({
+            ...prev,
+            [fieldType === "pupil" ? "pupilPhoto" : "beceResultPhoto"]: data.secure_url
+        }));
+
+        toast.success("Image uploaded!");
+    } catch (err) {
+        console.error(err);
+        toast.error("Upload failed");
+    } finally {
+        setUploadingField(null);
+    }
+};
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (formData.selectedSubjects.length < 9) {

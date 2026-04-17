@@ -56,6 +56,7 @@ import RestoreTimetable from "../TeacherAssignment/RestoreTimetable";
 import EditAttendancePage from "../TeacherAssignment/EditAttendancePage";
 import TermResult from "../TeacherAssignment/TermResult";
 import YearlyResult from "../TeacherAssignment/YearlyResult";
+import YearlyGeneralReportCard from "../TeacherAssignment/YearlyGeneralReportCard";
 import StudentIDCardData from "../Voters/StudentIDCardData";
 import WASCEForm from "../Voters/WASCEForm";
 
@@ -103,6 +104,7 @@ const NAV_ITEMS = [
       { key: "GeneralReportCard", label: "ReportCard", icon: <MdPerson /> },
       { key: "TermResult", label: "TermResult", icon: <MdPerson /> },
       { key: "YearlyResult", label: "Yearly Result", icon: <MdPerson /> },
+      { key: "YearlyGeneralReportCard", label: "YearlyGeneralReportCard", icon: <MdPerson /> },
       // { key: "Testing", label: "Testing", icon: <MdPerson /> },
 
     ],
@@ -123,16 +125,16 @@ const NAV_ITEMS = [
     label: "Pupil Attendance",
     icon: <MdWarning />, // 📖
   },
- 
 
-   {
+
+  {
     key: "staffAttendance",
     label: "Staff  Record",
     icon: <MdBarChart />,
     children: [
       { key: "staffAttendance", label: "Staff Attendance", icon: <MdPerson /> },
       { key: "GeneralStaffAttendanceReport", label: "Staff Attendance Report", icon: <MdPerson /> },
-  
+
 
     ],
   },
@@ -157,7 +159,7 @@ const NAV_ITEMS = [
     label: "Logout",
     icon: <MdWarning />, // 📖
   },
- 
+
 
 ];
 
@@ -245,6 +247,7 @@ function Gov() {
       case "ClassFullTermMatrixPage": return <ClassFullTermMatrixPage />;
       case "TermResult": return <TermResult />;
       case "YearlyResult": return <YearlyResult />;
+      case "YearlyGeneralReportCard": return <YearlyGeneralReportCard />;
       case "Testing": return <Testing />;
       case "AdminForm": return <AdminForm />;
       case "TeacherAssignmentReport": return <TeacherAssignmentReport />;

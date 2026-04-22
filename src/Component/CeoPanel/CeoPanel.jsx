@@ -47,6 +47,8 @@ const NAV_ITEMS = [
     children: [
       { key: "Form", label: " Pupils", icon: <MdPerson /> },
       { key: "class", label: " Class", icon: <MdPerson /> },
+      { key: "AdminForm", label: " AdminForm", icon: <MdPerson /> },
+
     ],
   },
   {

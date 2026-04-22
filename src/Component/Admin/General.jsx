@@ -49,6 +49,8 @@ import LogoutPage from "./LogoutPage"
 import AttendancePage from "../Voters/AttendancePage"
 import StaffAttendance from "../TeacherAssignment/StaffAttendance";
 import StaffClocking from "../TeacherAssignment/StaffClocking";
+import YearlyGeneralReportCard from "../TeacherAssignment/YearlyGeneralReportCard";
+import YearlyResult from "../TeacherAssignment/YearlyResult";
 
 
 // --- Navigation Items ---
@@ -100,6 +102,8 @@ const NAV_ITEMS = [
       { key: "SubGradeMatrixPage", label: "Sub Grade Sheet", icon: <MdPerson /> },
       { key: "ClassFullTermMatrixPage", label: "Term Grade Sheet", icon: <MdPerson /> },
       { key: "GeneralReportCard", label: "ReportCard", icon: <MdPerson /> },
+      { key: "YearlyResult", label: "Yearly Result", icon: <MdPerson /> },
+      { key: "YearlyGeneralReportCard", label: "YearlyGeneralReportCard", icon: <MdPerson /> },
       // { key: "Testing", label: "Testing", icon: <MdPerson /> },
 
     ],
@@ -127,17 +131,17 @@ const NAV_ITEMS = [
 
     ],
   },
-    {
+  {
     key: "pupilAttendance",
     label: "Pupil Attendance",
     icon: <MdWarning />, // 📖
   },
-    {
+  {
     key: "staffAttendance",
     label: "Staff Attendance",
     icon: <MdWarning />, // 📖
   },
-    {
+  {
     key: "staffClockin",
     label: "Staff Clocking",
     icon: <MdWarning />, // 📖
@@ -242,10 +246,12 @@ function General() {
       case "PupilIDCard": return <PupilIDCard />;
       case "IDCardPage": return <IDCardPage />;
       case "schoolreg": return <SchoolRegistration />;
-        case "staffAttendance": return <StaffAttendance />;
-        case "pupilAttendance": return <AttendancePage />;
-        case "staffClockin": return <StaffClocking />;
+      case "staffAttendance": return <StaffAttendance />;
+      case "pupilAttendance": return <AttendancePage />;
+      case "staffClockin": return <StaffClocking />;
       case "LogoutPage": return <LogoutPage />;
+      case "YearlyResult": return <YearlyResult />;
+      case "YearlyGeneralReportCard": return <YearlyGeneralReportCard />;
 
       default: return <Placeholder title={activeTab} />;
     }

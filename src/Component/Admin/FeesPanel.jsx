@@ -55,6 +55,8 @@ import TimeTableDailyAttendanceReport from "../TeacherAssignment/TimeTableDailyA
 import TimeTableTeacherReport from "../TeacherAssignment/TimeTableTeacherReport";
 import TermResult from "../TeacherAssignment/TermResult";
 import YearlyResult from "../TeacherAssignment/YearlyResult";
+import YearlyGeneralReportCard from "../TeacherAssignment/YearlyGeneralReportCard";
+
 
 
 // --- Navigation Items ---
@@ -67,6 +69,7 @@ const NAV_ITEMS = [
       { key: "Form", label: " Pupils", icon: <MdPerson /> },
       { key: "class", label: "Class", icon: <MdPerson /> },
       { key: "classList", label: "Class List", icon: <MdPerson /> },
+        { key: "AdminForm", label: " AdminForm", icon: <MdPerson /> },
 
     ],
   },
@@ -108,6 +111,7 @@ const NAV_ITEMS = [
       { key: "GeneralReportCard", label: "ReportCard", icon: <MdPerson /> },
       { key: "TermResult", label: "TermResult", icon: <MdPerson /> },
        { key: "YearlyResult", label: "Yearly Result", icon: <MdPerson /> },
+             { key: "YearlyGeneralReportCard", label: "YearlyGeneralReportCard", icon: <MdPerson /> },
 
     ],
   },
@@ -267,6 +271,8 @@ function FeesPanel() {
       case "TimeTableDailyAttendanceReport": return <TimeTableDailyAttendanceReport />;
       case "TimeTableTeacherReport": return <TimeTableTeacherReport />;
       case "LogoutPage": return <LogoutPage />;
+      case "YearlyGeneralReportCard": return <YearlyGeneralReportCard />;
+      
 
       default: return <Placeholder title={activeTab} />;
     }

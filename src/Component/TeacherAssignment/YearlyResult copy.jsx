@@ -14,11 +14,8 @@ const YearlyResult = () => {
   const [pupils, setPupils] = useState([]);
   const [allYearGrades, setAllYearGrades] = useState([]);
   const [loading, setLoading] = useState(false);
-  
-  // New State for handling manual or dynamic division modes
-  const [calcMode, setCalcMode] = useState("auto"); // Options: "auto", "2", "3"
-  
   const location = useLocation();
+
   const { schoolId, schoolName } = location.state || {};
 
   // 1. Initial Metadata Fetch
@@ -66,7 +63,7 @@ const YearlyResult = () => {
     return () => { unsubPupils(); unsubGrades(); };
   }, [academicYear, selectedClass, schoolId]);
 
-  // 3. Yearly Logic Engine (Enhanced with Dynamic Division)
+  // 3. Yearly Logic Engine
   const yearlyData = useMemo(() => {
     if (allYearGrades.length === 0 || pupils.length === 0) return { subjects: [], studentMap: {}, summaries: {} };
 
@@ -74,7 +71,6 @@ const YearlyResult = () => {
     const studentMap = {};
     const summaries = {};
 
-    // Helper to calculate a clean mean for single term test items (T1 + T2) / 2
     const calculateTermMean = (pId, sub, term) => {
       const t1Key = `${term} T1`;
       const t2Key = `${term} T2`;
@@ -91,41 +87,8 @@ const YearlyResult = () => {
         const m1 = calculateTermMean(p.studentID, sub, "Term 1");
         const m2 = calculateTermMean(p.studentID, sub, "Term 2");
         const m3 = calculateTermMean(p.studentID, sub, "Term 3");
-        
-
-      // --- Smart Division Core Logic ---
-let divisor = 3; 
-let scoreSum = m1 + m2 + m3;
-
-if (calcMode === "auto") {
-  let activeTermsCount = 0;
-  if (m1 > 0) activeTermsCount++;
-  if (m2 > 0) activeTermsCount++;
-  if (m3 > 0) activeTermsCount++;
-  divisor = activeTermsCount > 0 ? activeTermsCount : 1;
-} else if (calcMode === "term1_2") {
-  divisor = 2;
-  scoreSum = m1 + m2; // Explicitly drops Term 3 just in case stray values exist
-} else if (calcMode === "term2_3") {
-  divisor = 2;
-  scoreSum = m2 + m3; // Explicitly drops Term 1 to isolate late registrations/transfers
-} else {
-  divisor = Number(calcMode); // Falls back to 3
-}
-
-const calculatedAvg = Math.round(scoreSum / divisor);
-
-        return { 
-          id: p.studentID, 
-          avg: calculatedAvg, 
-          m1, 
-          m2, 
-          m3,
-          divisorUsed: divisor // Keep track for calculating accurate max baseline percentage later
-        };
+        return { id: p.studentID, avg: Math.round((m1 + m2 + m3) / 3), m1, m2, m3 };
       });
-
-      // Sort scores to establish positions/rankings inside this subject
       scores.sort((a, b) => b.avg - a.avg);
       scores.forEach((s, i) => {
         if (i > 0 && s.avg === scores[i - 1].avg) s.rank = scores[i - 1].rank;
@@ -138,24 +101,15 @@ const calculatedAvg = Math.round(scoreSum / divisor);
       const pId = pupil.studentID;
       const results = {};
       let totalYearlySum = 0;
-      let totalMaxAchievableScore = 0;
 
       subjects.forEach(sub => {
         const data = subjectStandings[sub].find(s => s.id === pId);
         results[sub] = { m1: data.m1, m2: data.m2, m3: data.m3, yearlyMean: data.avg, subRank: data.rank };
         totalYearlySum += data.avg;
-        
-        // Accumulate baseline possible points based on calculation constraints chosen
-        totalMaxAchievableScore += 100; 
       });
 
       studentMap[pId] = results;
-      
-      // Calculate dynamic accurate percentage based on actual evaluated subjects
-      const percentage = totalMaxAchievableScore > 0 
-        ? ((totalYearlySum / totalMaxAchievableScore) * 100).toFixed(1) 
-        : "0.0";
-
+      const percentage = subjects.length > 0 ? ((totalYearlySum / (subjects.length * 100)) * 100).toFixed(1) : 0;
       return { id: pId, total: totalYearlySum, percentage };
     });
 
@@ -166,26 +120,31 @@ const calculatedAvg = Math.round(scoreSum / divisor);
     });
 
     return { subjects, studentMap, summaries };
-  }, [allYearGrades, pupils, calcMode]);
+  }, [allYearGrades, pupils]);
 
   // 4. Action Handlers
-  const handleExportPDF = () => {
+ const handleExportPDF = () => {
+    // A3 Landscape provides the best balance for large tables
     const doc = new jsPDF({ orientation: "landscape", unit: "pt", format: "a3" });
+    
+    // Adjusting chunk size: with larger fonts and padding, 5-6 pupils per page fits best on A3
     const pupilsPerPage = 6; 
 
     for (let i = 0; i < pupils.length; i += pupilsPerPage) {
       const chunk = pupils.slice(i, i + pupilsPerPage);
       if (i > 0) doc.addPage();
 
+      // 1. Header with breathing room
       doc.setFontSize(22).setFont(undefined, 'bold');
       doc.text(schoolName.toUpperCase(), doc.internal.pageSize.getWidth() / 2, 45, { align: "center" });
       
       doc.setFontSize(14).setFont(undefined, 'normal');
       doc.text(
-        `ANNUAL PROGRESS BROAD SHEET - ${selectedClass} (${academicYear}) | Mode: ${calcMode.toUpperCase()} | Page ${Math.floor(i / pupilsPerPage) + 1}`,
+        `ANNUAL PROGRESS BROAD SHEET - ${selectedClass} (${academicYear}) | Page ${Math.floor(i / pupilsPerPage) + 1}`,
         doc.internal.pageSize.getWidth() / 2, 75, { align: "center" }
       );
 
+      // 2. Table Headers (Updated for 3 Terms + AVG + POS)
       const head1 = [
         { content: "SUBJECTS", styles: { halign: 'left', fillColor: [40, 44, 52] } }, 
         ...chunk.map(p => ({ 
@@ -197,6 +156,7 @@ const calculatedAvg = Math.round(scoreSum / divisor);
       
       const head2 = ["", ...chunk.flatMap(() => ["TM1", "TM2", "TM3", "AVG", "POS"])];
 
+      // 3. Body Rows
       const body = yearlyData.subjects.map(sub => [
         sub,
         ...chunk.flatMap(p => {
@@ -205,6 +165,7 @@ const calculatedAvg = Math.round(scoreSum / divisor);
         })
       ]);
 
+      // 4. Summary Footer Rows (matched to your specific styles)
       const footerStyles = { fontStyle: 'bold', halign: 'center', fontSize: 11 };
 
       const totalRow = ["TOTAL MARKS", ...chunk.flatMap(p => [
@@ -219,6 +180,7 @@ const calculatedAvg = Math.round(scoreSum / divisor);
         { content: yearlyData.summaries[p.studentID].rank, colSpan: 5, styles: { ...footerStyles, textColor: [200, 0, 0], fillColor: [230, 230, 250], fontSize: 13 } }
       ])];
 
+      // 5. Generate Table with increased spacing and font sizes
       autoTable(doc, {
         startY: 100,
         head: [head1, head2],
@@ -241,6 +203,7 @@ const calculatedAvg = Math.round(scoreSum / divisor);
           0: { fontStyle: 'bold', cellWidth: 120, fillColor: [245, 245, 245], fontSize: 11 } 
         },
         didParseCell: (data) => {
+          // Red text for failing grades (below 50)
           if (data.section === 'body' && typeof data.cell.raw === 'number' && data.cell.raw < 50) {
             data.cell.styles.textColor = [220, 0, 0];
           }
@@ -258,6 +221,7 @@ const calculatedAvg = Math.round(scoreSum / divisor);
 
   return (
     <div className="max-w-full mx-auto p-6 bg-white shadow-2xl rounded-3xl border border-gray-100">
+      {/* Print-specific Styles */}
       <style>{`
         @media print {
           body * { visibility: hidden; }
@@ -276,7 +240,7 @@ const calculatedAvg = Math.round(scoreSum / divisor);
         }
       `}</style>
 
-      {/* Header UI */}
+      {/* Header UI (Hidden during print) */}
       <div className="no-print flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
         <div>
           <h2 className="text-3xl font-extrabold text-gray-900">Annual Broad Sheet</h2>
@@ -298,47 +262,24 @@ const calculatedAvg = Math.round(scoreSum / divisor);
         </div>
       </div>
 
-      {/* Filters (Enhanced row with Calculation Mode Selector) */}
-      <div className="no-print grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 p-6 bg-gray-50 rounded-2xl border border-gray-200">
-        <div className="flex flex-col gap-1">
-          <label className="text-xs font-bold text-gray-600 uppercase">Academic Year</label>
-          <select className="border-2 border-gray-200 rounded-xl px-4 py-3 bg-white font-medium" value={academicYear} onChange={(e) => setAcademicYear(e.target.value)}>
-            {academicYears.map(y => <option key={y} value={y}>{y}</option>)}
-          </select>
-        </div>
-
-        <div className="flex flex-col gap-1">
-          <label className="text-xs font-bold text-gray-600 uppercase">Class Tier</label>
-          <select className="border-2 border-gray-200 rounded-xl px-4 py-3 bg-white font-medium" value={selectedClass} onChange={(e) => setSelectedClass(e.target.value)}>
-            {availableClasses.map(c => <option key={c} value={c}>{c}</option>)}
-          </select>
-        </div>
-
-        <div className="flex flex-col gap-1">
-          <label className="text-xs font-bold text-red-700 uppercase flex items-center gap-1">
-            ⚙️ Yearly Mean Divisor Mode
-          </label>
-        <select 
-  className="border-2 border-red-200 rounded-xl px-4 py-3 bg-red-50 font-bold text-red-900 focus:outline-none focus:border-red-400" 
-  value={calcMode} 
-  onChange={(e) => setCalcMode(e.target.value)}
->
-  <option value="auto">🔄 Auto Detect (Divide by active terms)</option>
-  <option value="term1_2">🔢 Force Divide by 2 (Terms 1 & 2 only)</option>
-  <option value="term2_3">🔢 Force Divide by 2 (Terms 2 & 3 only)</option>
-  <option value="3">🔢 Force Divide by 3 (Full Academic Year)</option>
-</select>
-        </div>
+      {/* Filters (Hidden during print) */}
+      <div className="no-print grid grid-cols-1 md:grid-cols-2 gap-6 mb-8 p-6 bg-gray-50 rounded-2xl border border-gray-200">
+        <select className="border-2 border-gray-200 rounded-xl px-4 py-3" value={academicYear} onChange={(e) => setAcademicYear(e.target.value)}>
+          {academicYears.map(y => <option key={y} value={y}>{y}</option>)}
+        </select>
+        <select className="border-2 border-gray-200 rounded-xl px-4 py-3" value={selectedClass} onChange={(e) => setSelectedClass(e.target.value)}>
+          {availableClasses.map(c => <option key={c} value={c}>{c}</option>)}
+        </select>
       </div>
 
       {loading ? (
-        <div className="text-center p-20 text-emerald-700 font-bold animate-pulse">Compiling Annual Broad Sheet...</div>
+        <div className="text-center p-20 text-emerald-700 font-bold">Compiling Annual Broad Sheet...</div>
       ) : (
         <div id="printable-sheet" className="overflow-x-auto border border-gray-200 rounded-2xl">
+          {/* Print-only Header */}
           <div className="hidden print:block text-center mb-6">
             <h1 className="text-2xl font-bold uppercase">{schoolName}</h1>
             <h2 className="text-lg">ANNUAL PROGRESS BROAD SHEET - {selectedClass} ({academicYear})</h2>
-            <p className="text-xs italic">Calculation Mode: Forced / {calcMode.toUpperCase()}</p>
           </div>
 
           <table className="w-full text-center border-collapse">

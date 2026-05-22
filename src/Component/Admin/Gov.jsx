@@ -56,6 +56,7 @@ import RestoreTimetable from "../TeacherAssignment/RestoreTimetable";
 import EditAttendancePage from "../TeacherAssignment/EditAttendancePage";
 import TermResult from "../TeacherAssignment/TermResult";
 import YearlyResult from "../TeacherAssignment/YearlyResult";
+import BulkDeleteGradesPage from "../TeacherAssignment/BulkDeleteGradesPage";
 import YearlyGeneralReportCard from "../TeacherAssignment/YearlyGeneralReportCard";
 import StudentIDCardData from "../Voters/StudentIDCardData";
 import WASCEForm from "../Voters/WASCEForm";
@@ -99,7 +100,8 @@ const NAV_ITEMS = [
     children: [
       // { key: "GradeSheetPage", label: "Test Grade Sheet", icon: <MdPerson /> },
       { key: "TeacherPupilsPageAdmin", label: "TeacherPupilsGrade", icon: <MdPerson /> },
-      { key: "SubGradeMatrixPage", label: "Sub Grade Sheet", icon: <MdPerson /> },
+      { key: "BulkDeleteGradesPage", label: "BulkDeleteGradesPage", icon: <MdPerson /> },
+      // { key: "SubGradeMatrixPage", label: "Sub Grade Sheet", icon: <MdPerson /> },
       { key: "ClassFullTermMatrixPage", label: "Term Grade Sheet", icon: <MdPerson /> },
       { key: "GeneralReportCard", label: "ReportCard", icon: <MdPerson /> },
       { key: "TermResult", label: "TermResult", icon: <MdPerson /> },
@@ -268,6 +270,7 @@ function Gov() {
       case "RestoreTimetable": return <RestoreTimetable />;
       case "EditAttendancePage": return <EditAttendancePage />;
       case "StudentIDCardData": return <StudentIDCardData />;
+      case "BulkDeleteGradesPage": return <BulkDeleteGradesPage />;
 
 
 

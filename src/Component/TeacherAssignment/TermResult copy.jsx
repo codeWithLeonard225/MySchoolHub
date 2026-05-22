@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { db } from "../../../firebase";
 import { schooldb } from "../Database/SchoolsResults";
-import { collection, query, where, onSnapshot } from "firebase/firestore";
+import { getDocs, collection, query, where, onSnapshot } from "firebase/firestore";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { useLocation } from "react-router-dom";
@@ -28,7 +28,7 @@ const TermResult = () => {
 
   const tests = termTests[selectedTerm];
 
-  // Fetch initial metadata
+  // Fetch initial metadata and grades (logic remains the same as your provided code)
   useEffect(() => {
     if (!schoolId) return;
     const q = query(collection(schooldb, "PupilGrades"), where("schoolId", "==", schoolId));
@@ -44,7 +44,6 @@ const TermResult = () => {
     return () => unsubscribe();
   }, [schoolId]);
 
-  // Fetch pupils and grades data streams
   useEffect(() => {
     if (!academicYear || !selectedClass || !schoolId) return;
     setLoading(true);
@@ -64,7 +63,7 @@ const TermResult = () => {
     return () => { unsubPupils(); unsubGrades(); };
   }, [academicYear, selectedClass, schoolId]);
 
-  // Matrix Processing Engine
+  // CORE LOGIC: Generate Matrix + Footer Totals
   const broadSheetData = useMemo(() => {
     if (classGradesData.length === 0 || pupils.length === 0) return { subjects: [], studentMap: {}, summaries: {} };
 
@@ -72,6 +71,7 @@ const TermResult = () => {
     const studentMap = {};
     const summaries = {};
 
+    // 1. Calculate Subject Ranks
     const subjectRanks = {};
     uniqueSubjects.forEach(subject => {
       const scores = pupils.map(p => {
@@ -88,6 +88,7 @@ const TermResult = () => {
       subjectRanks[subject] = scores;
     });
 
+    // 2. Calculate Overall Summaries (Total, %, Rank)
     const overallScores = pupils.map(p => {
       const pData = classGradesData.filter(x => x.pupilID === p.studentID);
       const total = uniqueSubjects.reduce((acc, sub) => {
@@ -105,6 +106,7 @@ const TermResult = () => {
       else s.pos = i + 1;
     });
 
+    // 3. Map everything
     pupils.forEach(pupil => {
       const results = {};
       uniqueSubjects.forEach(sub => {
@@ -126,162 +128,99 @@ const TermResult = () => {
     return { subjects: uniqueSubjects, studentMap, summaries };
   }, [classGradesData, pupils, tests]);
 
-  // Print Mode A: Original Layout (Subjects on Left, Students on Top)
-  const handlePrintStandard = () => {
-    const doc = new jsPDF({ orientation: "landscape", unit: "pt", format: "a3" });
-    const allFilteredPupils = pupils.filter(p => selectedPupil === "all" || p.studentID === selectedPupil);
+const handlePrint = () => {
+  // A3 Landscape provides the best balance for large tables
+  const doc = new jsPDF({ orientation: "landscape", unit: "pt", format: "a3" });
+  const allFilteredPupils = pupils.filter(p => selectedPupil === "all" || p.studentID === selectedPupil);
+  
+  const pupilsPerPage = 8; 
+  const totalPupils = allFilteredPupils.length;
+
+  for (let i = 0; i < totalPupils; i += pupilsPerPage) {
+    const pupilChunk = allFilteredPupils.slice(i, i + pupilsPerPage);
     
-    const pupilsPerPage = 8; 
-    const totalPupils = allFilteredPupils.length;
+    if (i > 0) doc.addPage();
 
-    for (let i = 0; i < totalPupils; i += pupilsPerPage) {
-      const pupilChunk = allFilteredPupils.slice(i, i + pupilsPerPage);
-      if (i > 0) doc.addPage();
-
-      doc.setFontSize(22).setFont(undefined, 'bold');
-      doc.text(schoolName.toUpperCase(), doc.internal.pageSize.getWidth() / 2, 45, { align: "center" });
-      
-      doc.setFontSize(14).setFont(undefined, 'normal');
-      doc.text(`${selectedClass} BROAD SHEET - ${selectedTerm} (${academicYear}) | Page ${Math.floor(i / pupilsPerPage) + 1}`, doc.internal.pageSize.getWidth() / 2, 70, { align: "center" });
-
-      const head1 = [
-        { content: "SUBJECTS", styles: { halign: 'left', fillColor: [40, 44, 52] } }, 
-        ...pupilChunk.map(p => ({ content: p.studentName.toUpperCase(), colSpan: 4, styles: { halign: 'center', fillColor: [63, 81, 181], fontSize: 10 } }))
-      ];
-      const head2 = ["", ...pupilChunk.flatMap(() => ["T1", "T2", "AVG", "RANK"])];
-
-      const body = broadSheetData.subjects.map(sub => [
-        sub,
-        ...pupilChunk.flatMap(p => {
-          const r = broadSheetData.studentMap[p.studentID]?.[sub] || {};
-          return [r.t1 || "0", r.t2 || "0", r.mean || "0", r.rank || "-"];
-        })
-      ]);
-
-      const footerStyles = { fontStyle: 'bold', halign: 'center', fontSize: 11 };
-      const totalRow = ["TOTAL MARKS", ...pupilChunk.flatMap(p => [{ content: broadSheetData.summaries[p.studentID].total, colSpan: 4, styles: { ...footerStyles, fillColor: [240, 240, 240] } }])];
-      const percRow = ["PERCENTAGE", ...pupilChunk.flatMap(p => [{ content: broadSheetData.summaries[p.studentID].percentage + "%", colSpan: 4, styles: { ...footerStyles, fillColor: [240, 240, 240] } }])];
-      const rankRow = ["OVERALL RANK", ...pupilChunk.flatMap(p => [{ content: broadSheetData.summaries[p.studentID].rank, colSpan: 4, styles: { ...footerStyles, textColor: [200, 0, 0], fillColor: [230, 230, 250], fontSize: 13 } }])];
-
-      autoTable(doc, {
-        startY: 90,
-        head: [head1, head2],
-        body: [...body, totalRow, percRow, rankRow],
-        theme: 'grid',
-        styles: { fontSize: 10, cellPadding: 6, valign: 'middle', lineWidth: 0.5, lineColor: [150, 150, 150] },
-        headStyles: { fillColor: [63, 81, 181], textColor: [255, 255, 255], fontSize: 10, cellPadding: 8 },
-        columnStyles: { 0: { fontStyle: 'bold', cellWidth: 120, fillColor: [245, 245, 245], fontSize: 11 } },
-        didParseCell: (data) => {
-          if (data.section === 'body' && typeof data.cell.raw === 'number' && data.cell.raw < 50) {
-            data.cell.styles.textColor = [220, 0, 0];
-          }
-        },
-        margin: { left: 20, right: 20, bottom: 40 },
-      });
-    }
-    doc.save(`${selectedClass}_Standard_BroadSheet_${selectedTerm}.pdf`);
-  };
-
-  // Print Mode B: Transposed Layout (Names on Left, Subjects on Top)
-  const handlePrintTransposed = () => {
-    const doc = new jsPDF({ orientation: "landscape", unit: "pt", format: "a3" });
-    const allFilteredPupils = pupils.filter(p => selectedPupil === "all" || p.studentID === selectedPupil);
+    // 1. Header with more breathing room
+    doc.setFontSize(22).setFont(undefined, 'bold');
+    doc.text(schoolName.toUpperCase(), doc.internal.pageSize.getWidth() / 2, 45, { align: "center" });
     
-    // Chunking subjects up to 6 items per page to safely fit horizontal structures cleanly
-    const subjectsPerPage = 6; 
-    const totalSubjects = broadSheetData.subjects.length;
+    doc.setFontSize(14).setFont(undefined, 'normal');
+    doc.text(
+      `${selectedClass} BROAD SHEET - ${selectedTerm} (${academicYear}) | Page ${Math.floor(i / pupilsPerPage) + 1}`,
+      doc.internal.pageSize.getWidth() / 2, 70, { align: "center" }
+    );
 
-    for (let sIdx = 0; sIdx < totalSubjects; sIdx += subjectsPerPage) {
-      const subjectChunk = broadSheetData.subjects.slice(sIdx, sIdx + subjectsPerPage);
-      
-      // Determine if this layout represents the terminal subject chunk
-      const isLastChunk = (sIdx + subjectsPerPage) >= totalSubjects;
+    // 2. Table Headers
+    const head1 = [
+      { content: "SUBJECTS", styles: { halign: 'left', fillColor: [40, 44, 52] } }, 
+      ...pupilChunk.map(p => ({ 
+        content: p.studentName.toUpperCase(), 
+        colSpan: 4, 
+        styles: { halign: 'center', fillColor: [63, 81, 181], fontSize: 10 } 
+      }))
+    ];
+    
+    const head2 = ["", ...pupilChunk.flatMap(() => ["T1", "T2", "AVG", "POS"])];
 
-      if (sIdx > 0) doc.addPage();
+    // 3. Body Rows
+    const body = broadSheetData.subjects.map(sub => [
+      sub,
+      ...pupilChunk.flatMap(p => {
+        const r = broadSheetData.studentMap[p.studentID]?.[sub] || {};
+        return [r.t1 || "0", r.t2 || "0", r.mean || "0", r.rank || "-"];
+      })
+    ]);
 
-      // Heading block
-      doc.setFontSize(22).setFont(undefined, 'bold');
-      doc.text(schoolName.toUpperCase(), doc.internal.pageSize.getWidth() / 2, 45, { align: "center" });
-      
-      doc.setFontSize(14).setFont(undefined, 'normal');
-      doc.text(`${selectedClass} TRANSPOSED BROAD SHEET - ${selectedTerm} (${academicYear}) | Part ${Math.floor(sIdx / subjectsPerPage) + 1}`, doc.internal.pageSize.getWidth() / 2, 70, { align: "center" });
+    // 4. Summary Footer Rows (increased font and height)
+    const footerStyles = { fontStyle: 'bold', halign: 'center', fontSize: 11 };
 
-      // Build fundamental structural header cells
-      const head1 = [
-        { content: "STUDENT NAMES", rowSpan: 2, styles: { valign: 'middle', halign: 'left', fillColor: [40, 44, 52] } },
-        ...subjectChunk.map(sub => ({ content: sub.toUpperCase(), colSpan: 4, styles: { halign: 'center', fillColor: [63, 81, 181], fontSize: 9 } }))
-      ];
+    const totalRow = ["TOTAL MARKS", ...pupilChunk.flatMap(p => [
+      { content: broadSheetData.summaries[p.studentID].total, colSpan: 4, styles: { ...footerStyles, fillColor: [240, 240, 240] } }
+    ])];
 
-      const head2 = [
-        ...subjectChunk.flatMap(() => ["T1", "T2", "AVG", "RANK"])
-      ];
+    const percRow = ["PERCENTAGE", ...pupilChunk.flatMap(p => [
+      { content: broadSheetData.summaries[p.studentID].percentage + "%", colSpan: 4, styles: { ...footerStyles, fillColor: [240, 240, 240] } }
+    ])];
 
-      // Append general calculations row array configurations only on final chunk
-      if (isLastChunk) {
-        head1.push({ content: "OVERALL STATS", colSpan: 3, styles: { halign: 'center', fillColor: [30, 41, 59], fontSize: 9 } });
-        head2.push("TOTAL", "PERC", "OVERALL RANK");
-      }
+    const rankRow = ["OVERALL RANK", ...pupilChunk.flatMap(p => [
+      { content: broadSheetData.summaries[p.studentID].rank, colSpan: 4, styles: { ...footerStyles, textColor: [200, 0, 0], fillColor: [230, 230, 250], fontSize: 13 } }
+    ])];
 
-      // Build out row content mapping strings per student record
-      const body = allFilteredPupils.map(p => {
-        const studentRow = [p.studentName.toUpperCase()];
-        
-        // Subject scores block loop
-        subjectChunk.forEach(sub => {
-          const r = broadSheetData.studentMap[p.studentID]?.[sub] || {};
-          studentRow.push(r.t1 || "0", r.t2 || "0", r.mean || "0", r.rank || "-");
-        });
-
-        // Add overall metrics safely tracking trailing position on last sheet
-        if (isLastChunk) {
-          const summary = broadSheetData.summaries[p.studentID] || {};
-          studentRow.push(summary.total || "0", (summary.percentage || "0") + "%", summary.rank || "-");
+    // 5. Generate Table with increased spacing
+    autoTable(doc, {
+      startY: 90,
+      head: [head1, head2],
+      body: [...body, totalRow, percRow, rankRow],
+      theme: 'grid',
+      styles: { 
+        fontSize: 10,        // Increased from 7/8 to 10
+        cellPadding: 6,     // Increased padding creates much larger row space
+        valign: 'middle',
+        lineWidth: 0.5,
+        lineColor: [150, 150, 150]
+      },
+      headStyles: {
+        fillColor: [63, 81, 181],
+        textColor: [255, 255, 255],
+        fontSize: 10,
+        cellPadding: 8
+      },
+      columnStyles: { 
+        0: { fontStyle: 'bold', cellWidth: 120, fillColor: [245, 245, 245], fontSize: 11 } 
+      },
+      didParseCell: (data) => {
+        // Red text for failing grades (below 50) in the PDF
+        if (data.section === 'body' && typeof data.cell.raw === 'number' && data.cell.raw < 50) {
+          data.cell.styles.textColor = [220, 0, 0];
         }
+      },
+      margin: { left: 20, right: 20, bottom: 40 },
+    });
+  }
 
-        return studentRow;
-      });
-
-      autoTable(doc, {
-        startY: 90,
-        head: [head1, head2],
-        body: body,
-        theme: 'grid',
-        styles: { fontSize: 8.5, cellPadding: 5, valign: 'middle', lineWidth: 0.5, lineColor: [150, 150, 150], halign: 'center' },
-        headStyles: { textColor: [255, 255, 255], fontSize: 8.5, fontStyle: 'bold' },
-        columnStyles: { 
-          0: { fontStyle: 'bold', cellWidth: 150, halign: 'left', fillColor: [245, 245, 245] }
-        },
-        didParseCell: (data) => {
-          if (data.section === 'body') {
-            const subjectsActiveSpan = subjectChunk.length * 4;
-            
-            if (data.column.index > 0 && data.column.index <= subjectsActiveSpan) {
-              // Highlight ranks inside subject columns
-              const isRankSubCol = data.column.index % 4 === 0;
-              if (isRankSubCol) {
-                data.cell.styles.textColor = [190, 24, 74];
-                data.cell.styles.fontStyle = 'bold';
-              } else {
-                const scoreVal = parseFloat(data.cell.raw);
-                if (!isNaN(scoreVal) && scoreVal < 50) {
-                  data.cell.styles.textColor = [220, 0, 0];
-                }
-              }
-            }
-            
-            // Style the overall final rank summary column uniquely on final chunk sheet
-            if (isLastChunk && data.column.index === subjectsActiveSpan + 3) {
-              data.cell.styles.textColor = [200, 0, 0];
-              data.cell.styles.fontStyle = 'bold';
-              data.cell.styles.fillColor = [240, 240, 253];
-            }
-          }
-        },
-        margin: { left: 20, right: 20, bottom: 40 },
-      });
-    }
-    doc.save(`${selectedClass}_Transposed_BroadSheet_${selectedTerm}.pdf`);
-  };
+  doc.save(`${selectedClass}_BroadSheet_${selectedTerm}.pdf`);
+};
 
   const getGradeColor = (val) => {
     const grade = Number(val);
@@ -292,25 +231,17 @@ const TermResult = () => {
 
   return (
     <div className="max-w-full mx-auto p-4 bg-white shadow-xl rounded-2xl">
-      <div className="flex flex-col lg:flex-row justify-between items-center mb-6 gap-4">
-        <h2 className="text-xl font-bold text-indigo-700">{schoolName} Broad Sheet Control Center</h2>
-        <div className="flex flex-wrap gap-2">
-          <button
-            onClick={handlePrintStandard}
-            className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-lg shadow-md transition-all font-semibold text-sm"
-          >
-            Print Standard Matrix (Subjects Left)
-          </button>
-          <button
-            onClick={handlePrintTransposed}
-            className="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-lg shadow-md transition-all font-semibold text-sm"
-          >
-            Print Transposed Matrix (Names Left)
-          </button>
-        </div>
+      <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+        <h2 className="text-xl font-bold text-indigo-700">{schoolName} Broad Sheet</h2>
+        <button
+          onClick={handlePrint}
+          className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-lg shadow-md transition-all font-semibold"
+        >
+          Print Broad Sheet (Landscape)
+        </button>
       </div>
 
-      {/* Filters Form Blocks */}
+      {/* Filters (Logic same as yours) */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8 p-4 border rounded-lg bg-indigo-50">
         <div>
           <label className="block text-xs font-bold mb-1">Term</label>
@@ -381,8 +312,7 @@ const TermResult = () => {
                   })}
                 </tr>
               ))}
-              
-              {/* Table Footer Elements */}
+              {/* Footer Summary Rows */}
               <tr className="bg-gray-100 font-bold border-t-2 border-indigo-200">
                 <td className="sticky left-0 bg-gray-100 px-4 py-3 border-r text-indigo-900">Combined Scores</td>
                 {pupils.filter(p => selectedPupil === "all" || p.studentID === selectedPupil).map(p => (

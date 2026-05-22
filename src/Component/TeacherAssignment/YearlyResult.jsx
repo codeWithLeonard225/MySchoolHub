@@ -14,9 +14,7 @@ const YearlyResult = () => {
   const [pupils, setPupils] = useState([]);
   const [allYearGrades, setAllYearGrades] = useState([]);
   const [loading, setLoading] = useState(false);
-  
-  // New State for handling manual or dynamic division modes
-  const [calcMode, setCalcMode] = useState("auto"); // Options: "auto", "2", "3"
+  const [calcMode, setCalcMode] = useState("auto"); // Options: "auto", "term1_2", "term2_3", "3"
   
   const location = useLocation();
   const { schoolId, schoolName } = location.state || {};
@@ -66,7 +64,7 @@ const YearlyResult = () => {
     return () => { unsubPupils(); unsubGrades(); };
   }, [academicYear, selectedClass, schoolId]);
 
-  // 3. Yearly Logic Engine (Enhanced with Dynamic Division)
+  // 3. Yearly Logic Engine
   const yearlyData = useMemo(() => {
     if (allYearGrades.length === 0 || pupils.length === 0) return { subjects: [], studentMap: {}, summaries: {} };
 
@@ -74,7 +72,6 @@ const YearlyResult = () => {
     const studentMap = {};
     const summaries = {};
 
-    // Helper to calculate a clean mean for single term test items (T1 + T2) / 2
     const calculateTermMean = (pId, sub, term) => {
       const t1Key = `${term} T1`;
       const t2Key = `${term} T2`;
@@ -92,40 +89,30 @@ const YearlyResult = () => {
         const m2 = calculateTermMean(p.studentID, sub, "Term 2");
         const m3 = calculateTermMean(p.studentID, sub, "Term 3");
         
+        let divisor = 3; 
+        let scoreSum = m1 + m2 + m3;
 
-      // --- Smart Division Core Logic ---
-let divisor = 3; 
-let scoreSum = m1 + m2 + m3;
+        if (calcMode === "auto") {
+          let activeTermsCount = 0;
+          if (m1 > 0) activeTermsCount++;
+          if (m2 > 0) activeTermsCount++;
+          if (m3 > 0) activeTermsCount++;
+          divisor = activeTermsCount > 0 ? activeTermsCount : 1;
+        } else if (calcMode === "term1_2") {
+          divisor = 2;
+          scoreSum = m1 + m2;
+        } else if (calcMode === "term2_3") {
+          divisor = 2;
+          scoreSum = m2 + m3;
+        } else {
+          divisor = Number(calcMode);
+        }
 
-if (calcMode === "auto") {
-  let activeTermsCount = 0;
-  if (m1 > 0) activeTermsCount++;
-  if (m2 > 0) activeTermsCount++;
-  if (m3 > 0) activeTermsCount++;
-  divisor = activeTermsCount > 0 ? activeTermsCount : 1;
-} else if (calcMode === "term1_2") {
-  divisor = 2;
-  scoreSum = m1 + m2; // Explicitly drops Term 3 just in case stray values exist
-} else if (calcMode === "term2_3") {
-  divisor = 2;
-  scoreSum = m2 + m3; // Explicitly drops Term 1 to isolate late registrations/transfers
-} else {
-  divisor = Number(calcMode); // Falls back to 3
-}
+        const calculatedAvg = Math.round(scoreSum / divisor);
 
-const calculatedAvg = Math.round(scoreSum / divisor);
-
-        return { 
-          id: p.studentID, 
-          avg: calculatedAvg, 
-          m1, 
-          m2, 
-          m3,
-          divisorUsed: divisor // Keep track for calculating accurate max baseline percentage later
-        };
+        return { id: p.studentID, avg: calculatedAvg, m1, m2, m3, divisorUsed: divisor };
       });
 
-      // Sort scores to establish positions/rankings inside this subject
       scores.sort((a, b) => b.avg - a.avg);
       scores.forEach((s, i) => {
         if (i > 0 && s.avg === scores[i - 1].avg) s.rank = scores[i - 1].rank;
@@ -144,14 +131,11 @@ const calculatedAvg = Math.round(scoreSum / divisor);
         const data = subjectStandings[sub].find(s => s.id === pId);
         results[sub] = { m1: data.m1, m2: data.m2, m3: data.m3, yearlyMean: data.avg, subRank: data.rank };
         totalYearlySum += data.avg;
-        
-        // Accumulate baseline possible points based on calculation constraints chosen
         totalMaxAchievableScore += 100; 
       });
 
       studentMap[pId] = results;
       
-      // Calculate dynamic accurate percentage based on actual evaluated subjects
       const percentage = totalMaxAchievableScore > 0 
         ? ((totalYearlySum / totalMaxAchievableScore) * 100).toFixed(1) 
         : "0.0";
@@ -168,7 +152,7 @@ const calculatedAvg = Math.round(scoreSum / divisor);
     return { subjects, studentMap, summaries };
   }, [allYearGrades, pupils, calcMode]);
 
-  // 4. Action Handlers
+  // 4. Print Mode A: Original Standard Matrix (Subjects on Left, Students on Top)
   const handleExportPDF = () => {
     const doc = new jsPDF({ orientation: "landscape", unit: "pt", format: "a3" });
     const pupilsPerPage = 6; 
@@ -206,40 +190,18 @@ const calculatedAvg = Math.round(scoreSum / divisor);
       ]);
 
       const footerStyles = { fontStyle: 'bold', halign: 'center', fontSize: 11 };
-
-      const totalRow = ["TOTAL MARKS", ...chunk.flatMap(p => [
-        { content: yearlyData.summaries[p.studentID].total, colSpan: 5, styles: { ...footerStyles, fillColor: [240, 240, 240] } }
-      ])];
-
-      const percRow = ["PERCENTAGE", ...chunk.flatMap(p => [
-        { content: yearlyData.summaries[p.studentID].percentage + "%", colSpan: 5, styles: { ...footerStyles, fillColor: [240, 240, 240] } }
-      ])];
-
-      const rankRow = ["ANNUAL RANK", ...chunk.flatMap(p => [
-        { content: yearlyData.summaries[p.studentID].rank, colSpan: 5, styles: { ...footerStyles, textColor: [200, 0, 0], fillColor: [230, 230, 250], fontSize: 13 } }
-      ])];
+      const totalRow = ["TOTAL MARKS", ...chunk.flatMap(p => [{ content: yearlyData.summaries[p.studentID].total, colSpan: 5, styles: { ...footerStyles, fillColor: [240, 240, 240] } }])];
+      const percRow = ["PERCENTAGE", ...chunk.flatMap(p => [{ content: yearlyData.summaries[p.studentID].percentage + "%", colSpan: 5, styles: { ...footerStyles, fillColor: [240, 240, 240] } }])];
+      const rankRow = ["ANNUAL RANK", ...chunk.flatMap(p => [{ content: yearlyData.summaries[p.studentID].rank, colSpan: 5, styles: { ...footerStyles, textColor: [200, 0, 0], fillColor: [230, 230, 250], fontSize: 13 } }])];
 
       autoTable(doc, {
         startY: 100,
         head: [head1, head2],
         body: [...body, totalRow, percRow, rankRow],
         theme: 'grid',
-        styles: { 
-          fontSize: 10,        
-          cellPadding: 6,     
-          valign: 'middle',
-          lineWidth: 0.5,
-          lineColor: [150, 150, 150]
-        },
-        headStyles: {
-          fillColor: [63, 81, 181],
-          textColor: [255, 255, 255],
-          fontSize: 10,
-          cellPadding: 8
-        },
-        columnStyles: { 
-          0: { fontStyle: 'bold', cellWidth: 120, fillColor: [245, 245, 245], fontSize: 11 } 
-        },
+        styles: { fontSize: 10, cellPadding: 6, valign: 'middle', lineWidth: 0.5, lineColor: [150, 150, 150] },
+        headStyles: { fillColor: [63, 81, 181], textColor: [255, 255, 255], fontSize: 10, cellPadding: 8 },
+        columnStyles: { 0: { fontStyle: 'bold', cellWidth: 120, fillColor: [245, 245, 245], fontSize: 11 } },
         didParseCell: (data) => {
           if (data.section === 'body' && typeof data.cell.raw === 'number' && data.cell.raw < 50) {
             data.cell.styles.textColor = [220, 0, 0];
@@ -248,8 +210,110 @@ const calculatedAvg = Math.round(scoreSum / divisor);
         margin: { left: 20, right: 20, bottom: 40 },
       });
     }
+    doc.save(`${selectedClass}_Annual_Standard_BroadSheet_${academicYear}.pdf`);
+  };
 
-    doc.save(`${selectedClass}_Annual_BroadSheet_${academicYear}.pdf`);
+  // Print Mode B: Transposed Matrix (Student Names on Left, Subjects on Top)
+ // Print Mode B: Transposed Matrix (Student Names on Left, Subjects on Top)
+  const handlePrintTransposed = () => {
+    const doc = new jsPDF({ orientation: "landscape", unit: "pt", format: "a3" });
+    
+    // Chunk down to exactly 6 subjects per landscape block as requested
+    const subjectsPerPage = 6; 
+    const totalSubjects = yearlyData.subjects.length;
+
+    for (let sIdx = 0; sIdx < totalSubjects; sIdx += subjectsPerPage) {
+      const subjectChunk = yearlyData.subjects.slice(sIdx, sIdx + subjectsPerPage);
+      
+      // Determine if this is the absolute final chunk of subjects
+      const isLastChunk = (sIdx + subjectsPerPage) >= totalSubjects;
+
+      if (sIdx > 0) doc.addPage();
+
+      doc.setFontSize(22).setFont(undefined, 'bold');
+      doc.text(schoolName.toUpperCase(), doc.internal.pageSize.getWidth() / 2, 45, { align: "center" });
+      
+      doc.setFontSize(14).setFont(undefined, 'normal');
+      doc.text(
+        `ANNUAL PROGRESS TRANSPOSED SHEET - ${selectedClass} (${academicYear}) | Part ${Math.floor(sIdx / subjectsPerPage) + 1}`,
+        doc.internal.pageSize.getWidth() / 2, 70, { align: "center" }
+      );
+
+      // Build out dynamic Headers based on whether we include the Overalls block or not
+      const head1 = [
+        { content: "STUDENT NAMES", rowSpan: 2, styles: { valign: 'middle', halign: 'left', fillColor: [40, 44, 52] } },
+        ...subjectChunk.map(sub => ({ content: sub.toUpperCase(), colSpan: 5, styles: { halign: 'center', fillColor: [63, 81, 181], fontSize: 9 } }))
+      ];
+
+      const head2 = [
+        ...subjectChunk.flatMap(() => ["TM1", "TM2", "TM3", "AVG", "POS"])
+      ];
+
+      // Append Overall Summary Blocks ONLY if it's the last page chunk
+      if (isLastChunk) {
+        head1.push({ content: "YEARLY OVERALLS", colSpan: 3, styles: { halign: 'center', fillColor: [30, 41, 59], fontSize: 9 } });
+        head2.push("TOTAL", "PERC", "ANNUAL RANK");
+      }
+
+      // Populate Table Body Rows
+      const body = pupils.map(p => {
+        const studentRow = [p.studentName.toUpperCase()];
+        
+        // Push the scores for the current 6 subjects in this chunk
+        subjectChunk.forEach(sub => {
+          const r = yearlyData.studentMap[p.studentID]?.[sub] || {};
+          studentRow.push(r.m1 || 0, r.m2 || 0, r.m3 || 0, r.yearlyMean || 0, r.subRank || "-");
+        });
+
+        // Push overall calculations onto the row array ONLY on the final page
+        if (isLastChunk) {
+          const summary = yearlyData.summaries[p.studentID] || {};
+          studentRow.push(summary.total || "0", (summary.percentage || "0") + "%", summary.rank || "-");
+        }
+
+        return studentRow;
+      });
+
+      autoTable(doc, {
+        startY: 90,
+        head: [head1, head2],
+        body: body,
+        theme: 'grid',
+        styles: { fontSize: 8.5, cellPadding: 5, valign: 'middle', lineWidth: 0.5, lineColor: [150, 150, 150], halign: 'center' },
+        headStyles: { textColor: [255, 255, 255], fontSize: 8.5, fontStyle: 'bold' },
+        columnStyles: { 
+          0: { fontStyle: 'bold', cellWidth: 150, halign: 'left', fillColor: [245, 245, 245] }
+        },
+        didParseCell: (data) => {
+          if (data.section === 'body') {
+            const subjectsActiveSpan = subjectChunk.length * 5;
+            
+            // Apply unique styles to score columns on any current sheet
+            if (data.column.index > 0 && data.column.index <= subjectsActiveSpan) {
+              const isPosSubCol = data.column.index % 5 === 0;
+              if (isPosSubCol) {
+                data.cell.styles.textColor = [190, 24, 74];
+                data.cell.styles.fontStyle = 'bold';
+              } else {
+                const scoreVal = parseFloat(data.cell.raw);
+                if (!isNaN(scoreVal) && scoreVal < 50) {
+                  data.cell.styles.textColor = [220, 0, 0];
+                }
+              }
+            }
+            
+            // Highlight final summary ranking indicators on the last sheet only
+            if (isLastChunk && data.column.index === subjectsActiveSpan + 3) {
+              data.cell.styles.textColor = [200, 0, 0];
+              data.cell.styles.fontStyle = 'bold';
+              data.cell.styles.fillColor = [240, 240, 253];
+            }
+          }
+        },
+        margin: { left: 20, right: 20, bottom: 40 },
+      });
+    }
+    doc.save(`${selectedClass}_Annual_Transposed_BroadSheet_${academicYear}.pdf`);
   };
 
   const handlePrintPreview = () => {
@@ -282,23 +346,29 @@ const calculatedAvg = Math.round(scoreSum / divisor);
           <h2 className="text-3xl font-extrabold text-gray-900">Annual Broad Sheet</h2>
           <p className="text-gray-500 font-medium">{schoolName} • Results Management</p>
         </div>
-        <div className="flex gap-3">
+        <div className="flex flex-wrap gap-2">
           <button 
             onClick={handlePrintPreview} 
-            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl shadow-lg font-bold transition-all"
+            className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl shadow-lg font-bold text-sm transition-all"
           >
             Print Preview
           </button>
           <button 
             onClick={handleExportPDF} 
-            className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-xl shadow-lg font-bold transition-all"
+            className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl shadow-lg font-bold text-sm transition-all"
           >
-            Export PDF
+            Export Standard Matrix
+          </button>
+          <button 
+            onClick={handlePrintTransposed} 
+            className="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-xl shadow-lg font-bold text-sm transition-all"
+          >
+            Export Transposed Matrix
           </button>
         </div>
       </div>
 
-      {/* Filters (Enhanced row with Calculation Mode Selector) */}
+      {/* Filters Form Blocks */}
       <div className="no-print grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 p-6 bg-gray-50 rounded-2xl border border-gray-200">
         <div className="flex flex-col gap-1">
           <label className="text-xs font-bold text-gray-600 uppercase">Academic Year</label>
@@ -318,16 +388,16 @@ const calculatedAvg = Math.round(scoreSum / divisor);
           <label className="text-xs font-bold text-red-700 uppercase flex items-center gap-1">
             ⚙️ Yearly Mean Divisor Mode
           </label>
-        <select 
-  className="border-2 border-red-200 rounded-xl px-4 py-3 bg-red-50 font-bold text-red-900 focus:outline-none focus:border-red-400" 
-  value={calcMode} 
-  onChange={(e) => setCalcMode(e.target.value)}
->
-  <option value="auto">🔄 Auto Detect (Divide by active terms)</option>
-  <option value="term1_2">🔢 Force Divide by 2 (Terms 1 & 2 only)</option>
-  <option value="term2_3">🔢 Force Divide by 2 (Terms 2 & 3 only)</option>
-  <option value="3">🔢 Force Divide by 3 (Full Academic Year)</option>
-</select>
+          <select 
+            className="border-2 border-red-200 rounded-xl px-4 py-3 bg-red-50 font-bold text-red-900 focus:outline-none focus:border-red-400" 
+            value={calcMode} 
+            onChange={(e) => setCalcMode(e.target.value)}
+          >
+            <option value="auto">🔄 Auto Detect (Divide by active terms)</option>
+            <option value="term1_2">🔢 Force Divide by 2 (Terms 1 & 2 only)</option>
+            <option value="term2_3">🔢 Force Divide by 2 (Terms 2 & 3 only)</option>
+            <option value="3">🔢 Force Divide by 3 (Full Academic Year)</option>
+          </select>
         </div>
       </div>
 

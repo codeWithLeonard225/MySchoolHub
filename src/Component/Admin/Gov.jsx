@@ -60,6 +60,7 @@ import BulkDeleteGradesPage from "../TeacherAssignment/BulkDeleteGradesPage";
 import YearlyGeneralReportCard from "../TeacherAssignment/YearlyGeneralReportCard";
 import StudentIDCardData from "../Voters/StudentIDCardData";
 import WASCEForm from "../Voters/WASCEForm";
+import ClassPromotion from "../Voters/ClassPromotion";
 
 
 
@@ -74,6 +75,7 @@ const NAV_ITEMS = [
       { key: "class", label: " Class", icon: <MdPerson /> },
       { key: "classList", label: "Class List", icon: <MdPerson /> },
       { key: "WASCEForm", label: "Wasce Entering", icon: <MdPerson /> },
+      { key: "ClassPromotion", label: " ClassPromotion", icon: <MdPerson /> },
       // { key: "SchoolRegistration", label: "SchoolRegistration", icon: <MdPerson /> },
     ],
   },
@@ -238,6 +240,7 @@ function Gov() {
       case "SchoolRegistration": return <SchoolRegistration />;
       case "class": return <ClassRegistration />;
       case "classList": return <StudentFilterPage />;
+        case "ClassPromotion": return <ClassPromotion />;
       case "fees": return <FeeReceipt />;
       case "feesCost": return <FeesCostPage />;
       case "TeacherRegistration": return <TeacherRegistration />;

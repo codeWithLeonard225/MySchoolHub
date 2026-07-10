@@ -70,6 +70,7 @@ const NAV_ITEMS = [
       { key: "class", label: "Class", icon: <MdPerson /> },
       { key: "classList", label: "Class List", icon: <MdPerson /> },
         { key: "AdminForm", label: " AdminForm", icon: <MdPerson /> },
+        { key: "SchoolRegistration", label: " SchoolRegistration", icon: <MdPerson /> },
 
     ],
   },
@@ -272,6 +273,7 @@ function FeesPanel() {
       case "TimeTableTeacherReport": return <TimeTableTeacherReport />;
       case "LogoutPage": return <LogoutPage />;
       case "YearlyGeneralReportCard": return <YearlyGeneralReportCard />;
+      case "SchoolRegistration": return <SchoolRegistration />;
       
 
       default: return <Placeholder title={activeTab} />;

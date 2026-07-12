@@ -19,10 +19,9 @@ const ClassPromotion = () => {
   // Target preset academic years (for the promotion destination)
   const academicYears = ["2024/2025", "2025/2026", "2026/2027", "2027/2028"];
 
-  // New state to select the baseline Academic Year you want to promote FROM
+  // States
   const [selectedSourceYear, setSelectedSourceYear] = useState("");
-  
-  const [classesInDb, setClassesInDb] = useState([]); 
+  const [classesInDb, setClassesInDb] = useState([]); // Master classes populated from 'Classes' collection
   const [sourceClass, setSourceClass] = useState("");
   const [targetClass, setTargetClass] = useState("");
   const [newAcademicYear, setNewAcademicYear] = useState("2026/2027");
@@ -32,35 +31,36 @@ const ClassPromotion = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isPromoting, setIsPromoting] = useState(false);
 
-  // 1. Fetch unique classes based on School ID AND the selected baseline Academic Year
+  // 1. Fetch ALL official school classes from the central "Classes" collection
+  // This ensures newly added classes show up immediately as options!
   useEffect(() => {
-    const fetchClasses = async () => {
-      if (!schoolId || !selectedSourceYear) {
+    const fetchOfficialClasses = async () => {
+      if (!schoolId) {
         setClassesInDb([]);
-        setSourceClass("");
         return;
       }
       try {
         const q = query(
-          collection(db, "PupilsReg"), 
-          where("schoolId", "==", schoolId),
-          where("academicYear", "==", selectedSourceYear) // 👈 Filter classes by year
+          collection(db, "Classes"),
+          where("schoolId", "==", schoolId)
         );
         const snapshot = await getDocs(q);
         const classSet = new Set();
         
         snapshot.forEach((doc) => {
           const data = doc.data();
-          if (data.class) classSet.add(data.class);
+          if (data.className) classSet.add(data.className.trim());
         });
         
         setClassesInDb([...classSet].sort());
       } catch (error) {
-        toast.error("Failed to load classes for this academic year");
+        console.error("Error fetching system classes:", error);
+        toast.error("Failed to load registered system classes");
       }
     };
-    fetchClasses();
-  }, [schoolId, selectedSourceYear]);
+
+    fetchOfficialClasses();
+  }, [schoolId]);
 
   // 2. Fetch pupils when the Source Class AND Source Academic Year match
   useEffect(() => {
@@ -75,7 +75,7 @@ const ClassPromotion = () => {
         const q = query(
           collection(db, "PupilsReg"),
           where("schoolId", "==", schoolId),
-          where("academicYear", "==", selectedSourceYear), // 👈 Fetch specific batch
+          where("academicYear", "==", selectedSourceYear), 
           where("class", "==", sourceClass)
         );
         const snapshot = await getDocs(q);
@@ -206,8 +206,7 @@ const ClassPromotion = () => {
                             className="w-full mt-2 p-3 bg-white border-2 border-indigo-200 rounded-xl font-bold text-indigo-700 outline-none focus:border-indigo-600 transition-all"
                         >
                             <option value="">-- Choose Target Class --</option>
-                            {/* Uses global mapping lists dynamically */}
-                            {academicYears.map(y => <option key={y} value={y}>{y}</option> && classesInDb.map(c => <option key={c} value={c}>{c}</option>))}
+                            {classesInDb.map(c => <option key={c} value={c}>{c}</option>)}
                         </select>
                     </div>
 

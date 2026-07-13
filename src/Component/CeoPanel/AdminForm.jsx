@@ -22,7 +22,9 @@ const ACCESS_TYPES = [
     "PrivateSpecial",
     "Fees",
     "Special",
-    "PupilAttendance"
+    "PupilAttendance",
+    "Gov",
+    "GovSpecial",
 ];
 
 const AdminForm = () => {

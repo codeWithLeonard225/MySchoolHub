@@ -127,6 +127,7 @@ const TermResult = () => {
   }, [classGradesData, pupils, tests]);
 
   // Print Mode A: Original Layout (Subjects on Left, Students on Top)
+ // Print Mode A: Original Layout (Subjects on Left, Students on Top)
   const handlePrintStandard = () => {
     const doc = new jsPDF({ orientation: "landscape", unit: "pt", format: "a3" });
     const allFilteredPupils = pupils.filter(p => selectedPupil === "all" || p.studentID === selectedPupil);
@@ -146,9 +147,9 @@ const TermResult = () => {
 
       const head1 = [
         { content: "SUBJECTS", styles: { halign: 'left', fillColor: [40, 44, 52] } }, 
-        ...pupilChunk.map(p => ({ content: p.studentName.toUpperCase(), colSpan: 4, styles: { halign: 'center', fillColor: [63, 81, 181], fontSize: 10 } }))
+        ...pupilChunk.map(p => ({ content: p.studentName.toUpperCase(), colSpan: 4, styles: { halign: 'center', fillColor: [63, 81, 181], fontSize: 11 } })) // Increased header student name size slightly
       ];
-      const head2 = ["", ...pupilChunk.flatMap(() => ["T1", "T2", "AVG", "RANK"])];
+      const head2 = ["", ...pupilChunk.flatMap(() => ["T1", "T2", "Mn", "RNK"])];
 
       const body = broadSheetData.subjects.map(sub => [
         sub,
@@ -158,19 +159,21 @@ const TermResult = () => {
         })
       ]);
 
-      const footerStyles = { fontStyle: 'bold', halign: 'center', fontSize: 11 };
+      const footerStyles = { fontStyle: 'bold', halign: 'center', fontSize: 13 }; // Increased footer text size
       const totalRow = ["TOTAL MARKS", ...pupilChunk.flatMap(p => [{ content: broadSheetData.summaries[p.studentID].total, colSpan: 4, styles: { ...footerStyles, fillColor: [240, 240, 240] } }])];
       const percRow = ["PERCENTAGE", ...pupilChunk.flatMap(p => [{ content: broadSheetData.summaries[p.studentID].percentage + "%", colSpan: 4, styles: { ...footerStyles, fillColor: [240, 240, 240] } }])];
-      const rankRow = ["OVERALL RANK", ...pupilChunk.flatMap(p => [{ content: broadSheetData.summaries[p.studentID].rank, colSpan: 4, styles: { ...footerStyles, textColor: [200, 0, 0], fillColor: [230, 230, 250], fontSize: 13 } }])];
+      const rankRow = ["OVERALL RANK", ...pupilChunk.flatMap(p => [{ content: broadSheetData.summaries[p.studentID].rank, colSpan: 4, styles: { ...footerStyles, textColor: [200, 0, 0], fillColor: [230, 230, 250], fontSize: 14 } }])];
 
       autoTable(doc, {
         startY: 90,
         head: [head1, head2],
         body: [...body, totalRow, percRow, rankRow],
         theme: 'grid',
-        styles: { fontSize: 10, cellPadding: 6, valign: 'middle', lineWidth: 0.5, lineColor: [150, 150, 150] },
-        headStyles: { fillColor: [63, 81, 181], textColor: [255, 255, 255], fontSize: 10, cellPadding: 8 },
-        columnStyles: { 0: { fontStyle: 'bold', cellWidth: 120, fillColor: [245, 245, 245], fontSize: 11 } },
+        // CHANGED: Increased general body font size from 10 to 12 for better grade legibility
+        styles: { fontSize: 12, cellPadding: 6, valign: 'middle', lineWidth: 0.5, lineColor: [150, 150, 150] }, 
+        headStyles: { fillColor: [63, 81, 181], textColor: [255, 255, 255], fontSize: 11, cellPadding: 8 },
+        // CHANGED: Match or scale the subject column size to complement the new grade size
+        columnStyles: { 0: { fontStyle: 'bold', cellWidth: 120, fillColor: [245, 245, 245], fontSize: 12 } }, 
         didParseCell: (data) => {
           if (data.section === 'body' && typeof data.cell.raw === 'number' && data.cell.raw < 50) {
             data.cell.styles.textColor = [220, 0, 0];

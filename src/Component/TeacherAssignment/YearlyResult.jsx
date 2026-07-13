@@ -152,10 +152,10 @@ const YearlyResult = () => {
     return { subjects, studentMap, summaries };
   }, [allYearGrades, pupils, calcMode]);
 
-  // 4. Print Mode A: Original Standard Matrix (Subjects on Left, Students on Top)
+  // 4. Print Mode A: Standard Matrix (AVG & POS only)
   const handleExportPDF = () => {
     const doc = new jsPDF({ orientation: "landscape", unit: "pt", format: "a3" });
-    const pupilsPerPage = 6; 
+    const pupilsPerPage = 8; // Bumped up slightly since width per student decreased
 
     for (let i = 0; i < pupils.length; i += pupilsPerPage) {
       const chunk = pupils.slice(i, i + pupilsPerPage);
@@ -174,25 +174,25 @@ const YearlyResult = () => {
         { content: "SUBJECTS", styles: { halign: 'left', fillColor: [40, 44, 52] } }, 
         ...chunk.map(p => ({ 
           content: p.studentName.toUpperCase(), 
-          colSpan: 5, 
+          colSpan: 2, 
           styles: { halign: 'center', fillColor: [63, 81, 181], fontSize: 10 } 
         }))
       ];
       
-      const head2 = ["", ...chunk.flatMap(() => ["TM1", "TM2", "TM3", "AVG", "POS"])];
+      const head2 = ["", ...chunk.flatMap(() => ["AVG", "POS"])];
 
       const body = yearlyData.subjects.map(sub => [
         sub,
         ...chunk.flatMap(p => {
           const r = yearlyData.studentMap[p.studentID]?.[sub] || {};
-          return [r.m1 || 0, r.m2 || 0, r.m3 || 0, r.yearlyMean || 0, r.subRank || "-"];
+          return [r.yearlyMean || 0, r.subRank || "-"];
         })
       ]);
 
       const footerStyles = { fontStyle: 'bold', halign: 'center', fontSize: 11 };
-      const totalRow = ["TOTAL MARKS", ...chunk.flatMap(p => [{ content: yearlyData.summaries[p.studentID].total, colSpan: 5, styles: { ...footerStyles, fillColor: [240, 240, 240] } }])];
-      const percRow = ["PERCENTAGE", ...chunk.flatMap(p => [{ content: yearlyData.summaries[p.studentID].percentage + "%", colSpan: 5, styles: { ...footerStyles, fillColor: [240, 240, 240] } }])];
-      const rankRow = ["ANNUAL RANK", ...chunk.flatMap(p => [{ content: yearlyData.summaries[p.studentID].rank, colSpan: 5, styles: { ...footerStyles, textColor: [200, 0, 0], fillColor: [230, 230, 250], fontSize: 13 } }])];
+      const totalRow = ["TOTAL MARKS", ...chunk.flatMap(p => [{ content: yearlyData.summaries[p.studentID].total, colSpan: 2, styles: { ...footerStyles, fillColor: [240, 240, 240] } }])];
+      const percRow = ["PERCENTAGE", ...chunk.flatMap(p => [{ content: yearlyData.summaries[p.studentID].percentage + "%", colSpan: 2, styles: { ...footerStyles, fillColor: [240, 240, 240] } }])];
+      const rankRow = ["ANNUAL RANK", ...chunk.flatMap(p => [{ content: yearlyData.summaries[p.studentID].rank, colSpan: 2, styles: { ...footerStyles, textColor: [200, 0, 0], fillColor: [230, 230, 250], fontSize: 13 } }])];
 
       autoTable(doc, {
         startY: 100,
@@ -201,7 +201,7 @@ const YearlyResult = () => {
         theme: 'grid',
         styles: { fontSize: 10, cellPadding: 6, valign: 'middle', lineWidth: 0.5, lineColor: [150, 150, 150] },
         headStyles: { fillColor: [63, 81, 181], textColor: [255, 255, 255], fontSize: 10, cellPadding: 8 },
-        columnStyles: { 0: { fontStyle: 'bold', cellWidth: 120, fillColor: [245, 245, 245], fontSize: 11 } },
+        columnStyles: { 0: { fontStyle: 'bold', cellWidth: 140, fillColor: [245, 245, 245], fontSize: 11 } },
         didParseCell: (data) => {
           if (data.section === 'body' && typeof data.cell.raw === 'number' && data.cell.raw < 50) {
             data.cell.styles.textColor = [220, 0, 0];
@@ -213,19 +213,15 @@ const YearlyResult = () => {
     doc.save(`${selectedClass}_Annual_Standard_BroadSheet_${academicYear}.pdf`);
   };
 
-  // Print Mode B: Transposed Matrix (Student Names on Left, Subjects on Top)
- // Print Mode B: Transposed Matrix (Student Names on Left, Subjects on Top)
+  // Print Mode B: Transposed Matrix (AVG & POS only)
   const handlePrintTransposed = () => {
     const doc = new jsPDF({ orientation: "landscape", unit: "pt", format: "a3" });
     
-    // Chunk down to exactly 6 subjects per landscape block as requested
-    const subjectsPerPage = 6; 
+    const subjectsPerPage = 12; // Increased chunk threshold from 6 to 12 since blocks are much thinner now
     const totalSubjects = yearlyData.subjects.length;
 
     for (let sIdx = 0; sIdx < totalSubjects; sIdx += subjectsPerPage) {
       const subjectChunk = yearlyData.subjects.slice(sIdx, sIdx + subjectsPerPage);
-      
-      // Determine if this is the absolute final chunk of subjects
       const isLastChunk = (sIdx + subjectsPerPage) >= totalSubjects;
 
       if (sIdx > 0) doc.addPage();
@@ -239,33 +235,28 @@ const YearlyResult = () => {
         doc.internal.pageSize.getWidth() / 2, 70, { align: "center" }
       );
 
-      // Build out dynamic Headers based on whether we include the Overalls block or not
       const head1 = [
         { content: "STUDENT NAMES", rowSpan: 2, styles: { valign: 'middle', halign: 'left', fillColor: [40, 44, 52] } },
-        ...subjectChunk.map(sub => ({ content: sub.toUpperCase(), colSpan: 5, styles: { halign: 'center', fillColor: [63, 81, 181], fontSize: 9 } }))
+        ...subjectChunk.map(sub => ({ content: sub.toUpperCase(), colSpan: 2, styles: { halign: 'center', fillColor: [63, 81, 181], fontSize: 9 } }))
       ];
 
       const head2 = [
-        ...subjectChunk.flatMap(() => ["TM1", "TM2", "TM3", "AVG", "POS"])
+        ...subjectChunk.flatMap(() => ["AVG", "POS"])
       ];
 
-      // Append Overall Summary Blocks ONLY if it's the last page chunk
       if (isLastChunk) {
         head1.push({ content: "YEARLY OVERALLS", colSpan: 3, styles: { halign: 'center', fillColor: [30, 41, 59], fontSize: 9 } });
         head2.push("TOTAL", "PERC", "ANNUAL RANK");
       }
 
-      // Populate Table Body Rows
       const body = pupils.map(p => {
         const studentRow = [p.studentName.toUpperCase()];
         
-        // Push the scores for the current 6 subjects in this chunk
         subjectChunk.forEach(sub => {
           const r = yearlyData.studentMap[p.studentID]?.[sub] || {};
-          studentRow.push(r.m1 || 0, r.m2 || 0, r.m3 || 0, r.yearlyMean || 0, r.subRank || "-");
+          studentRow.push(r.yearlyMean || 0, r.subRank || "-");
         });
 
-        // Push overall calculations onto the row array ONLY on the final page
         if (isLastChunk) {
           const summary = yearlyData.summaries[p.studentID] || {};
           studentRow.push(summary.total || "0", (summary.percentage || "0") + "%", summary.rank || "-");
@@ -282,15 +273,15 @@ const YearlyResult = () => {
         styles: { fontSize: 8.5, cellPadding: 5, valign: 'middle', lineWidth: 0.5, lineColor: [150, 150, 150], halign: 'center' },
         headStyles: { textColor: [255, 255, 255], fontSize: 8.5, fontStyle: 'bold' },
         columnStyles: { 
-          0: { fontStyle: 'bold', cellWidth: 150, halign: 'left', fillColor: [245, 245, 245] }
+          0: { fontStyle: 'bold', cellWidth: 160, halign: 'left', fillColor: [245, 245, 245] }
         },
         didParseCell: (data) => {
           if (data.section === 'body') {
-            const subjectsActiveSpan = subjectChunk.length * 5;
+            const subjectsActiveSpan = subjectChunk.length * 2;
             
-            // Apply unique styles to score columns on any current sheet
             if (data.column.index > 0 && data.column.index <= subjectsActiveSpan) {
-              const isPosSubCol = data.column.index % 5 === 0;
+              // Alternate pairs (index % 2 === 0 targets POS columns)
+              const isPosSubCol = data.column.index % 2 === 0;
               if (isPosSubCol) {
                 data.cell.styles.textColor = [190, 24, 74];
                 data.cell.styles.fontStyle = 'bold';
@@ -302,7 +293,6 @@ const YearlyResult = () => {
               }
             }
             
-            // Highlight final summary ranking indicators on the last sheet only
             if (isLastChunk && data.column.index === subjectsActiveSpan + 3) {
               data.cell.styles.textColor = [200, 0, 0];
               data.cell.styles.fontStyle = 'bold';
@@ -407,7 +397,7 @@ const YearlyResult = () => {
         <div id="printable-sheet" className="overflow-x-auto border border-gray-200 rounded-2xl">
           <div className="hidden print:block text-center mb-6">
             <h1 className="text-2xl font-bold uppercase">{schoolName}</h1>
-            <h2 className="text-lg">ANNUAL PROGRESS BROAD SHEET - {selectedClass} ({academicYear})</h2>
+            <h2 className="text-lg">ANNUAL PROGRESS BROAD SHEET - {selectedClass} (${academicYear})</h2>
             <p className="text-xs italic">Calculation Mode: Forced / {calcMode.toUpperCase()}</p>
           </div>
 

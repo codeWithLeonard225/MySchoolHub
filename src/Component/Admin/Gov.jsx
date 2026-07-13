@@ -103,7 +103,7 @@ const NAV_ITEMS = [
       // { key: "GradeSheetPage", label: "Test Grade Sheet", icon: <MdPerson /> },
       { key: "TeacherPupilsPageAdmin", label: "TeacherPupilsGrade", icon: <MdPerson /> },
       { key: "BulkDeleteGradesPage", label: "BulkDeleteGradesPage", icon: <MdPerson /> },
-      // { key: "SubGradeMatrixPage", label: "Sub Grade Sheet", icon: <MdPerson /> },
+      { key: "SubGradeMatrixPage", label: "Sub Grade Sheet", icon: <MdPerson /> },
       { key: "ClassFullTermMatrixPage", label: "Term Grade Sheet", icon: <MdPerson /> },
       { key: "GeneralReportCard", label: "ReportCard", icon: <MdPerson /> },
       { key: "TermResult", label: "TermResult", icon: <MdPerson /> },

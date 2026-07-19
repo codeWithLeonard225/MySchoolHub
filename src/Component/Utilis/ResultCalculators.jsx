@@ -33,6 +33,64 @@ export const getTermScores = (gradesArray, pupilId, subj, termPrefix) => {
 };
 
 /**
+ * Calculates annual mean based on the selected calculation mode.
+ *
+ * Modes:
+ * auto     -> Divide by active terms only
+ * term1_2  -> Use Terms 1 & 2
+ * term2_3  -> Use Terms 2 & 3
+ * 3        -> Force divide by 3
+ */
+export const calculateAnnualMean = (
+    term1,
+    term2,
+    term3,
+    calcMode = "auto"
+) => {
+
+    const t1 = term1 ?? null;
+    const t2 = term2 ?? null;
+    const t3 = term3 ?? null;
+
+    let scoreSum = 0;
+    let divisor = 1;
+
+    switch (calcMode) {
+
+        case "term1_2":
+            scoreSum = (t1 ?? 0) + (t2 ?? 0);
+            divisor = 2;
+            break;
+
+        case "term2_3":
+            scoreSum = (t2 ?? 0) + (t3 ?? 0);
+            divisor = 2;
+            break;
+
+        case "3":
+            scoreSum = (t1 ?? 0) + (t2 ?? 0) + (t3 ?? 0);
+            divisor = 3;
+            break;
+
+        case "auto":
+        default:
+
+            const active = [];
+
+            if (t1 !== null) active.push(t1);
+            if (t2 !== null) active.push(t2);
+            if (t3 !== null) active.push(t3);
+
+            if (active.length === 0) return null;
+
+            scoreSum = active.reduce((a, b) => a + b, 0);
+            divisor = active.length;
+    }
+
+    return scoreSum / divisor;
+};
+
+/**
  * Calculates Subject Ranks dynamically matching the tie-breaker/ranking strategy.
  */
 export const calculateSubjectRanks = (gradesArray, pupilIDs, uniqueSubjects, terms = ["Term 1", "Term 2", "Term 3"]) => {
@@ -67,7 +125,7 @@ export const calculateSubjectRanks = (gradesArray, pupilIDs, uniqueSubjects, ter
 /**
  * Calculates subject-specific annual ranks across all subjects using raw float averages.
  */
-export const calculateSubjectAnnualRanks = (gradesArray, pupilIDs, uniqueSubjects) => {
+export const calculateSubjectAnnualRanks = (gradesArray, pupilIDs, uniqueSubjects, calculationMode) => {
     const subjectAnnualRanks = {};
 
     uniqueSubjects.forEach((subj) => {
@@ -76,8 +134,12 @@ export const calculateSubjectAnnualRanks = (gradesArray, pupilIDs, uniqueSubject
             const t2 = getTermScores(gradesArray, id, subj, "Term 2").rawMean;
             const t3 = getTermScores(gradesArray, id, subj, "Term 3").rawMean;
 
-            const active = [t1, t2, t3].filter(v => v !== null);
-            const annualAvg = active.length > 0 ? active.reduce((a, b) => a + b, 0) / active.length : null;
+       const annualAvg = calculateAnnualMean(
+    t1,
+    t2,
+    t3,
+    calculationMode
+);
             return { id, annualAvg };
         }).filter(item => item.annualAvg !== null);
 
@@ -100,7 +162,14 @@ export const calculateSubjectAnnualRanks = (gradesArray, pupilIDs, uniqueSubject
  * Calculates Term summaries (Total, Percentage, Overall Class Rank) 
  * using high-precision calculations.
  */
-export const calculateOverallMetrics = (gradesArray, pupilIDs, uniqueSubjects, selectedPupilId, totalSubjectPercentage = null) => {
+export const calculateOverallMetrics = (
+    gradesArray,
+    pupilIDs,
+    uniqueSubjects,
+    selectedPupilId,
+    totalSubjectPercentage = null,
+    calculationMode = "auto"
+) => {
     const classTermTotals = { "Term 1": [], "Term 2": [], "Term 3": [] };
     const classAnnualAverages = [];
 
@@ -137,12 +206,17 @@ export const calculateOverallMetrics = (gradesArray, pupilIDs, uniqueSubjects, s
             const t2 = getTermScores(gradesArray, id, subj, "Term 2").rawMean;
             const t3 = getTermScores(gradesArray, id, subj, "Term 3").rawMean;
 
-            const activeTerms = [t1, t2, t3].filter(v => v !== null);
+            const annualAverage = calculateAnnualMean(
+    t1,
+    t2,
+    t3,
+    calculationMode
+);
 
-            if (activeTerms.length > 0) {
-                annualSumOfAverages += (activeTerms.reduce((s, v) => s + v, 0) / activeTerms.length);
-                annualSubjectCount++;
-            }
+if (annualAverage !== null) {
+    annualSumOfAverages += annualAverage;
+    annualSubjectCount++;
+}
         });
 
         if (annualSubjectCount > 0) {

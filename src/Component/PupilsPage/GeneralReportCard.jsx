@@ -5,10 +5,13 @@ import { getDocs, doc, collection, query, where, onSnapshot } from "firebase/fir
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { useLocation } from "react-router-dom";
-import { getTermScores, 
-    calculateSubjectRanks, 
-    calculateSubjectAnnualRanks, 
-    calculateOverallMetrics } from "../Utilis/ResultCalculators";
+import {
+    getTermScores,
+    calculateAnnualMean,
+    calculateSubjectRanks,
+    calculateSubjectAnnualRanks,
+    calculateOverallMetrics
+} from "../Utilis/ResultCalculators";
 
 
 
@@ -41,6 +44,7 @@ const GeneralReportCard = () => {
     const [loading, setLoading] = useState(false);
     const location = useLocation();
     const [totalPupilsInClass, setTotalPupilsInClass] = useState(0);
+    const [calculationMode, setCalculationMode] = useState("auto");
 
     const {
         schoolId,
@@ -179,7 +183,7 @@ const GeneralReportCard = () => {
 
     // Compute ranks using shared utils engine
     const subjectTermRanks = calculateSubjectRanks(classGradesData, pupilIDs, uniqueSubjects);
-    const subjectAnnualRanks = calculateSubjectAnnualRanks(classGradesData, pupilIDs, uniqueSubjects);
+    const subjectAnnualRanks = calculateSubjectAnnualRanks(classGradesData, pupilIDs, uniqueSubjects, calculationMode);
     
     // Compute total metrics using shared utils engine
     const { termSummaries, annualSummary } = calculateOverallMetrics(
@@ -198,11 +202,12 @@ const GeneralReportCard = () => {
         const t2Rank = subjectTermRanks[`${subj}_Term 2`]?.[selectedPupil] || "—";
         const t3Rank = subjectTermRanks[`${subj}_Term 3`]?.[selectedPupil] || "—";
 
-        const activeTerms = [t1Data.mean, t2Data.mean, t3Data.mean].filter((val) => val !== null);
-        let subjectAnnualAverage = 0;
-        if (activeTerms.length > 0) {
-            subjectAnnualAverage = activeTerms.reduce((s, v) => s + v, 0) / activeTerms.length;
-        }
+        const subjectAnnualAverage = calculateAnnualMean(
+    t1Data.rawMean,
+    t2Data.rawMean,
+    t3Data.rawMean,
+    calculationMode
+);
 
         const annualRank = subjectAnnualRanks[subj]?.[selectedPupil] || "—";
 
@@ -226,7 +231,10 @@ const GeneralReportCard = () => {
                 mean: t3Data.mean !== null ? t3Data.mean : "—",
                 rank: t3Rank
             },
-            annualAverage: activeTerms.length > 0 ? Math.round(subjectAnnualAverage) : "—",
+            annualAverage:
+    subjectAnnualAverage !== null
+        ? Math.round(subjectAnnualAverage)
+        : "—",
             annualRank: annualRank
         };
     }).filter(row =>
@@ -234,7 +242,7 @@ const GeneralReportCard = () => {
     );
 
     return { reportRows, termSummaries, annualSummary };
-}, [pupilGradesData, classGradesData, selectedPupil]);
+}, [pupilGradesData, classGradesData, selectedPupil, calculationMode]);
 
     // Rest of your file component (handlePrintPDF, render code, etc.) is unchanged
  // 🧾 Generate Professional Three-Term PDF with Custom Prints
@@ -628,7 +636,7 @@ doc.save(`${pupilInfo.studentName}_Comprehensive_Annual_Report.pdf`);
                 </h2>
 
                 {/* Dropdowns */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <div>
                         <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5">Academic Year</label>
                         <select className="w-full border border-slate-200 rounded-lg px-3 py-2 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" value={academicYear} onChange={(e) => setAcademicYear(e.target.value)}>
@@ -657,6 +665,35 @@ doc.save(`${pupilInfo.studentName}_Comprehensive_Annual_Report.pdf`);
                             ))}
                         </select>
                     </div>
+
+                    {/* Calculation Mode Selector */}
+<div>
+    <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5">
+        Annual Calculation
+    </label>
+
+    <select
+        className="w-full border border-slate-200 rounded-lg px-3 py-2 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+        value={calculationMode}
+        onChange={(e) => setCalculationMode(e.target.value)}
+    >
+        <option value="auto">
+            Auto (Available Terms)
+        </option>
+
+        <option value="term1_2">
+            Term 1 + Term 2
+        </option>
+
+        <option value="term2_3">
+            Term 2 + Term 3
+        </option>
+
+        <option value="3">
+            Divide by 3 Terms
+        </option>
+    </select>
+</div>
                 </div>
 
                 <div className="flex justify-end mt-6 border-t border-slate-100 pt-4">

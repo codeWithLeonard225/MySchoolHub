@@ -6,6 +6,12 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { useLocation } from "react-router-dom";
 
+// Centralized computation engine imports
+import { getTermScores, 
+    calculateSubjectRanks, 
+    calculateSubjectAnnualRanks, 
+    calculateOverallMetrics } from "../Utilis/ResultCalculators";
+
 const TermResult = () => {
   const [academicYear, setAcademicYear] = useState("");
   const [academicYears, setAcademicYears] = useState([]);
@@ -25,8 +31,6 @@ const TermResult = () => {
     "Term 2": ["Term 2 T1", "Term 2 T2"],
     "Term 3": ["Term 3 T1", "Term 3 T2"],
   };
-
-  const tests = termTests[selectedTerm];
 
   // Fetch initial metadata
   useEffect(() => {
@@ -48,11 +52,23 @@ const TermResult = () => {
   useEffect(() => {
     if (!academicYear || !selectedClass || !schoolId) return;
     setLoading(true);
-    const pQuery = query(collection(db, "PupilsReg"), where("schoolId", "==", schoolId), where("academicYear", "==", academicYear), where("class", "==", selectedClass));
-    const gQuery = query(collection(schooldb, "PupilGrades"), where("academicYear", "==", academicYear), where("schoolId", "==", schoolId), where("className", "==", selectedClass));
+    const pQuery = query(
+      collection(db, "PupilsReg"),
+      where("schoolId", "==", schoolId),
+      where("academicYear", "==", academicYear),
+      where("class", "==", selectedClass)
+    );
+    const gQuery = query(
+      collection(schooldb, "PupilGrades"),
+      where("academicYear", "==", academicYear),
+      where("schoolId", "==", schoolId),
+      where("className", "==", selectedClass)
+    );
 
     const unsubPupils = onSnapshot(pQuery, (snapshot) => {
-      const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })).sort((a, b) => a.studentName.localeCompare(b.studentName));
+      const data = snapshot.docs
+        .map(doc => ({ id: doc.id, ...doc.data() }))
+        .sort((a, b) => a.studentName.localeCompare(b.studentName));
       setPupils(data);
     });
 
@@ -61,73 +77,58 @@ const TermResult = () => {
       setLoading(false);
     });
 
-    return () => { unsubPupils(); unsubGrades(); };
+    return () => {
+      unsubPupils();
+      unsubGrades();
+    };
   }, [academicYear, selectedClass, schoolId]);
 
-  // Matrix Processing Engine
+  // Matrix Processing Engine utilizing central helpers
   const broadSheetData = useMemo(() => {
-    if (classGradesData.length === 0 || pupils.length === 0) return { subjects: [], studentMap: {}, summaries: {} };
+    if (classGradesData.length === 0 || pupils.length === 0) {
+      return { subjects: [], studentMap: {}, summaries: {} };
+    }
 
-    const uniqueSubjects = [...new Set(classGradesData.map(d => d.subject))].sort();
+    const uniqueSubjects = [...new Set(classGradesData.map((d) => d.subject))].sort();
+    const pupilIDs = pupils.map((p) => p.studentID);
+
+    // Compute subject term ranks using the core utility
+    const subjectTermRanks = calculateSubjectRanks(classGradesData, pupilIDs, uniqueSubjects, [selectedTerm]);
+
     const studentMap = {};
     const summaries = {};
 
-    const subjectRanks = {};
-    uniqueSubjects.forEach(subject => {
-      const scores = pupils.map(p => {
-        const g = classGradesData.filter(x => x.pupilID === p.studentID && x.subject === subject);
-        const t1 = Number(g.find(x => x.test === tests[0])?.grade || 0);
-        const t2 = Number(g.find(x => x.test === tests[1])?.grade || 0);
-        return { id: p.studentID, mean: (t1 + t2) / 2 };
-      });
-      scores.sort((a, b) => b.mean - a.mean);
-      scores.forEach((s, i) => {
-        if (i > 0 && s.mean === scores[i - 1].mean) s.rank = scores[i - 1].rank;
-        else s.rank = i + 1;
-      });
-      subjectRanks[subject] = scores;
-    });
-
-    const overallScores = pupils.map(p => {
-      const pData = classGradesData.filter(x => x.pupilID === p.studentID);
-      const total = uniqueSubjects.reduce((acc, sub) => {
-        const g = pData.filter(x => x.subject === sub);
-        const t1 = Number(g.find(x => x.test === tests[0])?.grade || 0);
-        const t2 = Number(g.find(x => x.test === tests[1])?.grade || 0);
-        return acc + ((t1 + t2) / 2);
-      }, 0);
-      return { id: p.studentID, total };
-    });
-
-    overallScores.sort((a, b) => b.total - a.total);
-    overallScores.forEach((s, i) => {
-      if (i > 0 && s.total === overallScores[i - 1].total) s.pos = overallScores[i - 1].pos;
-      else s.pos = i + 1;
-    });
-
-    pupils.forEach(pupil => {
+    pupils.forEach((pupil) => {
       const results = {};
-      uniqueSubjects.forEach(sub => {
-        const g = classGradesData.filter(x => x.pupilID === pupil.studentID && x.subject === sub);
-        const t1 = g.find(x => x.test === tests[0])?.grade || 0;
-        const t2 = g.find(x => x.test === tests[1])?.grade || 0;
-        results[sub] = { t1, t2, mean: Math.round((Number(t1) + Number(t2)) / 2), rank: subjectRanks[sub].find(s => s.id === pupil.studentID)?.rank || "—" };
+      uniqueSubjects.forEach((sub) => {
+        const scores = getTermScores(classGradesData, pupil.studentID, sub, selectedTerm);
+        const rankKey = `${sub}_${selectedTerm}`;
+        const rank = subjectTermRanks[rankKey]?.[pupil.studentID] || "—";
+
+        results[sub] = {
+          t1: scores.t1 !== null ? scores.t1 : "—",
+          t2: scores.t2 !== null ? scores.t2 : "—",
+          mean: scores.mean !== null ? scores.mean : "—",
+          rank: rank,
+        };
       });
       studentMap[pupil.studentID] = results;
 
-      const ov = overallScores.find(o => o.id === pupil.studentID);
+      // Calculate term summaries (totals, percentages, overall positions)
+      const overallMetrics = calculateOverallMetrics(classGradesData, pupilIDs, uniqueSubjects, pupil.studentID);
+      const termSummary = overallMetrics.termSummaries[selectedTerm];
+
       summaries[pupil.studentID] = {
-        total: Math.round(ov.total),
-        percentage: uniqueSubjects.length > 0 ? ((ov.total / (uniqueSubjects.length * 100)) * 100).toFixed(1) : 0,
-        rank: ov.pos
+        total: termSummary?.total !== "—" ? termSummary.total : 0,
+        percentage: termSummary?.percentage !== "—" ? termSummary.percentage : "0.0",
+        rank: termSummary?.rank !== "—" ? termSummary.rank : "—",
       };
     });
 
     return { subjects: uniqueSubjects, studentMap, summaries };
-  }, [classGradesData, pupils, tests]);
+  }, [classGradesData, pupils, selectedTerm]);
 
   // Print Mode A: Original Layout (Subjects on Left, Students on Top)
- // Print Mode A: Original Layout (Subjects on Left, Students on Top)
   const handlePrintStandard = () => {
     const doc = new jsPDF({ orientation: "landscape", unit: "pt", format: "a3" });
     const allFilteredPupils = pupils.filter(p => selectedPupil === "all" || p.studentID === selectedPupil);
@@ -147,7 +148,7 @@ const TermResult = () => {
 
       const head1 = [
         { content: "SUBJECTS", styles: { halign: 'left', fillColor: [40, 44, 52] } }, 
-        ...pupilChunk.map(p => ({ content: p.studentName.toUpperCase(), colSpan: 4, styles: { halign: 'center', fillColor: [63, 81, 181], fontSize: 11 } })) // Increased header student name size slightly
+        ...pupilChunk.map(p => ({ content: p.studentName.toUpperCase(), colSpan: 4, styles: { halign: 'center', fillColor: [63, 81, 181], fontSize: 11 } }))
       ];
       const head2 = ["", ...pupilChunk.flatMap(() => ["T1", "T2", "Mn", "RNK"])];
 
@@ -155,11 +156,11 @@ const TermResult = () => {
         sub,
         ...pupilChunk.flatMap(p => {
           const r = broadSheetData.studentMap[p.studentID]?.[sub] || {};
-          return [r.t1 || "0", r.t2 || "0", r.mean || "0", r.rank || "-"];
+          return [r.t1, r.t2, r.mean, r.rank];
         })
       ]);
 
-      const footerStyles = { fontStyle: 'bold', halign: 'center', fontSize: 13 }; // Increased footer text size
+      const footerStyles = { fontStyle: 'bold', halign: 'center', fontSize: 13 };
       const totalRow = ["TOTAL MARKS", ...pupilChunk.flatMap(p => [{ content: broadSheetData.summaries[p.studentID].total, colSpan: 4, styles: { ...footerStyles, fillColor: [240, 240, 240] } }])];
       const percRow = ["PERCENTAGE", ...pupilChunk.flatMap(p => [{ content: broadSheetData.summaries[p.studentID].percentage + "%", colSpan: 4, styles: { ...footerStyles, fillColor: [240, 240, 240] } }])];
       const rankRow = ["OVERALL RANK", ...pupilChunk.flatMap(p => [{ content: broadSheetData.summaries[p.studentID].rank, colSpan: 4, styles: { ...footerStyles, textColor: [200, 0, 0], fillColor: [230, 230, 250], fontSize: 14 } }])];
@@ -169,10 +170,8 @@ const TermResult = () => {
         head: [head1, head2],
         body: [...body, totalRow, percRow, rankRow],
         theme: 'grid',
-        // CHANGED: Increased general body font size from 10 to 12 for better grade legibility
         styles: { fontSize: 12, cellPadding: 6, valign: 'middle', lineWidth: 0.5, lineColor: [150, 150, 150] }, 
         headStyles: { fillColor: [63, 81, 181], textColor: [255, 255, 255], fontSize: 11, cellPadding: 8 },
-        // CHANGED: Match or scale the subject column size to complement the new grade size
         columnStyles: { 0: { fontStyle: 'bold', cellWidth: 120, fillColor: [245, 245, 245], fontSize: 12 } }, 
         didParseCell: (data) => {
           if (data.section === 'body' && typeof data.cell.raw === 'number' && data.cell.raw < 50) {
@@ -190,26 +189,21 @@ const TermResult = () => {
     const doc = new jsPDF({ orientation: "landscape", unit: "pt", format: "a3" });
     const allFilteredPupils = pupils.filter(p => selectedPupil === "all" || p.studentID === selectedPupil);
     
-    // Chunking subjects up to 6 items per page to safely fit horizontal structures cleanly
     const subjectsPerPage = 6; 
     const totalSubjects = broadSheetData.subjects.length;
 
     for (let sIdx = 0; sIdx < totalSubjects; sIdx += subjectsPerPage) {
       const subjectChunk = broadSheetData.subjects.slice(sIdx, sIdx + subjectsPerPage);
-      
-      // Determine if this layout represents the terminal subject chunk
       const isLastChunk = (sIdx + subjectsPerPage) >= totalSubjects;
 
       if (sIdx > 0) doc.addPage();
 
-      // Heading block
       doc.setFontSize(22).setFont(undefined, 'bold');
       doc.text(schoolName.toUpperCase(), doc.internal.pageSize.getWidth() / 2, 45, { align: "center" });
       
       doc.setFontSize(14).setFont(undefined, 'normal');
       doc.text(`${selectedClass} TRANSPOSED BROAD SHEET - ${selectedTerm} (${academicYear}) | Part ${Math.floor(sIdx / subjectsPerPage) + 1}`, doc.internal.pageSize.getWidth() / 2, 70, { align: "center" });
 
-      // Build fundamental structural header cells
       const head1 = [
         { content: "STUDENT NAMES", rowSpan: 2, styles: { valign: 'middle', halign: 'left', fillColor: [40, 44, 52] } },
         ...subjectChunk.map(sub => ({ content: sub.toUpperCase(), colSpan: 4, styles: { halign: 'center', fillColor: [63, 81, 181], fontSize: 9 } }))
@@ -219,26 +213,22 @@ const TermResult = () => {
         ...subjectChunk.flatMap(() => ["T1", "T2", "AVG", "RANK"])
       ];
 
-      // Append general calculations row array configurations only on final chunk
       if (isLastChunk) {
         head1.push({ content: "OVERALL STATS", colSpan: 3, styles: { halign: 'center', fillColor: [30, 41, 59], fontSize: 9 } });
         head2.push("TOTAL", "PERC", "OVERALL RANK");
       }
 
-      // Build out row content mapping strings per student record
       const body = allFilteredPupils.map(p => {
         const studentRow = [p.studentName.toUpperCase()];
         
-        // Subject scores block loop
         subjectChunk.forEach(sub => {
           const r = broadSheetData.studentMap[p.studentID]?.[sub] || {};
-          studentRow.push(r.t1 || "0", r.t2 || "0", r.mean || "0", r.rank || "-");
+          studentRow.push(r.t1, r.t2, r.mean, r.rank);
         });
 
-        // Add overall metrics safely tracking trailing position on last sheet
         if (isLastChunk) {
           const summary = broadSheetData.summaries[p.studentID] || {};
-          studentRow.push(summary.total || "0", (summary.percentage || "0") + "%", summary.rank || "-");
+          studentRow.push(summary.total, summary.percentage + "%", summary.rank);
         }
 
         return studentRow;
@@ -259,7 +249,6 @@ const TermResult = () => {
             const subjectsActiveSpan = subjectChunk.length * 4;
             
             if (data.column.index > 0 && data.column.index <= subjectsActiveSpan) {
-              // Highlight ranks inside subject columns
               const isRankSubCol = data.column.index % 4 === 0;
               if (isRankSubCol) {
                 data.cell.styles.textColor = [190, 24, 74];
@@ -272,7 +261,6 @@ const TermResult = () => {
               }
             }
             
-            // Style the overall final rank summary column uniquely on final chunk sheet
             if (isLastChunk && data.column.index === subjectsActiveSpan + 3) {
               data.cell.styles.textColor = [200, 0, 0];
               data.cell.styles.fontStyle = 'bold';
@@ -288,6 +276,7 @@ const TermResult = () => {
 
   const getGradeColor = (val) => {
     const grade = Number(val);
+    if (isNaN(grade)) return "text-gray-400";
     if (grade >= 50) return "text-blue-600 font-bold";
     if (grade > 0 && grade <= 49) return "text-red-600 font-bold";
     return "text-gray-400";
@@ -375,9 +364,9 @@ const TermResult = () => {
                     const res = broadSheetData.studentMap[p.studentID]?.[sub] || {};
                     return (
                       <React.Fragment key={`${p.studentID}-${sub}`}>
-                        <td className={`px-1 py-2 border-r ${getGradeColor(res.t1)}`}>{res.t1 || "-"}</td>
-                        <td className={`px-1 py-2 border-r ${getGradeColor(res.t2)}`}>{res.t2 || "-"}</td>
-                        <td className={`px-1 py-2 border-r font-bold bg-gray-50 ${getGradeColor(res.mean)}`}>{res.mean || "-"}</td>
+                        <td className={`px-1 py-2 border-r ${getGradeColor(res.t1)}`}>{res.t1}</td>
+                        <td className={`px-1 py-2 border-r ${getGradeColor(res.t2)}`}>{res.t2}</td>
+                        <td className={`px-1 py-2 border-r font-bold bg-gray-50 ${getGradeColor(res.mean)}`}>{res.mean}</td>
                         <td className="px-1 py-2 border-r font-bold text-red-600">{res.rank}</td>
                       </React.Fragment>
                     );

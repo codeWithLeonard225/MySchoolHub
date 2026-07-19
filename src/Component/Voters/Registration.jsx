@@ -318,68 +318,7 @@ const Registration = () => {
     }, [users, formData.id]);
 
 
-    const handleInputChange = (e) => {
-        const { name, value } = e.target;
-        setFormData((prev) => ({ ...prev, [name]: value }));
-    };
-
-    const handleUploadSuccess = (url, publicId) => {
-        setFormData((prev) => ({
-            ...prev,
-            userPhoto: url,
-            userPublicId: publicId,
-        }));
-        toast.success("Image uploaded successfully!");
-    };
-
-    const handleCameraCapture = async (base64Data) => {
-        setIsUploading(true);
-        setUploadProgress(0);
-        try {
-            const res = await fetch(base64Data);
-            const blob = await res.blob();
-            if (blob.size > MAX_FILE_SIZE) {
-                toast.error("Image is too large. Max size is 5MB.");
-                setIsUploading(false);
-                return;
-            }
-
-            const xhr = new XMLHttpRequest();
-            xhr.upload.addEventListener("progress", (e) => {
-                if (e.lengthComputable) {
-                    setUploadProgress(Math.round((e.loaded * 100) / e.total));
-                }
-            });
-
-            xhr.onreadystatechange = () => {
-                if (xhr.readyState === 4) {
-                    setIsUploading(false);
-                    setShowCamera(false);
-                    if (xhr.status === 200) {
-                        const data = JSON.parse(xhr.responseText);
-                        handleUploadSuccess(data.secure_url, data.public_id);
-                    } else {
-                        toast.error("Camera upload failed. Please try again.");
-                    }
-                }
-            };
-
-            const formDataObj = new FormData();
-            formDataObj.append("file", blob);
-            formDataObj.append("upload_preset", UPLOAD_PRESET);
-            formDataObj.append("folder", "SchoolAppPupils/Uploads");
-
-            xhr.open("POST", `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`);
-            xhr.send(formDataObj);
-        } catch (err) {
-            console.error("Camera upload failed:", err);
-            toast.error("Failed to upload image from camera.");
-            setIsUploading(false);
-            setShowCamera(false);
-        }
-    };
-
-    const handleSubmit = async (e) => {
+     const handleSubmit = async (e) => {
         e.preventDefault();
         // ✅ Custom validation
         if (!formData.studentName.trim()) {
@@ -469,6 +408,69 @@ const Registration = () => {
             setIsSubmitting(false);
         }
     };
+
+    const handleInputChange = (e) => {
+        const { name, value } = e.target;
+        setFormData((prev) => ({ ...prev, [name]: value }));
+    };
+
+    const handleUploadSuccess = (url, publicId) => {
+        setFormData((prev) => ({
+            ...prev,
+            userPhoto: url,
+            userPublicId: publicId,
+        }));
+        toast.success("Image uploaded successfully!");
+    };
+
+    const handleCameraCapture = async (base64Data) => {
+        setIsUploading(true);
+        setUploadProgress(0);
+        try {
+            const res = await fetch(base64Data);
+            const blob = await res.blob();
+            if (blob.size > MAX_FILE_SIZE) {
+                toast.error("Image is too large. Max size is 5MB.");
+                setIsUploading(false);
+                return;
+            }
+
+            const xhr = new XMLHttpRequest();
+            xhr.upload.addEventListener("progress", (e) => {
+                if (e.lengthComputable) {
+                    setUploadProgress(Math.round((e.loaded * 100) / e.total));
+                }
+            });
+
+            xhr.onreadystatechange = () => {
+                if (xhr.readyState === 4) {
+                    setIsUploading(false);
+                    setShowCamera(false);
+                    if (xhr.status === 200) {
+                        const data = JSON.parse(xhr.responseText);
+                        handleUploadSuccess(data.secure_url, data.public_id);
+                    } else {
+                        toast.error("Camera upload failed. Please try again.");
+                    }
+                }
+            };
+
+            const formDataObj = new FormData();
+            formDataObj.append("file", blob);
+            formDataObj.append("upload_preset", UPLOAD_PRESET);
+            formDataObj.append("folder", "SchoolAppPupils/Uploads");
+
+            xhr.open("POST", `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`);
+            xhr.send(formDataObj);
+        } catch (err) {
+            console.error("Camera upload failed:", err);
+            toast.error("Failed to upload image from camera.");
+            setIsUploading(false);
+            setShowCamera(false);
+        }
+    };
+
+   
 
     const handleUpdate = (user) => {
         // Save the student's *current* academic details for display during edit

@@ -31,6 +31,7 @@ import TeacherPupilsPage from "../TeacherAssignment/TeacherPupilsPage";
 import GradeSheetPage from "../TeacherAssignment/GradeSheetPage";
 import SubGradeMatrixPage from "../TeacherAssignment/SubGradeMatrixPage";
 import ClassFullTermMatrixPage from "../TeacherAssignment/ClassFullTermMatrixPage";
+import ReportCardTermly from "../PupilsPage/ReportCardTermly";
 import GeneralReportCard from "../PupilsPage/GeneralReportCard";
 import SchoolRegistration from "../CeoPanel/SchoolRegistration"
 import AdminForm from "../CeoPanel/AdminForm"
@@ -111,9 +112,10 @@ const NAV_ITEMS = [
       { key: "TeacherPupilsPageAdmin", label: "TeacherPupilsGrade", icon: <MdPerson /> },
       { key: "SubGradeMatrixPage", label: "Sub Grade Sheet", icon: <MdPerson /> },
       { key: "ClassFullTermMatrixPage", label: "Term Grade Sheet", icon: <MdPerson /> },
-      { key: "GeneralReportCard", label: "ReportCard", icon: <MdPerson /> },
-      { key: "TermResult", label: "TermResult", icon: <MdPerson /> },
-       { key: "YearlyResult", label: "Yearly Result", icon: <MdPerson /> },
+      { key: "ReportCardTermly", label: "ReportCard Termly", icon: <MdPerson /> },
+      { key: "GeneralReportCard", label: "ReportCard Yearly", icon: <MdPerson /> },
+      { key: "TermResult", label: "TermResult GradeSheet", icon: <MdPerson /> },
+       { key: "YearlyResult", label: "Yearly GradeSheet", icon: <MdPerson /> },
              { key: "YearlyGeneralReportCard", label: "YearlyGeneralReportCard", icon: <MdPerson /> },
 
     ],
@@ -255,6 +257,7 @@ function FeesPanel() {
       case "TermResult": return <TermResult />;
       case "YearlyResult": return <YearlyResult />;
       case "GradeSheetPage": return <GradeSheetPage />;
+      case "ReportCardTermly": return <ReportCardTermly />;
       case "GeneralReportCard": return <GeneralReportCard />;
       case "AdminForm": return <AdminForm />;
       case "beceResult": return <NationalResultPage />;

@@ -31,6 +31,7 @@ import TeacherPupilsPageAdmin from "../TeacherAssignment/TeacherPupilsPageAdmin"
 import GradeSheetPage from "../TeacherAssignment/GradeSheetPage";
 import SubGradeMatrixPage from "../TeacherAssignment/SubGradeMatrixPage";
 import ClassFullTermMatrixPage from "../TeacherAssignment/ClassFullTermMatrixPage";
+import ReportCardTermly from "../PupilsPage/ReportCardTermly";
 import GeneralReportCard from "../PupilsPage/GeneralReportCard";
 import SchoolRegistration from "../CeoPanel/SchoolRegistration"
 import AdminForm from "../CeoPanel/AdminForm"
@@ -105,9 +106,10 @@ const NAV_ITEMS = [
       { key: "BulkDeleteGradesPage", label: "BulkDeleteGradesPage", icon: <MdPerson /> },
       { key: "SubGradeMatrixPage", label: "Sub Grade Sheet", icon: <MdPerson /> },
       { key: "ClassFullTermMatrixPage", label: "Term Grade Sheet", icon: <MdPerson /> },
-      { key: "GeneralReportCard", label: "ReportCard", icon: <MdPerson /> },
-      { key: "TermResult", label: "TermResult", icon: <MdPerson /> },
-      { key: "YearlyResult", label: "Yearly Result", icon: <MdPerson /> },
+      { key: "ReportCardTermly", label: "ReportCard Termly", icon: <MdPerson /> },
+      { key: "GeneralReportCard", label: "ReportCard Yearly", icon: <MdPerson /> },
+      { key: "TermResult", label: "TermResult GradeSheet", icon: <MdPerson /> },
+      { key: "YearlyResult", label: "Yearly GradeSheet", icon: <MdPerson /> },
       { key: "YearlyGeneralReportCard", label: "YearlyGeneralReportCard", icon: <MdPerson /> },
       // { key: "Testing", label: "Testing", icon: <MdPerson /> },
 
@@ -240,7 +242,7 @@ function Gov() {
       case "SchoolRegistration": return <SchoolRegistration />;
       case "class": return <ClassRegistration />;
       case "classList": return <StudentFilterPage />;
-        case "ClassPromotion": return <ClassPromotion />;
+      case "ClassPromotion": return <ClassPromotion />;
       case "fees": return <FeeReceipt />;
       case "feesCost": return <FeesCostPage />;
       case "TeacherRegistration": return <TeacherRegistration />;
@@ -248,6 +250,7 @@ function Gov() {
       case "TeacherAssignment": return <TeacherAssignmentPage />;
       case "GradeSheetPage": return <GradeSheetPage />;
       case "GeneralReportCard": return <GeneralReportCard />;
+      case "ReportCardTermly": return <ReportCardTermly />;
       case "SubGradeMatrixPage": return <SubGradeMatrixPage />;
       case "ClassFullTermMatrixPage": return <ClassFullTermMatrixPage />;
       case "TermResult": return <TermResult />;

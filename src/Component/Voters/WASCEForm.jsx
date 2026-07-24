@@ -420,7 +420,7 @@ const WasceReg = () => {
         addLine("Full Name", stu.studentName);
         addLine("Faculty", stu.faculty);
         addLine("Gender", stu.gender);
-        addLine("DOB", stu.dob);
+        addLine("Date of Birth", formatDOB(stu.dob));
         addLine("Age", stu.age);
         addLine("Address", stu.address);
         addLine("Mobile", stu.mobileNumber);
@@ -552,17 +552,18 @@ const WasceReg = () => {
     const tableData = sortedStudents.map((stu, index) => {
         const { surname, otherNames } = splitName(stu.studentName);
 
-        return [
-            index + 1,
-            surname,
-            otherNames,
-            stu.gender || "",
-            stu.beceYear || "",
-            stu.beceIndexNo || "",
-            stu.address || "",
-            stu.mobileNumber || "",
-            stu.previousSchool || ""
-        ];
+      return [
+    index + 1,
+    surname,
+    otherNames,
+    stu.gender || "",
+    formatDOB(stu.dob),
+    stu.beceYear || "",
+    stu.beceIndexNo || "",
+    stu.address || "",
+    stu.mobileNumber || "",
+    stu.previousSchool || ""
+];
     });
 
         // 📋 HEADERS
@@ -571,6 +572,7 @@ const WasceReg = () => {
             "Surname",
             "Other Name",
             "Sex",
+            "Date of Birth",
             "BECE Year",
             "Index Number",
             "Address",
@@ -593,17 +595,18 @@ const WasceReg = () => {
                 textColor: [255, 255, 255],
                 fontStyle: "bold"
             },
-            columnStyles: {
-                0: { cellWidth: 20 },
-                1: { cellWidth: 40 },
-                2: { cellWidth: 50 },
-                3: { cellWidth: 25 },
-                4: { cellWidth: 30 },
-                5: { cellWidth: 50 },
-                6: { cellWidth: 70 },
-                7: { cellWidth: 45 },
-                8: { cellWidth: 60 }
-            }
+           columnStyles: {
+    0: { cellWidth: 15 }, // No
+    1: { cellWidth: 35 }, // Surname
+    2: { cellWidth: 45 }, // Other Name
+    3: { cellWidth: 20 }, // Sex
+    4: { cellWidth: 28 }, // Date of Birth
+    5: { cellWidth: 25 }, // BECE Year
+    6: { cellWidth: 40 }, // Index Number
+    7: { cellWidth: 55 }, // Address
+    8: { cellWidth: 40 }, // Mobile
+    9: { cellWidth: 55 }  // Previous School
+}
         });
 
         // 💾 SAVE
@@ -620,6 +623,14 @@ const WasceReg = () => {
         const nameB = b.studentName?.toLowerCase() || "";
         return nameA.localeCompare(nameB);
     });
+
+    const formatDOB = (dateString) => {
+    if (!dateString) return "";
+
+    const date = new Date(dateString);
+
+    return `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()}`;
+};
 
     return (
         <div className="min-h-screen bg-gray-50 p-4 md:p-8">

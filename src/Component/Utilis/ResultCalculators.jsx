@@ -1,271 +1,228 @@
 // src/Component/Utils/ResultCalculator.jsx
 
 /**
- * Safely parses and retrieves term scores.
- * Keeps raw float averages intact to ensure calculation accuracy,
- * while returning rounded integers for UI display.
+ * Parses test scores and rounds term mean to nearest integer (matching AnnualBroadSheet).
  */
-export const getTermScores = (gradesArray, pupilId, subj, termPrefix) => {
-    const records = gradesArray.filter(
-        (g) => g.pupilID === pupilId && g.subject === subj && g.test.startsWith(termPrefix)
+export const getTermScores = (
+  gradesArray,
+  pupilId,
+  subj,
+  termPrefix
+) => {
+  const getScore = (test) => {
+    const record = gradesArray.find(
+      (g) =>
+        g.pupilID === pupilId &&
+        g.subject === subj &&
+        g.test === test
     );
+    return Number(record?.grade || 0);
+  };
 
-    const t1Record = records.find(r => r.test.endsWith("T1"));
-    const t2Record = records.find(r => r.test.endsWith("T2"));
+  const t1 = getScore(`${termPrefix} T1`);
+  const t2 = getScore(`${termPrefix} T2`);
 
-    const t1Val = t1Record && t1Record.grade !== "" && t1Record.grade !== undefined ? Number(t1Record.grade) : null;
-    const t2Val = t2Record && t2Record.grade !== "" && t2Record.grade !== undefined ? Number(t2Record.grade) : null;
+  const rawMean = (t1 + t2) / 2;
+  const roundedMean = Math.round(rawMean);
 
-    let rawMean = null;
-    if (t1Val !== null || t2Val !== null) {
-        // Match the fallback logic of treating missing test grades as 0
-        const v1 = t1Val !== null ? t1Val : 0;
-        const v2 = t2Val !== null ? t2Val : 0;
-        rawMean = (v1 + v2) / 2;
-    }
-
-    return {
-        t1: t1Val !== null ? Math.round(t1Val) : null,
-        t2: t2Val !== null ? Math.round(t2Val) : null,
-        rawMean: rawMean, // High-precision float for ranking and summation
-        mean: rawMean !== null ? Math.round(rawMean) : null
-    };
+  return {
+    t1: Math.round(t1),
+    t2: Math.round(t2),
+    rawMean,
+    mean: roundedMean, // Pre-rounded term mean
+  };
 };
 
 /**
- * Calculates annual mean based on the selected calculation mode.
- *
- * Modes:
- * auto     -> Divide by active terms only
- * term1_2  -> Use Terms 1 & 2
- * term2_3  -> Use Terms 2 & 3
- * 3        -> Force divide by 3
+ * Calculates Annual Subject Mean matching AnnualBroadSheet's exact logic.
+ * Expects m1, m2, m3 to be pre-rounded integers or handles rounding inline.
  */
 export const calculateAnnualMean = (
-    term1,
-    term2,
-    term3,
-    calcMode = "auto"
+  term1 = 0,
+  term2 = 0,
+  term3 = 0,
+  calcMode = "auto"
 ) => {
+  // Ensure we are working with rounded integers for each term
+  const m1 = Math.round(Number(term1) || 0);
+  const m2 = Math.round(Number(term2) || 0);
+  const m3 = Math.round(Number(term3) || 0);
 
-    const t1 = term1 ?? null;
-    const t2 = term2 ?? null;
-    const t3 = term3 ?? null;
+  let divisor = 3;
+  let scoreSum = m1 + m2 + m3;
 
-    let scoreSum = 0;
-    let divisor = 1;
+  if (calcMode === "auto") {
+    let activeTermsCount = 0;
+    if (m1 > 0) activeTermsCount++;
+    if (m2 > 0) activeTermsCount++;
+    if (m3 > 0) activeTermsCount++;
+    divisor = activeTermsCount > 0 ? activeTermsCount : 1;
+  } else if (calcMode === "term1_2") {
+    divisor = 2;
+    scoreSum = m1 + m2;
+  } else if (calcMode === "term2_3") {
+    divisor = 2;
+    scoreSum = m2 + m3;
+  } else {
+    divisor = Number(calcMode) || 3;
+    scoreSum = m1 + m2 + m3;
+  }
 
-    switch (calcMode) {
-
-        case "term1_2":
-            scoreSum = (t1 ?? 0) + (t2 ?? 0);
-            divisor = 2;
-            break;
-
-        case "term2_3":
-            scoreSum = (t2 ?? 0) + (t3 ?? 0);
-            divisor = 2;
-            break;
-
-        case "3":
-            scoreSum = (t1 ?? 0) + (t2 ?? 0) + (t3 ?? 0);
-            divisor = 3;
-            break;
-
-        case "auto":
-        default:
-
-            const active = [];
-
-            if (t1 !== null) active.push(t1);
-            if (t2 !== null) active.push(t2);
-            if (t3 !== null) active.push(t3);
-
-            if (active.length === 0) return null;
-
-            scoreSum = active.reduce((a, b) => a + b, 0);
-            divisor = active.length;
-    }
-
-    return scoreSum / divisor;
+  // Final round of the sum divided by divisor
+  return Math.round(scoreSum / divisor);
 };
 
 /**
- * Calculates Subject Ranks dynamically matching the tie-breaker/ranking strategy.
+ * Calculates subject term rankings with exact tie-breaking.
  */
-export const calculateSubjectRanks = (gradesArray, pupilIDs, uniqueSubjects, terms = ["Term 1", "Term 2", "Term 3"]) => {
-    const subjectTermRanks = {};
+export const calculateSubjectRanks = (
+  gradesArray,
+  pupilIDs,
+  uniqueSubjects
+) => {
+  const ranks = {};
 
-    uniqueSubjects.forEach((subj) => {
-        terms.forEach((term) => {
-            const studentMeans = pupilIDs.map((id) => {
-                const { rawMean } = getTermScores(gradesArray, id, subj, term);
-                return { id, rawMean };
-            }).filter(item => item.rawMean !== null);
+  uniqueSubjects.forEach((sub) => {
+    ["Term 1", "Term 2", "Term 3"].forEach((term) => {
+      const scores = pupilIDs
+        .map((id) => {
+          const score = getTermScores(gradesArray, id, sub, term).mean;
+          return { id, score };
+        })
+        .sort((a, b) => b.score - a.score);
 
-            // Sort descending by raw float averages
-            studentMeans.sort((a, b) => b.rawMean - a.rawMean);
+      const key = `${sub}_${term}`;
+      ranks[key] = {};
 
-            const rankKey = `${subj}_${term}`;
-            subjectTermRanks[rankKey] = {};
-
-            studentMeans.forEach((student, idx) => {
-                if (idx > 0 && student.rawMean === studentMeans[idx - 1].rawMean) {
-                    subjectTermRanks[rankKey][student.id] = subjectTermRanks[rankKey][studentMeans[idx - 1].id];
-                } else {
-                    subjectTermRanks[rankKey][student.id] = idx + 1;
-                }
-            });
-        });
+      scores.forEach((s, index) => {
+        if (index > 0 && s.score === scores[index - 1].score) {
+          ranks[key][s.id] = ranks[key][scores[index - 1].id];
+        } else {
+          ranks[key][s.id] = index + 1;
+        }
+      });
     });
+  });
 
-    return subjectTermRanks;
+  return ranks;
 };
 
 /**
- * Calculates subject-specific annual ranks across all subjects using raw float averages.
+ * Calculates subject annual ranks across pupils.
  */
-export const calculateSubjectAnnualRanks = (gradesArray, pupilIDs, uniqueSubjects, calculationMode) => {
-    const subjectAnnualRanks = {};
+export const calculateSubjectAnnualRanks = (
+  gradesArray,
+  pupilIDs,
+  uniqueSubjects,
+  calcMode = "auto"
+) => {
+  const result = {};
 
-    uniqueSubjects.forEach((subj) => {
-        const studentSubjAnnuals = pupilIDs.map((id) => {
-            const t1 = getTermScores(gradesArray, id, subj, "Term 1").rawMean;
-            const t2 = getTermScores(gradesArray, id, subj, "Term 2").rawMean;
-            const t3 = getTermScores(gradesArray, id, subj, "Term 3").rawMean;
+  uniqueSubjects.forEach((sub) => {
+    const scores = pupilIDs
+      .map((id) => {
+        const m1 = getTermScores(gradesArray, id, sub, "Term 1").mean;
+        const m2 = getTermScores(gradesArray, id, sub, "Term 2").mean;
+        const m3 = getTermScores(gradesArray, id, sub, "Term 3").mean;
 
-            const annualAvg = calculateAnnualMean(
-                t1,
-                t2,
-                t3,
-                calculationMode
-            );
-            return { id, annualAvg };
-        }).filter(item => item.annualAvg !== null);
+        return {
+          id,
+          annual: calculateAnnualMean(m1, m2, m3, calcMode),
+        };
+      })
+      .sort((a, b) => b.annual - a.annual);
 
-        studentSubjAnnuals.sort((a, b) => b.annualAvg - a.annualAvg);
-        subjectAnnualRanks[subj] = {};
+    result[sub] = {};
 
-        studentSubjAnnuals.forEach((student, idx) => {
-            if (idx > 0 && student.annualAvg === studentSubjAnnuals[idx - 1].annualAvg) {
-                subjectAnnualRanks[subj][student.id] = subjectAnnualRanks[subj][studentSubjAnnuals[idx - 1].id];
-            } else {
-                subjectAnnualRanks[subj][student.id] = idx + 1;
-            }
-        });
+    scores.forEach((s, index) => {
+      if (index > 0 && s.annual === scores[index - 1].annual) {
+        result[sub][s.id] = result[sub][scores[index - 1].id];
+      } else {
+        result[sub][s.id] = index + 1;
+      }
     });
+  });
 
-    return subjectAnnualRanks;
+  return result;
 };
 
 /**
- * Calculates Term summaries (Total, Percentage, Overall Class Rank) 
- * using high-precision calculations.
+ * Overall Metrics Calculation
+ * Accurately mimics allStudentsStats, footers, percentages, and class ranks from AnnualBroadSheet.
  */
 export const calculateOverallMetrics = (
-    gradesArray,
-    pupilIDs,
-    uniqueSubjects,
-    selectedPupilId,
-    totalSubjectPercentage = null,
-    calculationMode = "auto"
+  gradesArray,
+  pupilIDs,
+  uniqueSubjects,
+  selectedPupilId,
+  calculationMode = "auto"
 ) => {
-    const classTermTotals = { "Term 1": [], "Term 2": [], "Term 3": [] };
-    const classAnnualAverages = [];
+  const allStudentsStats = pupilIDs.map((id) => {
+    let t1 = 0,
+      t2 = 0,
+      t3 = 0;
+    let totalAnnualAccumulator = 0;
 
-    pupilIDs.forEach((id) => {
-        let annualSumOfAverages = 0;
-        let annualSubjectCount = 0;
+    uniqueSubjects.forEach((sub) => {
+      const m1 = getTermScores(gradesArray, id, sub, "Term 1").mean;
+      const m2 = getTermScores(gradesArray, id, sub, "Term 2").mean;
+      const m3 = getTermScores(gradesArray, id, sub, "Term 3").mean;
 
-        ["Term 1", "Term 2", "Term 3"].forEach((term) => {
-            let termSum = 0;
-            let termSubjectCount = 0;
+      t1 += m1;
+      t2 += m2;
+      t3 += m3;
 
-            uniqueSubjects.forEach((subj) => {
-                const { rawMean } = getTermScores(gradesArray, id, subj, term);
-                if (rawMean !== null) {
-                    termSum += rawMean; // Maintain raw fractional accuracy
-                    termSubjectCount++;
-                }
-            });
-
-            if (termSubjectCount > 0) {
-                // If specific class subject percentage is passed, calculate relative to that.
-                // Otherwise, fall back to standard subject count * 100
-               const maxTermPercentage = totalSubjectPercentage > 0
-    ? totalSubjectPercentage
-    : (uniqueSubjects.length * 100);
-
-                const percentage = (termSum / maxTermPercentage) * 100;
-                classTermTotals[term].push({ id, total: termSum, percentage });
-            }
-        });
-
-        uniqueSubjects.forEach((subj) => {
-            const t1 = getTermScores(gradesArray, id, subj, "Term 1").rawMean;
-            const t2 = getTermScores(gradesArray, id, subj, "Term 2").rawMean;
-            const t3 = getTermScores(gradesArray, id, subj, "Term 3").rawMean;
-
-            const annualAverage = calculateAnnualMean(
-                t1,
-                t2,
-                t3,
-                calculationMode
-            );
-
-            if (annualAverage !== null) {
-                annualSumOfAverages += annualAverage;
-                annualSubjectCount++;
-            }
-        });
-
-        if (annualSubjectCount > 0) {
-            classAnnualAverages.push({ id, average: annualSumOfAverages / annualSubjectCount });
-        }
+      const annMean = calculateAnnualMean(m1, m2, m3, calculationMode);
+      totalAnnualAccumulator += annMean;
     });
 
-    // 1. Process Term Summaries with Ties
-    const termSummariesCalculated = {};
-    ["Term 1", "Term 2", "Term 3"].forEach((term) => {
-        const list = classTermTotals[term];
-        // Sort descending by raw float percentage to eliminate rounding ranking anomalies
-        list.sort((a, b) => b.total - a.total);
-        list.forEach((entry, idx) => {
-            if (idx > 0 && entry.total === list[idx - 1].total) {
-                entry.rank = list[idx - 1].rank;
-            } else {
-                entry.rank = idx + 1;
-            }
-        });
+    return { id, t1, t2, t3, annual: totalAnnualAccumulator };
+  });
 
-        const studentTermStats = list.find((x) => x.id === selectedPupilId);
-        termSummariesCalculated[term] = studentTermStats ? {
-            total: Math.round(studentTermStats.total),
-            percentage: studentTermStats.percentage.toFixed(1),
-            rank: studentTermStats.rank
-        } : { total: "—", percentage: "—", rank: "—" };
-    });
+  const activePupilStats = allStudentsStats.find(
+    (s) => s.id === selectedPupilId
+  ) || { t1: 0, t2: 0, t3: 0, annual: 0 };
 
-    // 2. Process Annual Summaries with Ties
-    classAnnualAverages.sort((a, b) => b.average - a.average);
-    classAnnualAverages.forEach((entry, idx) => {
-        if (idx > 0 && entry.average === classAnnualAverages[idx - 1].average) {
-            entry.rank = classAnnualAverages[idx - 1].rank;
-        } else {
-            entry.rank = idx + 1;
-        }
-    });
+  const subjectCount = uniqueSubjects.length || 1;
 
-    const selectedAnnualStats = classAnnualAverages.find((x) => x.id === selectedPupilId);
-    const annualSummary = {
-        avg: selectedAnnualStats ? selectedAnnualStats.average.toFixed(1) : "0.0",
-        rank: selectedAnnualStats ? selectedAnnualStats.rank : "—"
-    };
+  const getRank = (field) => {
+    const sorted = [...allStudentsStats].sort((a, b) => b[field] - a[field]);
+    const index = sorted.findIndex((s) => s.id === selectedPupilId);
+    if (index === -1) return "—";
 
-    return {
-        termSummaries: termSummariesCalculated,
-        annualSummary,
-        classTermTotals,
-        classAnnualAverages
-    };
+    if (index > 0 && sorted[index][field] === sorted[index - 1][field]) {
+      return sorted.findIndex((s) => s[field] === sorted[index][field]) + 1;
+    }
+    return index + 1;
+  };
+
+  const termSummaries = {
+    "Term 1": {
+      total: activePupilStats.t1,
+      percentage: (activePupilStats.t1 / subjectCount).toFixed(1),
+      rank: getRank("t1"),
+    },
+    "Term 2": {
+      total: activePupilStats.t2,
+      percentage: (activePupilStats.t2 / subjectCount).toFixed(1),
+      rank: getRank("t2"),
+    },
+    "Term 3": {
+      total: activePupilStats.t3,
+      percentage: (activePupilStats.t3 / subjectCount).toFixed(1),
+      rank: getRank("t3"),
+    },
+  };
+
+  const annualSummary = {
+    total: activePupilStats.annual,
+    avg: (activePupilStats.annual / subjectCount).toFixed(1),
+    rank: getRank("annual"),
+  };
+
+  return {
+    termSummaries,
+    annualSummary,
+    allStudentsStats,
+  };
 };

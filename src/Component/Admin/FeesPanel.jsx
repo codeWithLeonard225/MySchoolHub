@@ -58,6 +58,8 @@ import TermResult from "../TeacherAssignment/TermResult";
 import YearlyResult from "../TeacherAssignment/YearlyResult";
 import YearlyGeneralReportCard from "../TeacherAssignment/YearlyGeneralReportCard";
 import ClassPromotion from "../Voters/ClassPromotion";
+import SubjectData from "../CeoPanel/SubjectData"
+
 
 
 
@@ -71,9 +73,10 @@ const NAV_ITEMS = [
       { key: "Form", label: " Pupils", icon: <MdPerson /> },
       { key: "class", label: "Class", icon: <MdPerson /> },
       { key: "classList", label: "Class List", icon: <MdPerson /> },
-        { key: "AdminForm", label: " AdminForm", icon: <MdPerson /> },
-        { key: "SchoolRegistration", label: " SchoolRegistration", icon: <MdPerson /> },
-         { key: "ClassPromotion", label: " ClassPromotion", icon: <MdPerson /> },
+      { key: "AdminForm", label: " AdminForm", icon: <MdPerson /> },
+      { key: "SchoolRegistration", label: " SchoolRegistration", icon: <MdPerson /> },
+      { key: "ClassPromotion", label: " ClassPromotion", icon: <MdPerson /> },
+      { key: "SubjectData", label: "SubjectData", icon: <MdPerson /> },
 
     ],
   },
@@ -115,8 +118,8 @@ const NAV_ITEMS = [
       { key: "ReportCardTermly", label: "ReportCard Termly", icon: <MdPerson /> },
       { key: "GeneralReportCard", label: "ReportCard Yearly", icon: <MdPerson /> },
       { key: "TermResult", label: "TermResult GradeSheet", icon: <MdPerson /> },
-       { key: "YearlyResult", label: "Yearly GradeSheet", icon: <MdPerson /> },
-             { key: "YearlyGeneralReportCard", label: "YearlyGeneralReportCard", icon: <MdPerson /> },
+      { key: "YearlyResult", label: "Yearly GradeSheet", icon: <MdPerson /> },
+      { key: "YearlyGeneralReportCard", label: "YearlyGeneralReportCard", icon: <MdPerson /> },
 
     ],
   },
@@ -143,29 +146,29 @@ const NAV_ITEMS = [
 
     ],
   },
-    {
+  {
     key: "pupilAttendance",
     label: "Pupil Attendance",
     icon: <MdWarning />, // 📖
   },
-    {
+  {
     key: "staffAttendance",
     label: "Staff Attendance",
     icon: <MdWarning />, // 📖
   },
-    {
-      key: "timetable",
-      label: "TimeTable",
-      icon: <MdBarChart />,
-      children: [
-        { key: "TimetableEntry", label: "TimetableEntry", icon: <MdPerson /> },
-        { key: "TimeTableTeacherAtt", label: "TimeTableTeacherAtt", icon: <MdPerson /> },
-        { key: "TimeTableDailyAttendanceReport", label: "DailyAttendanceReport", icon: <MdPerson /> },
-        { key: "TimeTableTeacherReport", label: "MonthlyAttendanceReport", icon: <MdPerson /> },
-  
-      ],
-    },
- 
+  {
+    key: "timetable",
+    label: "TimeTable",
+    icon: <MdBarChart />,
+    children: [
+      { key: "TimetableEntry", label: "TimetableEntry", icon: <MdPerson /> },
+      { key: "TimeTableTeacherAtt", label: "TimeTableTeacherAtt", icon: <MdPerson /> },
+      { key: "TimeTableDailyAttendanceReport", label: "DailyAttendanceReport", icon: <MdPerson /> },
+      { key: "TimeTableTeacherReport", label: "MonthlyAttendanceReport", icon: <MdPerson /> },
+
+    ],
+  },
+
   {
     key: "LogoutPage",
     label: "Logout",
@@ -250,6 +253,7 @@ function FeesPanel() {
       case "feesCost": return <FeesCostPage />;
       case "TeacherRegistration": return <TeacherRegistration />;
       case "subjects": return <SubjectPage />;
+      case "SubjectData": return <SubjectData />;
       case "TeacherAssignment": return <TeacherAssignmentPage />;
       case "TeacherPupilsPage": return <TeacherPupilsPage />;
       case "SubGradeMatrixPage": return <SubGradeMatrixPage />;
@@ -280,7 +284,7 @@ function FeesPanel() {
       case "YearlyGeneralReportCard": return <YearlyGeneralReportCard />;
       case "SchoolRegistration": return <SchoolRegistration />;
       case "ClassPromotion": return <ClassPromotion />;
-      
+
 
       default: return <Placeholder title={activeTab} />;
     }

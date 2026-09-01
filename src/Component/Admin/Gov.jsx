@@ -62,6 +62,12 @@ import YearlyGeneralReportCard from "../TeacherAssignment/YearlyGeneralReportCar
 import StudentIDCardData from "../Voters/StudentIDCardData";
 import WASCEForm from "../Voters/WASCEForm";
 import ClassPromotion from "../Voters/ClassPromotion";
+import TeacherIDCards from "../Staff/TeacherIDCards";
+import StaffAttendanceScanner from "../Staff/StaffAttendanceScanner";
+import StaffAttendanceRecords from "../Staff/StaffAttendanceRecords";
+import PupilIDCardScan from "../PupilsPage/PupilIDCardScan";
+import PupilAttendanceScanner from "../PupilsPage/PupilAttendanceScanner";
+import PupilAttendanceLogs from "../PupilsPage/PupilAttendanceLogs";
 
 
 
@@ -126,6 +132,30 @@ const NAV_ITEMS = [
       { key: "StudentIDCardData", label: "StudentIDCardData", icon: <MdPerson /> },
     ],
   },
+
+   {
+    key: "qrcode-Pupil",
+    label: "Qr code Attendance-Pupil",
+    icon: <MdBarChart />,
+    children: [
+      // { key: "PupilIDCardScan", label: "Pupil Card Scan", icon: <MdPerson /> },
+      { key: "PupilAttendanceScanner", label: "Attendance Scanner", icon: <MdPerson /> },
+      { key: "PupilAttendanceLogs", label: "Pupil Attendance Logs", icon: <MdPerson /> },
+    ],
+  },
+  {
+    key: "qrcode-Staff",
+    label: "Qr code Attendance-Staff",
+    icon: <MdBarChart />,
+    children: [
+      // { key: "TeacherIDCards", label: "Teacher IDCards", icon: <MdPerson /> },
+      { key: "StaffAttendanceScanner", label: "Staff Attendance Scanner", icon: <MdPerson /> },
+      { key: "StaffAttendanceRecords", label: "Staff Attendance Records", icon: <MdPerson /> },
+    ],
+  },
+
+
+
   {
     key: "pupilAttendance",
     label: "Pupil Attendance",
@@ -277,6 +307,12 @@ function Gov() {
       case "EditAttendancePage": return <EditAttendancePage />;
       case "StudentIDCardData": return <StudentIDCardData />;
       case "BulkDeleteGradesPage": return <BulkDeleteGradesPage />;
+          case "TeacherIDCards": return <TeacherIDCards />;
+      case "StaffAttendanceScanner": return <StaffAttendanceScanner />;
+      case "StaffAttendanceRecords": return <StaffAttendanceRecords />;
+      case "PupilIDCardScan": return <PupilIDCardScan />;
+      case "PupilAttendanceScanner": return <PupilAttendanceScanner />;
+      case "PupilAttendanceLogs": return <PupilAttendanceLogs />;
 
 
 

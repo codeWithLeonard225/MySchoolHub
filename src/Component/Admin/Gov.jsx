@@ -121,17 +121,17 @@ const NAV_ITEMS = [
 
     ],
   },
-  {
-    key: "idcards",
-    label: "Pupils ID Cards",
-    icon: <MdBarChart />,
-    children: [
-      { key: "ModelSchoolIdCard", label: "ModelSchoolIdCard", icon: <MdPerson /> },
-      { key: "IDCardPage", label: "IDCardPage", icon: <MdPerson /> },
-      { key: "IDCardBackSection", label: "IDCardBackSection", icon: <MdPerson /> },
-      { key: "StudentIDCardData", label: "StudentIDCardData", icon: <MdPerson /> },
-    ],
-  },
+  // {
+  //   key: "idcards",
+  //   label: "Pupils ID Cards",
+  //   icon: <MdBarChart />,
+  //   children: [
+  //     { key: "ModelSchoolIdCard", label: "ModelSchoolIdCard", icon: <MdPerson /> },
+  //     { key: "IDCardPage", label: "IDCardPage", icon: <MdPerson /> },
+  //     { key: "IDCardBackSection", label: "IDCardBackSection", icon: <MdPerson /> },
+  //     { key: "StudentIDCardData", label: "StudentIDCardData", icon: <MdPerson /> },
+  //   ],
+  // },
 
    {
     key: "qrcode-Pupil",

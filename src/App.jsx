@@ -21,6 +21,9 @@ import StaffAttDashboard from "./Component/Dashboard/StaffAttDashboard";
 import SupervisorOneDashboard from "./Component/Dashboard/SupervisorOneDashboard";
 import SupervisorThreeDashboard from "./Component/Dashboard/SupervisorThreeDashboard";
 import SupervisorTwoDashboard from "./Component/Dashboard/SupervisorTwoDashboard";
+import SupervisorJssOneDashboard from "./Component/Dashboard/SupervisorJssOneDashboard";
+import SupervisorJssTwoDashboard from "./Component/Dashboard/SupervisorJssTwoDashboard";
+import SupervisorJssThreeDashboard from "./Component/Dashboard/SupervisorJssThreeDashboard";
 
 
 
@@ -108,6 +111,30 @@ function App() {
             element={
               <ProtectedRoute role="admin">
                 <SupervisorThreeDashboard/>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/SupervisorJssOneDashboard"
+            element={
+              <ProtectedRoute role="admin">
+                <SupervisorJssOneDashboard/>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/SupervisorJssTwoDashboard"
+            element={
+              <ProtectedRoute role="admin">
+                <SupervisorJssTwoDashboard/>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/SupervisorJssThreeDashboard"
+            element={
+              <ProtectedRoute role="admin">
+                <SupervisorJssThreeDashboard/>
               </ProtectedRoute>
             }
           />

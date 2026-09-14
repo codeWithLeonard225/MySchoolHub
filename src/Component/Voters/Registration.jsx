@@ -244,11 +244,11 @@ const Registration = () => {
 
     // --- New State for Filtering ---
     const TODAY_DATE = useMemo(() => new Date().toISOString().slice(0, 10), []);
-  const [currentFilter, setCurrentFilter] = useState({
-    date: TODAY_DATE,
-    class: "All",
-    academicYear: "All"
-});
+    const [currentFilter, setCurrentFilter] = useState({
+        date: TODAY_DATE,
+        class: "All",
+        academicYear: "All"
+    });
 
     const handleDateFilterChange = (date) => {
         setCurrentFilter(prev => ({ ...prev, date }));
@@ -259,19 +259,19 @@ const Registration = () => {
     };
 
     const handleAcademicYearFilterChange = (academicYear) => {
-    setCurrentFilter(prev => ({
-        ...prev,
-        academicYear
-    }));
-};
+        setCurrentFilter(prev => ({
+            ...prev,
+            academicYear
+        }));
+    };
 
     const handleResetFilters = () => {
         setSearchTerm("");
-       setCurrentFilter({
-    date: TODAY_DATE,
-    class: "All",
-    academicYear: "All"
-});
+        setCurrentFilter({
+            date: TODAY_DATE,
+            class: "All",
+            academicYear: "All"
+        });
         toast.info("Filters reset to show today's registrations.");
     };
     // 🔎 FILTER & SORT LOGIC: Updated to use currentFilter state
@@ -289,11 +289,11 @@ const Registration = () => {
             filtered = filtered.filter(user => user.class === currentFilter.class);
         }
         // 3. Filter by Academic Year
-if (currentFilter.academicYear !== "All") {
-    filtered = filtered.filter(
-        user => user.academicYear === currentFilter.academicYear
-    );
-}
+        if (currentFilter.academicYear !== "All") {
+            filtered = filtered.filter(
+                user => user.academicYear === currentFilter.academicYear
+            );
+        }
 
         // 3. Filter by Search Term
         if (lowerCaseSearchTerm.trim() !== "") {
@@ -334,7 +334,7 @@ if (currentFilter.academicYear !== "All") {
     }, [users, formData.id]);
 
 
-     const handleSubmit = async (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
         // ✅ Custom validation
         if (!formData.studentName.trim()) {
@@ -431,13 +431,23 @@ if (currentFilter.academicYear !== "All") {
     };
 
     const handleUploadSuccess = (url, publicId) => {
-        setFormData((prev) => ({
-            ...prev,
-            userPhoto: url,
-            userPublicId: publicId,
-        }));
-        toast.success("Image uploaded successfully!");
-    };
+    console.log("PUPIL PHOTO URL:", url);
+    console.log("PUPIL PHOTO PUBLIC ID:", publicId);
+
+    if (!url) {
+        console.error("No Cloudinary URL received.");
+        toast.error("Photo uploaded but no image URL was returned.");
+        return;
+    }
+
+    setFormData((prev) => ({
+        ...prev,
+        userPhoto: url,
+        userPublicId: publicId,
+    }));
+
+    toast.success("Pupil photo uploaded successfully!");
+};
 
     const handleCameraCapture = async (base64Data) => {
         setIsUploading(true);
@@ -486,7 +496,7 @@ if (currentFilter.academicYear !== "All") {
         }
     };
 
-   
+
 
     const handleUpdate = (user) => {
         // Save the student's *current* academic details for display during edit
@@ -753,13 +763,41 @@ if (currentFilter.academicYear !== "All") {
                 <div className="flex flex-col items-center mb-4 border-t pt-4">
                     <label className="mb-2 font-medium text-sm">Student Photo</label>
                     <div className="border-4 border-dashed w-36 h-48 flex items-center justify-center bg-white/30 mb-2">
-                        {formData.userPhoto ? <img src={formData.userPhoto} alt="Student" className="w-full h-full object-cover" /> : "2-inch Photo"}
+                        {formData.userPhoto ? (
+    <img
+        src={formData.userPhoto}
+        alt="Student"
+        className="w-full h-full object-cover"
+        onLoad={() => {
+            console.log(
+                "PUPIL PHOTO DISPLAYED:",
+                formData.userPhoto
+            );
+        }}
+        onError={() => {
+            console.error(
+                "PUPIL PHOTO FAILED TO DISPLAY:",
+                formData.userPhoto
+            );
+        }}
+    />
+) : (
+    <span className="text-gray-500 text-sm text-center">
+        2-inch Photo
+    </span>
+)}
                     </div>
                     <CloudinaryImageUploader
+                        folder="SchoolAppPupils/Uploads"
                         onUploadSuccess={handleUploadSuccess}
-                        onUploadStart={() => { setIsUploading(true); setUploadProgress(0); }}
+                        onUploadStart={() => {
+                            setIsUploading(true);
+                            setUploadProgress(0);
+                        }}
                         onUploadProgress={setUploadProgress}
-                        onUploadComplete={() => setIsUploading(false)}
+                        onUploadComplete={() => {
+                            setIsUploading(false);
+                        }}
                     />
                     <button type="button" onClick={() => setShowCamera(true)} className="w-full sm:w-auto bg-green-600 text-white py-2 px-6 rounded-md text-sm font-semibold mt-2" disabled={isUploading}>
                         Use Camera
@@ -823,23 +861,23 @@ if (currentFilter.academicYear !== "All") {
                         </div>
 
                         <div className="flex-1">
-    <label className="block mb-1 text-xs font-medium text-gray-700">
-        Filter by Academic Year
-    </label>
+                            <label className="block mb-1 text-xs font-medium text-gray-700">
+                                Filter by Academic Year
+                            </label>
 
-    <select
-        value={currentFilter.academicYear}
-        onChange={(e) =>
-            handleAcademicYearFilterChange(e.target.value)
-        }
-        className="w-full p-2 border border-gray-300 rounded-lg"
-    >
-        <option value="All">All Academic Years</option>
-        <option value="2025/2026">2025/2026</option>
-        <option value="2026/2027">2026/2027</option>
-        <option value="2027/2028">2027/2028</option>
-    </select>
-</div>
+                            <select
+                                value={currentFilter.academicYear}
+                                onChange={(e) =>
+                                    handleAcademicYearFilterChange(e.target.value)
+                                }
+                                className="w-full p-2 border border-gray-300 rounded-lg"
+                            >
+                                <option value="All">All Academic Years</option>
+                                <option value="2025/2026">2025/2026</option>
+                                <option value="2026/2027">2026/2027</option>
+                                <option value="2027/2028">2027/2028</option>
+                            </select>
+                        </div>
                         <button
                             type="button"
                             onClick={handleResetFilters}

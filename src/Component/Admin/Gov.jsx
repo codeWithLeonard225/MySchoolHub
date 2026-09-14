@@ -65,6 +65,7 @@ import ClassPromotion from "../Voters/ClassPromotion";
 import TeacherIDCards from "../Staff/TeacherIDCards";
 import StaffAttendanceScanner from "../Staff/StaffAttendanceScanner";
 import StaffAttendanceRecords from "../Staff/StaffAttendanceRecords";
+import StaffPayroll from "../Staff/StaffPayroll";
 import PupilIDCardScan from "../PupilsPage/PupilIDCardScan";
 import PupilAttendanceScanner from "../PupilsPage/PupilAttendanceScanner";
 import PupilAttendanceLogs from "../PupilsPage/PupilAttendanceLogs";
@@ -83,7 +84,8 @@ const NAV_ITEMS = [
       { key: "classList", label: "Class List", icon: <MdPerson /> },
       { key: "WASCEForm", label: "Wasce Entering", icon: <MdPerson /> },
       { key: "ClassPromotion", label: " ClassPromotion", icon: <MdPerson /> },
-      // { key: "SchoolRegistration", label: "SchoolRegistration", icon: <MdPerson /> },
+      { key: "AdminForm", label: " AdminForm", icon: <MdPerson /> },
+      { key: "SchoolRegistration", label: "SchoolRegistration", icon: <MdPerson /> },
     ],
   },
 
@@ -150,30 +152,31 @@ const NAV_ITEMS = [
     children: [
       // { key: "TeacherIDCards", label: "Teacher IDCards", icon: <MdPerson /> },
       { key: "StaffAttendanceScanner", label: "Staff Attendance Scanner", icon: <MdPerson /> },
+      { key: "StaffPayroll", label: "Staff Payroll", icon: <MdPerson /> },
       { key: "StaffAttendanceRecords", label: "Staff Attendance Records", icon: <MdPerson /> },
     ],
   },
 
 
 
-  {
-    key: "pupilAttendance",
-    label: "Pupil Attendance",
-    icon: <MdWarning />, // 📖
-  },
+  // {
+  //   key: "pupilAttendance",
+  //   label: "Pupil Attendance",
+  //   icon: <MdWarning />, // 📖
+  // },
 
 
-  {
-    key: "staffAttendance",
-    label: "Staff  Record",
-    icon: <MdBarChart />,
-    children: [
-      { key: "staffAttendance", label: "Staff Attendance", icon: <MdPerson /> },
-      { key: "GeneralStaffAttendanceReport", label: "Staff Attendance Report", icon: <MdPerson /> },
+  // {
+  //   key: "staffAttendance",
+  //   label: "Staff  Record",
+  //   icon: <MdBarChart />,
+  //   children: [
+  //     { key: "staffAttendance", label: "Staff Attendance", icon: <MdPerson /> },
+  //     { key: "GeneralStaffAttendanceReport", label: "Staff Attendance Report", icon: <MdPerson /> },
 
 
-    ],
-  },
+  //   ],
+  // },
 
   {
     key: "timetable",
@@ -309,6 +312,7 @@ function Gov() {
       case "BulkDeleteGradesPage": return <BulkDeleteGradesPage />;
           case "TeacherIDCards": return <TeacherIDCards />;
       case "StaffAttendanceScanner": return <StaffAttendanceScanner />;
+      case "StaffPayroll": return <StaffPayroll />;
       case "StaffAttendanceRecords": return <StaffAttendanceRecords />;
       case "PupilIDCardScan": return <PupilIDCardScan />;
       case "PupilAttendanceScanner": return <PupilAttendanceScanner />;

@@ -400,7 +400,9 @@ const AdminForm = () => {
                             <option value="SupervisorThree">Supervisor Three</option>
                             <option value="SupervisorFour">Supervisor Four</option>
                             <option value="SupervisorFive">Supervisor Five</option>
-                          
+                            <option value="SupervisorJssOne">Supervisor JSS 1</option>
+                            <option value="SupervisorJssTwo">Supervisor JSS 2</option>
+                            <option value="SupervisorJssThree">Supervisor JSS 3</option>
                             <option value="General">General</option>
                         </select>
                     </div>

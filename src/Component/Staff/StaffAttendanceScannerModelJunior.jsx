@@ -90,9 +90,9 @@ const StaffAttendanceScanner = () => {
         // ==========================================
 
          const ATTENDANCE_START = 6 * 60 + 30;  // 6:30 AM
-        const PRESENT_END = 8 * 60 + 30;       // 8:30 AM
-        const LATE_END = 9 * 60;                // 9:00 AM
-        const ABSENT_END = 13 * 60 + 10;        // 1:10 PM
+        const PRESENT_END = 10 * 60 ;       // 10:00 AM
+        const LATE_END = 11 * 60;                // 11:00 AM
+        const ABSENT_END = 12 * 60 + 55;        // 12:55 PM
 
         // ==========================================
         // BEFORE 1:50 PM

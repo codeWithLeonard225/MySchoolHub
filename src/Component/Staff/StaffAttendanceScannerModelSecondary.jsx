@@ -89,10 +89,10 @@ const StaffAttendanceScanner = () => {
         // STAFF ATTENDANCE TIME SETTINGS
         // ==========================================
 
-         const ATTENDANCE_START = 12 * 60 + 50; // 1:50 PM
+         const ATTENDANCE_START = 11 * 60; // 11:00 AM
         // const ATTENDANCE_START = 0 * 60 + 50; // 12:50 AM
         const PRESENT_END = 15 * 60;           // 3:00 PM
-        const LATE_END = 16 * 60;              // 4:00 PM
+        const LATE_END = 16 * 60 + 10;              // 4:10 PM
         const ABSENT_END = 18 * 60;            // 6:00 PM
 
         // ==========================================

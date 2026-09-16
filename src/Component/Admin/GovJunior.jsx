@@ -38,10 +38,10 @@ import AdminForm from "../CeoPanel/AdminForm"
 import RegDashboard from "../Dashboard/RegDashboard"
 import StudentFilterPage from "../Voters/StudentFilterPage";
 import TeacherAssignmentReport from "../TeacherAssignment/TeacherAssignmentReport";
-import PastQuestions from "../Admin/PastQuestionUpload";
+import PastQuestions from "./PastQuestionUpload";
 import PupilIDCard from "../Voters/PupilIDCard";
 import IDCardPage from "../Voters/IDCardPage";
-import LogoutPage from "../Admin/LogoutPage"
+import LogoutPage from "./LogoutPage"
 import AttendancePage from "../Voters/AttendancePage";
 import AttendancePageClass from "../TeacherAssignment/AttendancePageClass";
 import StaffAttendanceSimple from "../TeacherAssignment/StaffAttendance";
@@ -63,7 +63,7 @@ import StudentIDCardData from "../Voters/StudentIDCardData";
 import WASCEForm from "../Voters/WASCEForm";
 import ClassPromotion from "../Voters/ClassPromotion";
 import TeacherIDCards from "../Staff/TeacherIDCards";
-import StaffAttendanceScanner from "../Staff/StaffAttendanceScannerModelSecondary";
+import StaffAttendanceScanner from "../Staff/StaffAttendanceScannerModelJunior";
 import StaffAttendanceRecords from "../Staff/StaffAttendanceRecords";
 import StaffPayroll from "../Staff/StaffPayroll";
 import PupilIDCardScan from "../PupilsPage/PupilIDCardScan";
@@ -84,7 +84,7 @@ const NAV_ITEMS = [
       { key: "classList", label: "Class List", icon: <MdPerson /> },
       { key: "WASCEForm", label: "Wasce Entering", icon: <MdPerson /> },
       { key: "ClassPromotion", label: " ClassPromotion", icon: <MdPerson /> },
-      { key: "AdminForm", label: " AdminForm", icon: <MdPerson /> },
+      // { key: "AdminForm", label: " AdminForm", icon: <MdPerson /> },
       // { key: "SchoolRegistration", label: "SchoolRegistration", icon: <MdPerson /> },
     ],
   },

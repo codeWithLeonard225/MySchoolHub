@@ -19,8 +19,8 @@ import {
     MdCheckCircle,
     MdRemoveCircle,
 } from "react-icons/md";
-import StaffAttendanceScanner from "../Staff/StaffAttendanceScannerModelSecondary";
 import StaffAttendanceRecords from "../Staff/StaffAttendanceRecords";
+import StaffAttendanceScanner from "../Staff/StaffAttendanceScannerModelJunior";
 import LogoutPage from "../Admin/LogoutPage"
 
 
@@ -28,25 +28,16 @@ import LogoutPage from "../Admin/LogoutPage"
 // --- Navigation Items ---
 const NAV_ITEMS = [
     {
-        key: "staffAttendance",
+        key: "StaffAttendanceScanner",
         label: "Staff Attendance",
         icon: <MdWarning />, // 📖
     },
     {
-        key: "GeneralStaffAttendanceReport",
-        label: "Staff Report",
+        key: "StaffAttendanceRecords",
+        label: "Staff Attendance Report",
         icon: <MdWarning />, // 📖
     },
 
-    // {
-    //     key: "timetable",
-    //     label: "TimeTable",
-    //     icon: <MdBarChart />,
-    //     children: [
-    //         { key: "WeeklyTimetableReport", label: "WeeklyTimetableReport", icon: <MdPerson /> },
-    //         { key: "TimeTableDailyAttendanceReport", label: "DailyAttendanceReport", icon: <MdPerson /> },
-    //     ],
-    // },
 
     {
         key: "LogoutPage",
@@ -81,7 +72,7 @@ const Dashboard = () => (
 );
 
 // --- Main Admin Panel ---
-function StaffAttDashboard() {
+function StaffAttendanceJss() {
     const [activeTab, setActiveTab] = useState("dashboard");
     const [openDropdown, setOpenDropdown] = useState(null);
     const [openNestedDropdowns, setOpenNestedDropdowns] = useState({});
@@ -124,8 +115,8 @@ function StaffAttDashboard() {
     const renderContent = () => {
         switch (activeTab) {
             case "dashboard": return <Dashboard />;
-            case "staffAttendance": return <StaffAttendanceScanner />;
-            case "GeneralStaffAttendanceReport": return <StaffAttendanceRecords />;
+            case "StaffAttendanceScanner": return <StaffAttendanceScanner />;
+            case "StaffAttendanceRecords": return <StaffAttendanceRecords />;
             case "WeeklyTimetableReport": return <WeeklyTimetableReport />;
             case "TimeTableDailyAttendanceReport": return <TimeTableDailyAttendanceReport />;
             case "LogoutPage": return <LogoutPage />;
@@ -141,7 +132,7 @@ function StaffAttDashboard() {
                 className={`fixed inset-y-0 left-0 z-40 w-64 bg-white p-4 border-r border-gray-200 shadow-lg transform transition-transform duration-300 
         ${sidebarOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0 md:static md:block`}
             >
-                <h2 className="text-3xl font-bold text-indigo-700 mb-6">Admin Panel</h2>
+                <h2 className="text-3xl font-bold text-indigo-700 mb-6">Supervisor Panel</h2>
                 <div className="space-y-2 flex-grow">
                     <Button
                         variant={activeTab === "dashboard" ? "default" : "ghost"}
@@ -177,4 +168,4 @@ function StaffAttDashboard() {
     );
 }
 
-export default StaffAttDashboard;
+export default StaffAttendanceJss;

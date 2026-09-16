@@ -390,11 +390,13 @@ const AdminForm = () => {
                         >
                             <option value="" disabled>Select Admin Category</option>
                             <option value="Gov">Government (Gov)</option>
+                            <option value="GovJunior">GovJunior (Gov)</option>
                             <option value="Private">Private</option>
                             <option value="Fees">Fees Admin</option>
                             <option value="Special">Special/Super Admin</option>
                             <option value="PupilAttendance">Pupil Attendance</option>
                             <option value="StaffAttendanceSimple">Staff Attendance</option>
+                            <option value="StaffAttendanceJss">Staff Attendance JSS</option>
                             <option value="SupervisorOne">Supervisor One</option>
                             <option value="SupervisorTwo">Supervisor Two</option>
                             <option value="SupervisorThree">Supervisor Three</option>

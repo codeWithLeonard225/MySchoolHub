@@ -707,19 +707,20 @@ const StaffAttendanceScanner = () => {
     };
 
     // Save attendance manually via selection modal
-   const handleSaveManualEntry = async (e) => {
+  // =====================================================
+// SAVE MANUAL ATTENDANCE ENTRY
+// =====================================================
+
+const handleSaveManualEntry = async (e) => {
 
     e.preventDefault();
 
+    // ==========================================
+    // CHECK STAFF SELECTION
+    // ==========================================
+
     if (!selectedTeacherId) {
         toast.error("Please select a staff member.");
-        return;
-    }
-
-    if (!manualNote.trim()) {
-        toast.error(
-            "A short note is compulsory for every manual attendance entry."
-        );
         return;
     }
 
@@ -748,6 +749,7 @@ const StaffAttendanceScanner = () => {
         const teacherName =
             selectedStaff.teacherName || "Staff Member";
 
+
         // ==========================================
         // DATE / TIME
         // ==========================================
@@ -763,21 +765,24 @@ const StaffAttendanceScanner = () => {
                 minute: "2-digit"
             });
 
+
         // ==========================================
-        // DETERMINISTIC ATTENDANCE DOCUMENT
+        // ATTENDANCE DOCUMENT
         // ==========================================
 
         const attendanceId =
             `${schoolId}_${teacherID}_${todayStr}`;
 
-        const attendanceRef = doc(
-            db,
-            "StaffAttendance",
-            attendanceId
-        );
+        const attendanceRef =
+            doc(
+                db,
+                "StaffAttendance",
+                attendanceId
+            );
 
         const attendanceSnap =
             await getDoc(attendanceRef);
+
 
         // =====================================================
         // MANUAL CLOCK-IN
@@ -786,22 +791,51 @@ const StaffAttendanceScanner = () => {
         if (manualAction === "clock-in") {
 
             // ==========================================
-            // CHECK EXISTING RECORD
+            // EXISTING ATTENDANCE RECORD
             // ==========================================
 
             if (attendanceSnap.exists()) {
 
-                const existing = attendanceSnap.data();
+                const existing =
+                    attendanceSnap.data();
 
-                // ------------------------------------------
+
+                // ==========================================
+                // ALREADY MARKED ABSENT
+                // ==========================================
+
+                if (existing.status === "Absent") {
+
+                    toast.warning(
+                        `⚠️ ${teacherName} cannot Clock-IN because they are already marked ABSENT for today.`
+                    );
+
+                    setScannedResult({
+                        name: teacherName,
+                        status: "Clock-In Blocked: Already Absent",
+                        time: "--",
+                        note:
+                            existing.note ||
+                            "This staff member has already been marked Absent for today.",
+                        isError: true
+                    });
+
+                    return;
+                }
+
+
+                // ==========================================
                 // FINALIZED RECORD
-                // ------------------------------------------
+                // ==========================================
 
                 if (isAttendanceLocked(existing)) {
 
                     setOverrideRecord({
+
                         docRef: attendanceRef,
+
                         teacherID,
+
                         teacherName,
 
                         previousStatus:
@@ -813,7 +847,8 @@ const StaffAttendanceScanner = () => {
                         newStatus:
                             existing.status,
 
-                        manualAction: "clock-in",
+                        manualAction:
+                            "clock-in",
 
                         previousClockInTime:
                             existing.clockInTime || null,
@@ -823,42 +858,67 @@ const StaffAttendanceScanner = () => {
 
                         previousHistory:
                             existing.overrideHistory || []
+
                     });
 
                     setOverrideAction("manual");
 
                     setShowManualModal(false);
+
                     setShowOverrideModal(true);
 
                     return;
                 }
 
-                // ------------------------------------------
+
+                // ==========================================
                 // ALREADY CLOCKED OUT
-                // ------------------------------------------
+                // ==========================================
 
                 if (existing.clockOutTime) {
 
-                    toast.error(
-                        `🚫 ${teacherName} already clocked out today at ${existing.clockOutTime}.`
+                    toast.warning(
+                        `⚠️ ${teacherName} already Clocked-OUT today at ${existing.clockOutTime}.`
                     );
+
+                    setScannedResult({
+                        name: teacherName,
+                        status: "Clock-In Blocked: Already Clocked Out",
+                        time: existing.clockOutTime,
+                        note:
+                            "A staff member cannot Clock-IN again after Clocking-OUT.",
+                        isError: true
+                    });
 
                     return;
                 }
 
-                // ------------------------------------------
+
+                // ==========================================
                 // ALREADY CLOCKED IN
-                // ------------------------------------------
+                // ==========================================
 
                 toast.warning(
-                    `⚠️ ${teacherName} is already clocked in at ${existing.clockInTime || "--"}.`
+                    `⚠️ ${teacherName} is already Clocked-IN at ${existing.clockInTime || "--"}.`
                 );
+
+                setScannedResult({
+                    name: teacherName,
+                    status:
+                        `Already Clocked-In (${existing.status})`,
+                    time:
+                        existing.clockInTime || "--",
+                    note:
+                        existing.note || null,
+                    isError: true
+                });
 
                 return;
             }
 
+
             // ==========================================
-            // DETERMINE STATUS FROM CURRENT TIME
+            // DETERMINE CLOCK-IN STATUS
             // ==========================================
 
             const {
@@ -867,73 +927,120 @@ const StaffAttendanceScanner = () => {
                 reason
             } = getClockInStatus(now);
 
+
             // ==========================================
-            // BEFORE ATTENDANCE START
+            // ATTENDANCE NOT STARTED
             // ==========================================
 
             if (derivedStatus === "Not Started") {
 
-                toast.warning(reason);
+                toast.warning(
+                    `⏰ ${reason}`
+                );
+
+                setScannedResult({
+                    name: teacherName,
+                    status: "Attendance Not Started",
+                    time: timeStr,
+                    note: reason,
+                    isError: true
+                });
 
                 return;
             }
 
+
             // ==========================================
-            // AFTER CLOCK-IN DEADLINE
+            // ATTENDANCE CLOSED
             // ==========================================
 
             if (!allowed) {
 
                 toast.error(
-                    `❌ ${teacherName} cannot be clocked in because attendance is closed.`
+                    `❌ ${teacherName} cannot be Clocked-IN because attendance is closed.`
                 );
+
+                setScannedResult({
+                    name: teacherName,
+                    status: "Clock-In Blocked: Attendance Closed",
+                    time: timeStr,
+                    note:
+                        reason ||
+                        "Attendance is closed.",
+                    isError: true
+                });
 
                 return;
             }
+
 
             // ==========================================
             // CREATE MANUAL CLOCK-IN
             // ==========================================
 
-            await setDoc(attendanceRef, {
+            await setDoc(
+                attendanceRef,
+                {
 
-                teacherID,
-                teacherName,
+                    teacherID,
 
-                schoolId,
+                    teacherName,
 
-                date: todayStr,
+                    schoolId,
 
-                clockInTime: timeStr,
-                clockOutTime: null,
+                    date: todayStr,
 
-                status: derivedStatus,
+                    clockInTime: timeStr,
 
-                note: manualNote.trim(),
+                    clockOutTime: null,
 
-                isManual: true,
-                entryType: "manual",
+                    status: derivedStatus,
 
-                isFinal: false,
+                    note:
+                        manualNote.trim(),
 
-                finalizedBy: "manual",
+                    isManual: true,
 
-                timestamp: serverTimestamp()
-            });
+                    entryType: "manual",
 
-            toast.success(
-                `✅ ${teacherName} manually Clocked IN at ${timeStr} (${derivedStatus}).`
+                    isFinal: false,
+
+                    finalizedBy: "manual",
+
+                    timestamp:
+                        serverTimestamp()
+
+                }
             );
 
+
+            // ==========================================
+            // SUCCESS MESSAGE
+            // ==========================================
+
+            toast.success(
+                `✅ ${teacherName} manually Clocked-IN at ${timeStr} (${derivedStatus}).`
+            );
+
+
             setScannedResult({
+
                 name: teacherName,
-                status: `Manual Clock-In (${derivedStatus})`,
+
+                status:
+                    `Manual Clock-In (${derivedStatus})`,
+
                 time: timeStr,
-                note: manualNote.trim(),
+
+                note:
+                    manualNote.trim(),
+
                 isError: false
+
             });
 
         }
+
 
         // =====================================================
         // MANUAL CLOCK-OUT
@@ -941,21 +1048,73 @@ const StaffAttendanceScanner = () => {
 
         else if (manualAction === "clock-out") {
 
+
             // ==========================================
-            // NO ATTENDANCE RECORD
+            // NO CLOCK-IN RECORD
             // ==========================================
 
             if (!attendanceSnap.exists()) {
 
-                toast.error(
-                    `🚫 ${teacherName} cannot clock out because there is no clock-in record for today.`
+                toast.warning(
+                    `⚠️ ${teacherName} cannot Clock-OUT because they have not Clocked-IN today.`
                 );
+
+                setScannedResult({
+
+                    name: teacherName,
+
+                    status:
+                        "Clock-Out Blocked",
+
+                    time:
+                        "--",
+
+                    note:
+                        "No clock-in record exists for today.",
+
+                    isError: true
+
+                });
 
                 return;
             }
 
+
             const existing =
                 attendanceSnap.data();
+
+
+            // ==========================================
+            // ALREADY ABSENT
+            // ==========================================
+
+            if (existing.status === "Absent") {
+
+                toast.warning(
+                    `⚠️ ${teacherName} cannot Clock-OUT because they are marked ABSENT for today.`
+                );
+
+                setScannedResult({
+
+                    name: teacherName,
+
+                    status:
+                        "Clock-Out Blocked: Absent",
+
+                    time:
+                        "--",
+
+                    note:
+                        existing.note ||
+                        "This staff member is marked Absent for today.",
+
+                    isError: true
+
+                });
+
+                return;
+            }
+
 
             // ==========================================
             // FINALIZED RECORD
@@ -964,8 +1123,11 @@ const StaffAttendanceScanner = () => {
             if (isAttendanceLocked(existing)) {
 
                 setOverrideRecord({
+
                     docRef: attendanceRef,
+
                     teacherID,
+
                     teacherName,
 
                     previousStatus:
@@ -977,7 +1139,8 @@ const StaffAttendanceScanner = () => {
                     newStatus:
                         existing.status,
 
-                    manualAction: "clock-out",
+                    manualAction:
+                        "clock-out",
 
                     previousClockInTime:
                         existing.clockInTime || null,
@@ -987,15 +1150,18 @@ const StaffAttendanceScanner = () => {
 
                     previousHistory:
                         existing.overrideHistory || []
+
                 });
 
                 setOverrideAction("manual");
 
                 setShowManualModal(false);
+
                 setShowOverrideModal(true);
 
                 return;
             }
+
 
             // ==========================================
             // ALREADY CLOCKED OUT
@@ -1004,46 +1170,124 @@ const StaffAttendanceScanner = () => {
             if (existing.clockOutTime) {
 
                 toast.warning(
-                    `⚠️ ${teacherName} already clocked out at ${existing.clockOutTime}.`
+                    `⚠️ ${teacherName} already Clocked-OUT at ${existing.clockOutTime}.`
                 );
+
+                setScannedResult({
+
+                    name: teacherName,
+
+                    status:
+                        "Already Clocked-Out",
+
+                    time:
+                        existing.clockOutTime,
+
+                    note:
+                        existing.note || null,
+
+                    isError: true
+
+                });
 
                 return;
             }
+
+
+            // ==========================================
+            // CLOCK-OUT REQUIRES CLOCK-IN
+            // ==========================================
+
+            if (!existing.clockInTime) {
+
+                toast.warning(
+                    `⚠️ ${teacherName} cannot Clock-OUT because no Clock-IN time exists for today.`
+                );
+
+                setScannedResult({
+
+                    name: teacherName,
+
+                    status:
+                        "Clock-Out Blocked: No Clock-In",
+
+                    time:
+                        "--",
+
+                    note:
+                        "Clock-In must be recorded before Clock-Out.",
+
+                    isError: true
+
+                });
+
+                return;
+            }
+
 
             // ==========================================
             // UPDATE CLOCK-OUT
             // ==========================================
 
-            await updateDoc(attendanceRef, {
+            await updateDoc(
+                attendanceRef,
+                {
 
-                clockOutTime: timeStr,
+                    clockOutTime:
+                        timeStr,
 
-                note: manualNote.trim(),
+                    note:
+                        manualNote.trim(),
 
-                isManual: true,
-                entryType: "manual",
+                    isManual:
+                        true,
 
-                updatedAt: serverTimestamp(),
+                    entryType:
+                        "manual",
 
-                manuallyClockedOut: true
-            });
+                    updatedAt:
+                        serverTimestamp(),
 
-            toast.success(
-                `🚪 ${teacherName} manually Clocked OUT at ${timeStr}.`
+                    manuallyClockedOut:
+                        true
+
+                }
             );
 
+
+            // ==========================================
+            // SUCCESS
+            // ==========================================
+
+            toast.success(
+                `🚪 ${teacherName} manually Clocked-OUT at ${timeStr}.`
+            );
+
+
             setScannedResult({
-                name: teacherName,
-                status: "Manual Clock-Out",
-                time: timeStr,
-                note: manualNote.trim(),
-                isError: false
+
+                name:
+                    teacherName,
+
+                status:
+                    "Manual Clock-Out",
+
+                time:
+                    timeStr,
+
+                note:
+                    manualNote.trim(),
+
+                isError:
+                    false
+
             });
+
         }
+
 
         // =====================================================
         // MANUAL EXCUSE
-        // NO CLOCK-IN / NO CLOCK-OUT TIME
         // =====================================================
 
         else if (manualAction === "excuse") {
@@ -1054,14 +1298,22 @@ const StaffAttendanceScanner = () => {
 
             if (attendanceSnap.exists()) {
 
-                const existing = attendanceSnap.data();
+                const existing =
+                    attendanceSnap.data();
 
-                // Allow override of finalized record
+
+                // ==========================================
+                // FINALIZED RECORD
+                // ==========================================
+
                 if (isAttendanceLocked(existing)) {
 
                     setOverrideRecord({
+
                         docRef: attendanceRef,
+
                         teacherID,
+
                         teacherName,
 
                         previousStatus:
@@ -1070,9 +1322,11 @@ const StaffAttendanceScanner = () => {
                         previousNote:
                             existing.note,
 
-                        newStatus: "Excused",
+                        newStatus:
+                            "Excused",
 
-                        manualAction: "excuse",
+                        manualAction:
+                            "excuse",
 
                         previousClockInTime:
                             existing.clockInTime || null,
@@ -1082,15 +1336,18 @@ const StaffAttendanceScanner = () => {
 
                         previousHistory:
                             existing.overrideHistory || []
+
                     });
 
                     setOverrideAction("manual");
 
                     setShowManualModal(false);
+
                     setShowOverrideModal(true);
 
                     return;
                 }
+
 
                 toast.warning(
                     `⚠️ ${teacherName} already has attendance for today (${existing.status}).`
@@ -1099,59 +1356,87 @@ const StaffAttendanceScanner = () => {
                 return;
             }
 
+
             // ==========================================
             // CREATE EXCUSED RECORD
             // ==========================================
 
-            await setDoc(attendanceRef, {
+            await setDoc(
+                attendanceRef,
+                {
 
-                teacherID,
-                teacherName,
+                    teacherID,
 
-                schoolId,
+                    teacherName,
 
-                date: todayStr,
+                    schoolId,
 
-                // NO TIME
-                clockInTime: null,
-                clockOutTime: null,
+                    date:
+                        todayStr,
 
-                status: "Excused",
+                    clockInTime:
+                        null,
 
-                note: manualNote.trim(),
+                    clockOutTime:
+                        null,
 
-                isManual: true,
-                entryType: "manual",
+                    status:
+                        "Excused",
 
-                isFinal: true,
+                    note:
+                        manualNote.trim(),
 
-                finalizedBy: "manual",
+                    isManual:
+                        true,
 
-                finalizedAt: serverTimestamp(),
+                    entryType:
+                        "manual",
 
-                timestamp: serverTimestamp()
-            });
+                    isFinal:
+                        true,
 
-            // ==========================================
-            // DISPLAY RESULT
-            // ==========================================
+                    finalizedBy:
+                        "manual",
+
+                    finalizedAt:
+                        serverTimestamp(),
+
+                    timestamp:
+                        serverTimestamp()
+
+                }
+            );
+
 
             setScannedResult({
-                name: teacherName,
-                status: "Manual Excused",
-                time: "--",
-                note: manualNote.trim(),
-                isError: false
+
+                name:
+                    teacherName,
+
+                status:
+                    "Manual Excused",
+
+                time:
+                    "--",
+
+                note:
+                    manualNote.trim(),
+
+                isError:
+                    false
+
             });
+
 
             toast.success(
                 `📝 ${teacherName} marked as Excused.`
             );
+
         }
+
 
         // =====================================================
         // MANUAL ABSENT
-        // NO CLOCK-IN / NO CLOCK-OUT TIME
         // =====================================================
 
         else if (manualAction === "absent") {
@@ -1162,14 +1447,36 @@ const StaffAttendanceScanner = () => {
 
             if (attendanceSnap.exists()) {
 
-                const existing = attendanceSnap.data();
+                const existing =
+                    attendanceSnap.data();
 
-                // Allow override of finalized record
+
+                // ==========================================
+                // ALREADY ABSENT
+                // ==========================================
+
+                if (existing.status === "Absent") {
+
+                    toast.warning(
+                        `⚠️ ${teacherName} is already marked ABSENT for today.`
+                    );
+
+                    return;
+                }
+
+
+                // ==========================================
+                // FINALIZED RECORD
+                // ==========================================
+
                 if (isAttendanceLocked(existing)) {
 
                     setOverrideRecord({
+
                         docRef: attendanceRef,
+
                         teacherID,
+
                         teacherName,
 
                         previousStatus:
@@ -1178,9 +1485,11 @@ const StaffAttendanceScanner = () => {
                         previousNote:
                             existing.note,
 
-                        newStatus: "Absent",
+                        newStatus:
+                            "Absent",
 
-                        manualAction: "absent",
+                        manualAction:
+                            "absent",
 
                         previousClockInTime:
                             existing.clockInTime || null,
@@ -1190,15 +1499,18 @@ const StaffAttendanceScanner = () => {
 
                         previousHistory:
                             existing.overrideHistory || []
+
                     });
 
                     setOverrideAction("manual");
 
                     setShowManualModal(false);
+
                     setShowOverrideModal(true);
 
                     return;
                 }
+
 
                 toast.warning(
                     `⚠️ ${teacherName} already has attendance for today (${existing.status}).`
@@ -1207,64 +1519,97 @@ const StaffAttendanceScanner = () => {
                 return;
             }
 
+
             // ==========================================
             // CREATE ABSENT RECORD
             // ==========================================
 
-            await setDoc(attendanceRef, {
+            await setDoc(
+                attendanceRef,
+                {
 
-                teacherID,
-                teacherName,
+                    teacherID,
 
-                schoolId,
+                    teacherName,
 
-                date: todayStr,
+                    schoolId,
 
-                // NO TIME
-                clockInTime: null,
-                clockOutTime: null,
+                    date:
+                        todayStr,
 
-                status: "Absent",
+                    clockInTime:
+                        null,
 
-                note: manualNote.trim(),
+                    clockOutTime:
+                        null,
 
-                isManual: true,
-                entryType: "manual",
+                    status:
+                        "Absent",
 
-                isFinal: true,
+                    note:
+                        manualNote.trim(),
 
-                finalizedBy: "manual",
+                    isManual:
+                        true,
 
-                finalizedAt: serverTimestamp(),
+                    entryType:
+                        "manual",
 
-                timestamp: serverTimestamp()
-            });
+                    isFinal:
+                        true,
 
-            // ==========================================
-            // DISPLAY RESULT
-            // ==========================================
+                    finalizedBy:
+                        "manual",
+
+                    finalizedAt:
+                        serverTimestamp(),
+
+                    timestamp:
+                        serverTimestamp()
+
+                }
+            );
+
 
             setScannedResult({
-                name: teacherName,
-                status: "Manual Absent",
-                time: "--",
-                note: manualNote.trim(),
-                isError: false
+
+                name:
+                    teacherName,
+
+                status:
+                    "Manual Absent",
+
+                time:
+                    "--",
+
+                note:
+                    manualNote.trim(),
+
+                isError:
+                    false
+
             });
+
 
             toast.success(
                 `❌ ${teacherName} marked as Absent.`
             );
+
         }
 
+
         // ==========================================
-        // RESET MODAL
+        // RESET MANUAL MODAL
         // ==========================================
 
         setShowManualModal(false);
+
         setSelectedTeacherId("");
+
         setManualNote("");
+
         setManualAction("clock-in");
+
 
     } catch (err) {
 
@@ -1280,6 +1625,7 @@ const StaffAttendanceScanner = () => {
     } finally {
 
         setIsSavingManual(false);
+
     }
 };
 
@@ -1490,7 +1836,7 @@ const StaffAttendanceScanner = () => {
                                     value={manualNote}
                                     onChange={(e) => setManualNote(e.target.value)}
                                     className="w-full p-2.5 border rounded-xl text-sm bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                                    required
+                                    
                                 />
 
                                 <p className="text-[10px] text-gray-400 mt-1">

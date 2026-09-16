@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import AdminPanel from "./Component/Admin/AdminPanel";
 import LoginPage from "./Component/Admin/LoginPage";
 import Gov from "./Component/Admin/Gov";
+import GovJunior from "./Component/Admin/GovJunior";
 import FeesDashboard from "./Component/Dashboard/FeesDsahboard";
 import { AuthProvider } from "./Component/Security/AuthContext";
 import ProtectedRoute from "./Component/Security/ProtectedRoute";
@@ -24,6 +25,7 @@ import SupervisorTwoDashboard from "./Component/Dashboard/SupervisorTwoDashboard
 import SupervisorJssOneDashboard from "./Component/Dashboard/SupervisorJssOneDashboard";
 import SupervisorJssTwoDashboard from "./Component/Dashboard/SupervisorJssTwoDashboard";
 import SupervisorJssThreeDashboard from "./Component/Dashboard/SupervisorJssThreeDashboard";
+import StaffAttendanceJss from "./Component/Dashboard/StaffAttendanceJss";
 
 
 
@@ -71,6 +73,14 @@ function App() {
             element={
               <ProtectedRoute role="admin">
                 <Gov/>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/GovJunior"
+            element={
+              <ProtectedRoute role="admin">
+                <GovJunior/>
               </ProtectedRoute>
             }
           />
@@ -135,6 +145,14 @@ function App() {
             element={
               <ProtectedRoute role="admin">
                 <SupervisorJssThreeDashboard/>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/StaffAttendanceJss"
+            element={
+              <ProtectedRoute role="admin">
+                <StaffAttendanceJss/>
               </ProtectedRoute>
             }
           />

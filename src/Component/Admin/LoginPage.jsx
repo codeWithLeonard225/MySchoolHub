@@ -39,12 +39,14 @@ const LoginPage = () => {
   const getAdminRoute = (type) => {
     switch (type) {
       case "Gov": return "/gov";
+      case "GovJunior": return "/GovJunior";
       case "Private": return "/admin";
       case "Fees": return "/registra";
       case "Special": return "/special";
       case "General": return "/General";
       case "PupilAttendance": return "/PupilAttendance";
       case "StaffAttendanceSimple": return "/StaffAttDashboard";
+      case "StaffAttendanceJss": return "/StaffAttendanceJss";
       case "SupervisorOne": return "/SupervisorOneDashboard";
       case "SupervisorJssOne": return "/SupervisorJssOneDashboard";
       case "SupervisorJssTwo": return "/SupervisorJssTwoDashboard";

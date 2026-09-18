@@ -66,9 +66,10 @@ import TeacherIDCards from "../Staff/TeacherIDCards";
 import StaffAttendanceScanner from "../Staff/StaffAttendanceScannerModelJunior";
 import StaffAttendanceRecords from "../Staff/StaffAttendanceRecords";
 import StaffPayroll from "../Staff/StaffPayroll";
-import PupilIDCardScan from "../PupilsPage/PupilIDCardScan";
+import PupilIDCardScan from "../PupilsPage/PupilIDCardScanModelJunior";
 import PupilAttendanceScanner from "../PupilsPage/PupilAttendanceScanner";
 import PupilAttendanceLogs from "../PupilsPage/PupilAttendanceLogs";
+import PupilIDCardBack from "../PupilsPage/PupilIDCardBack";
 
 
 
@@ -140,7 +141,8 @@ const NAV_ITEMS = [
     label: "Qr code Attendance-Pupil",
     icon: <MdBarChart />,
     children: [
-      // { key: "PupilIDCardScan", label: "Pupil Card Scan", icon: <MdPerson /> },
+      { key: "PupilIDCardScan", label: "Pupil Card Scan", icon: <MdPerson /> },
+      { key: "PupilIDCardBack", label: "Pupil Card Back", icon: <MdPerson /> },
       { key: "PupilAttendanceScanner", label: "Attendance Scanner", icon: <MdPerson /> },
       { key: "PupilAttendanceLogs", label: "Pupil Attendance Logs", icon: <MdPerson /> },
     ],
@@ -315,6 +317,7 @@ function Gov() {
       case "StaffPayroll": return <StaffPayroll />;
       case "StaffAttendanceRecords": return <StaffAttendanceRecords />;
       case "PupilIDCardScan": return <PupilIDCardScan />;
+      case "PupilIDCardBack": return <PupilIDCardBack />;
       case "PupilAttendanceScanner": return <PupilAttendanceScanner />;
       case "PupilAttendanceLogs": return <PupilAttendanceLogs />;
 

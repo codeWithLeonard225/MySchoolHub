@@ -298,9 +298,9 @@ const PupilIDCard = () => {
                                 minHeight: "36px",
                                 paddingRight: "60px" // Reserves right padding so text won't overlap the QR code
                             }}>
-                                <div style={{ fontSize: "9px", color: "#ffd700", lineHeight: "1.1", overflow: "hidden" }}>
+                                <div style={{ fontSize: "10px", color: "#ffd700", lineHeight: "1.1", overflow: "hidden" }}>
                                     {schoolMotto && <div style={{ fontStyle: "italic", fontWeight: "500", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>"{schoolMotto}"</div>}
-                                    {schoolContact && <div style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>Tel: {schoolContact}</div>}
+                                    {schoolContact && <div style={{ whiteSpace: "nowrap", overflow: "hidden",fontWeight: "500", textOverflow: "ellipsis" }}>Tel: {schoolContact}</div>}
                                     {!schoolMotto && !schoolContact && <div>Official School Pass</div>}
                                 </div>
                             </div>

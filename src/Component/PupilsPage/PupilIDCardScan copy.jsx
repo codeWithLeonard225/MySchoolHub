@@ -14,12 +14,6 @@ const CARDS_PER_ROW = 2;
 const ROWS_PER_PAGE = 4;
 const CARDS_PER_BROWSER_PAGE = CARDS_PER_ROW * ROWS_PER_PAGE;
 
-// Helper to truncate long class strings to the first 4 characters (e.g., "Jss 1 Move" -> "Jss 1")
-const formatClassName = (className) => {
-    if (!className) return "";
-    return className.trim().slice(0, 4);
-};
-
 const PupilIDCard = () => {
     const location = useLocation();
     const {
@@ -30,9 +24,9 @@ const PupilIDCard = () => {
         schoolMotto,
         schoolContact,
     } = location.state || {};
+
     const { user } = useAuth();
     const currentSchoolId = schoolId || user?.schoolId || "";
-
     const [pupils, setPupils] = useState([]);
     const [selectedClass, setSelectedClass] = useState("All");
     const [selectedAcademicYear, setSelectedAcademicYear] = useState("All");
@@ -78,9 +72,11 @@ const PupilIDCard = () => {
                         body * {
                             visibility: hidden !important;
                         }
+
                         .grid, .grid * {
                             visibility: visible !important;
                         }
+
                         .grid {
                             position: absolute !important;
                             left: 0 !important;
@@ -92,13 +88,16 @@ const PupilIDCard = () => {
                             margin: 0 !important;
                             padding: 0 !important;
                         }
+
                         .print\\:hidden { 
                             display: none !important; 
                         }
+
                         @page { 
                             size: A4 portrait; 
                             margin: 0.4in; 
                         }
+
                         body {
                             -webkit-print-color-adjust: exact !important;
                             print-color-adjust: exact !important;
@@ -110,12 +109,14 @@ const PupilIDCard = () => {
                 `}
             </style>
 
-            {/* Action Bar */}
+            {/* Action Bar (Hidden when printing) */}
             <div className="print:hidden" style={{ width: "100%", maxWidth: "800px", marginBottom: "20px", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "15px" }}>
-                <h2 style={{ fontSize: "24px", fontWeight: "bold", margin: 0, color: "#1f2937" }}>Pupil & Staff ID Cards</h2>
+                <h2 style={{ fontSize: "24px", fontWeight: "bold", margin: 0 }}>Pupil & Staff ID Cards</h2>
+
                 <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
+                    {/* Class Filter Dropdown */}
                     <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
-                        <label style={{ fontSize: "14px", fontWeight: "600", color: "#374151" }}>Class:</label>
+                        <label style={{ fontSize: "14px", fontWeight: "600" }}>Class:</label>
                         <select 
                             value={selectedClass} 
                             onChange={(e) => {
@@ -130,8 +131,9 @@ const PupilIDCard = () => {
                         </select>
                     </div>
 
+                    {/* Academic Year Filter Dropdown */}
                     <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
-                        <label style={{ fontSize: "14px", fontWeight: "600", color: "#374151" }}>Year:</label>
+                        <label style={{ fontSize: "14px", fontWeight: "600" }}>Year:</label>
                         <select 
                             value={selectedAcademicYear} 
                             onChange={(e) => {
@@ -148,14 +150,14 @@ const PupilIDCard = () => {
 
                     <button 
                         onClick={() => window.print()} 
-                        style={{ padding: "8px 16px", background: "#800000", color: "#fff", border: "none", borderRadius: "6px", cursor: "pointer", display: "flex", alignItems: "center", gap: "6px", fontWeight: "600" }}
+                        style={{ padding: "8px 16px", background: "#2563eb", color: "#fff", border: "none", borderRadius: "6px", cursor: "pointer", display: "flex", alignItems: "center", gap: "6px", fontWeight: "600" }}
                     >
                         <FaPrint /> Print Page ({currentPage})
                     </button>
                 </div>
             </div>
 
-            {/* Pagination controls */}
+            {/* Pagination controls (Hidden when printing) */}
             {totalPages > 1 && (
                 <div className="print:hidden" style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: "15px", marginBottom: "20px" }}>
                     <button
@@ -165,7 +167,7 @@ const PupilIDCard = () => {
                     >
                         <FaArrowLeft size={12} /> Previous
                     </button>
-                    <span style={{ fontSize: "14px", fontWeight: "600", color: "#374151" }}>
+                    <span style={{ fontSize: "14px", fontWeight: "600" }}>
                         Page {currentPage} of {totalPages}
                     </span>
                     <button
@@ -197,111 +199,73 @@ const PupilIDCard = () => {
                             style={{
                                 width: CARD_WIDTH,
                                 height: CARD_HEIGHT,
-                                border: "1px solid #500000",
+                                border: "1px solid #1a252f",
                                 borderRadius: "8px",
-                                overflow: "hidden",
+                                padding: "8px 10px",
                                 boxSizing: "border-box",
                                 display: "flex",
                                 flexDirection: "column",
                                 justifyContent: "space-between",
-                                background: "linear-gradient(135deg, #fffde7 0%, #fff9c4 100%)",
+                                backgroundColor: "#ffffff",
                                 boxShadow: "0 2px 6px rgba(0,0,0,0.12)",
-                                pageBreakInside: "avoid",
-                                position: "relative" // Enables absolute positioning for inner elements
+                                pageBreakInside: "avoid"
                             }}
                         >
-                            {/* Header */}
-                            <div style={{ 
-                                background: "linear-gradient(90deg, #800000 0%, #4a0000 100%)", 
-                                padding: "4px 8px", 
-                                display: "flex", 
-                                alignItems: "center", 
-                                gap: "6px",
-                                minHeight: "36px"
-                            }}>
+                            {/* Header: School Logo, Name & Address */}
+                            <div style={{ borderBottom: "1px solid #007bff", paddingBottom: "3px", display: "flex", alignItems: "center", gap: "6px" }}>
                                 {schoolLogoUrl && (
                                     <img 
                                         src={schoolLogoUrl} 
                                         alt="School Logo" 
-                                        style={{ width: "26px", height: "26px", objectFit: "contain", borderRadius: "3px", background: "#fff", padding: "1px", flexShrink: 0 }} 
+                                        style={{ width: "26px", height: "26px", objectFit: "contain", borderRadius: "3px" }} 
                                     />
                                 )}
                                 <div style={{ flex: 1, overflow: "hidden", lineHeight: "1.1" }}>
-                                    <div style={{ 
-                                        fontWeight: "bold", 
-                                        fontSize: "9.5px", 
-                                        color: "#ffd700", 
-                                        textTransform: "uppercase", 
-                                        wordBreak: "break-word",
-                                        display: "-webkit-box",
-                                        WebkitLineClamp: 2,
-                                        WebkitBoxOrient: "vertical",
-                                        overflow: "hidden"
-                                    }}>
+                                    <div style={{ fontWeight: "bold", fontSize: "10px", color: "#007bff", textTransform: "uppercase", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                                         {schoolName || "STUDENT ID CARD"}
                                     </div>
                                     {schoolAddress && (
-                                        <div style={{ fontSize: "6.5px", color: "#fff59d", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                                        <div style={{ fontSize: "7px", color: "#555", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                                             {schoolAddress}
                                         </div>
                                     )}
                                 </div>
-                                <span style={{ fontSize: "8.5px", fontWeight: "600", color: "#ffd700", whiteSpace: "nowrap", flexShrink: 0 }}>
+                                <span style={{ fontSize: "9px", fontWeight: "600", color: "#444", whiteSpace: "nowrap" }}>
                                     {pupil.academicYear || ""}
                                 </span>
                             </div>
 
                             {/* Card Body */}
-                            <div style={{ display: "flex", gap: "8px", alignItems: "center", padding: "0 8px", margin: "2px 0" }}>
+                            <div style={{ display: "flex", gap: "8px", alignItems: "center", margin: "4px 0" }}>
                                 <img 
                                     src={pupil.userPhotoUrl || "https://via.placeholder.com/80"} 
                                     alt={pupil.studentName} 
-                                    style={{ width: "60px", height: "60px", borderRadius: "5px", objectFit: "cover", border: "1px solid #800000", flexShrink: 0 }}
+                                    style={{ width: "65px", height: "65px", borderRadius: "5px", objectFit: "cover", border: "1px solid #ccc" }}
                                 />
-                                <div style={{ fontSize: "10px", lineHeight: "1.3", flex: 1, overflow: "hidden", color: "#4a0000" }}>
-                                    <div style={{ fontWeight: "bold", fontSize: "11px", color: "#800000", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                                <div style={{ fontSize: "10px", lineHeight: "1.3", flex: 1, overflow: "hidden" }}>
+                                    <div style={{ fontWeight: "bold", fontSize: "11px", color: "#2c3e50", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                                         {pupil.studentName}
                                     </div>
                                     <div><strong>ID:</strong> {pupil.studentID}</div>
-                                    <div><strong>Class:</strong> {formatClassName(pupil.class)}</div>
+                                    <div><strong>Class:</strong> {pupil.class}</div>
+                                    <div><strong>Type:</strong> {pupil.pupilType || "Pupil"}</div>
                                 </div>
                             </div>
 
-                            {/* Floating QR Code */}
-                            <div style={{ 
-                                position: "absolute",
-                                bottom: "30px",
-                                right: "35px",
-                                background: "#fff", 
-                                padding: "2px", 
-                                borderRadius: "4px",
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                boxShadow: "0 1px 4px rgba(0,0,0,0.25)",
-                                zIndex: 2
-                            }}>
-                                <QRCodeSVG 
-                                    value={pupil.studentID} 
-                                    size={42}
-                                    level="M"
-                                    includeMargin={false}
-                                />
-                            </div>
-
-                            {/* Card Footer */}
-                            <div style={{ 
-                                display: "flex", 
-                                alignItems: "center", 
-                                background: "linear-gradient(90deg, #800000 0%, #4a0000 100%)", 
-                                padding: "4px 8px",
-                                minHeight: "36px",
-                                paddingRight: "60px" // Reserves right padding so text won't overlap the QR code
-                            }}>
-                                <div style={{ fontSize: "9px", color: "#ffd700", lineHeight: "1.1", overflow: "hidden" }}>
+                            {/* Card Footer: Motto, Contact & Unchanged QRCodeSVG */}
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", borderTop: "1px solid #eee", paddingTop: "3px" }}>
+                                <div style={{ fontSize: "7px", color: "#666", lineHeight: "1.1", maxWidth: "68%", overflow: "hidden" }}>
                                     {schoolMotto && <div style={{ fontStyle: "italic", fontWeight: "500", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>"{schoolMotto}"</div>}
                                     {schoolContact && <div style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>Tel: {schoolContact}</div>}
                                     {!schoolMotto && !schoolContact && <div>Official School Pass</div>}
+                                </div>
+                                <div style={{ background: "#fff", padding: "1px" }}>
+                                    <QRCodeSVG 
+                                        value={pupil.studentID} 
+                                        size={52}
+                                        level="M"
+                                        includeMargin={false}
+                                    />
                                 </div>
                             </div>
                         </div>

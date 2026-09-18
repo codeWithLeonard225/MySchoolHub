@@ -1187,7 +1187,7 @@ const PupilAttendanceLogs = () => {
                             {/* ===============================
                                 EDIT STATUS
                             =============================== */}
-                            <button
+                            {/* <button
                               onClick={() => {
                                 setEditingLogId(
                                   log.id
@@ -1224,12 +1224,12 @@ const PupilAttendanceLogs = () => {
                               }}
                             >
                               ✏️ Edit
-                            </button>
+                            </button> */}
 
                             {/* ===============================
                                 DELETE
                             =============================== */}
-                            <button
+                            {/* <button
                               onClick={() =>
                                 handleDeleteLog(
                                   log.id,
@@ -1260,7 +1260,7 @@ const PupilAttendanceLogs = () => {
                               }}
                             >
                               🗑️
-                            </button>
+                            </button> */}
                           </div>
                         )}
                       </td>

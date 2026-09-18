@@ -63,6 +63,7 @@ import StudentIDCardData from "../Voters/StudentIDCardData";
 import WASCEForm from "../Voters/WASCEForm";
 import ClassPromotion from "../Voters/ClassPromotion";
 import TeacherIDCards from "../Staff/TeacherIDCards";
+import StaffIDCardBack from "../Staff/StaffIDCardBack";
 import StaffAttendanceScanner from "../Staff/StaffAttendanceScannerModelSecondary";
 import StaffAttendanceRecords from "../Staff/StaffAttendanceRecords";
 import StaffPayroll from "../Staff/StaffPayroll";
@@ -150,7 +151,8 @@ const NAV_ITEMS = [
     label: "Qr code Attendance-Staff",
     icon: <MdBarChart />,
     children: [
-      // { key: "TeacherIDCards", label: "Teacher IDCards", icon: <MdPerson /> },
+      { key: "TeacherIDCards", label: "Teacher IDCards", icon: <MdPerson /> },
+      { key: "StaffIDCardBack", label: "Teacher IDCards Back", icon: <MdPerson /> },
       { key: "StaffAttendanceScanner", label: "Staff Attendance Scanner", icon: <MdPerson /> },
       { key: "StaffPayroll", label: "Staff Payroll", icon: <MdPerson /> },
       { key: "StaffAttendanceRecords", label: "Staff Attendance Records", icon: <MdPerson /> },
@@ -309,6 +311,7 @@ function Gov() {
       case "RestoreTimetable": return <RestoreTimetable />;
       case "EditAttendancePage": return <EditAttendancePage />;
       case "StudentIDCardData": return <StudentIDCardData />;
+      case "StaffIDCardBack": return <StaffIDCardBack />;
       case "BulkDeleteGradesPage": return <BulkDeleteGradesPage />;
           case "TeacherIDCards": return <TeacherIDCards />;
       case "StaffAttendanceScanner": return <StaffAttendanceScanner />;

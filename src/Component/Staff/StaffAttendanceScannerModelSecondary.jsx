@@ -69,17 +69,7 @@ const StaffAttendanceScanner = () => {
         setShowManualModal(true);
     };
 
-    // Helper: Determine status based on current time
-    // const getClockInStatus = (now) => {
-    //     const hours = now.getHours();
-    //     if (hours >= 12) {
-    //         return { status: "Absent", allowed: false, reason: "Clock-in closed after 12:00 PM (Marked Absent)" };
-    //     }
-    //     if (hours < 8) {
-    //         return { status: "Present", allowed: true, reason: "" };
-    //     }
-    //     return { status: "Late", allowed: true, reason: "" };
-    // };
+   
 
     const getClockInStatus = (now) => {
         const currentMinutes =
@@ -91,7 +81,7 @@ const StaffAttendanceScanner = () => {
 
          const ATTENDANCE_START = 11 * 60; // 11:00 AM
         // const ATTENDANCE_START = 0 * 60 + 50; // 12:50 AM
-        const PRESENT_END = 15 * 60;           // 3:00 PM
+        const PRESENT_END = 15 * 60 + 30;           // 3:30 PM
         const LATE_END = 16 * 60 + 10;              // 4:10 PM
         const ABSENT_END = 18 * 60;            // 6:00 PM
 

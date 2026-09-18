@@ -140,9 +140,9 @@ const TeacherIDCards = () => {
                                         </div>
                                     )}
                                     <div className="overflow-hidden">
-                                        <h2 className="text-[11px] font-bold tracking-tight truncate leading-tight uppercase">
-                                            {schoolName}
-                                        </h2>
+                                        <h2 className="text-[10px] font-bold tracking-tight leading-tight uppercase break-words line-clamp-2">
+    {schoolName}
+</h2>
                                         <p className="text-[8px] text-gray-300 truncate leading-tight italic">
                                             {schoolMotto}
                                         </p>
@@ -170,23 +170,36 @@ const TeacherIDCards = () => {
                                     )}
                                 </div>
 
-                                {/* Details & Role */}
-                                <div className="flex-1 min-w-0 flex flex-col justify-between h-[1.2in]">
-                                    <div>
-                                        <h3 className="text-xs font-bold text-gray-900 leading-tight truncate">
-                                            {teacher.teacherName}
-                                        </h3>
-                                        <p className="text-[9px] text-indigo-600 font-semibold mt-0.5">
-                                            {teacher.isFormTeacher ? `Form Teacher (${teacher.assignClass || "N/A"})` : "Academic Staff"}
-                                        </p>
-                                    </div>
+                             
+{/* Details & Role */}
+<div className="flex-1 min-w-0 flex flex-col items-center justify-center h-[1.2in] text-center top-8">
 
-                                    <div className="text-[8.5px] text-gray-600 space-y-0.5 border-t pt-1 border-gray-100">
-                                        <p className="truncate"><span className="font-medium text-gray-700">ID:</span> {teacher.teacherID || "N/A"}</p>
-                                        <p className="truncate"><span className="font-medium text-gray-700">Gender:</span> {teacher.gender || "N/A"}</p>
-                                        <p className="truncate"><span className="font-medium text-gray-700">Phone:</span> {teacher.phone || "N/A"}</p>
-                                    </div>
-                                </div>
+    {/* Teacher Name */}
+    <div className="w-full">
+        <h3 className="text-[11px] font-bold text-gray-900 leading-tight break-words line-clamp-2">
+            {teacher.teacherName}
+        </h3>
+
+        {/* Position */}
+        <p className="text-[9px] text-indigo-600 font-semibold mt-0.5 leading-tight break-words line-clamp-2">
+            {teacher.position || "Staff"}
+        </p>
+    </div>
+
+    {/* Staff Information */}
+    <div className="w-full text-[8.5px] text-gray-600 space-y-0.5 border-t pt-1 mt-1">
+        <p className="leading-tight">
+            <span className="font-medium text-gray-700">Gender:</span>{" "}
+            {teacher.gender || "N/A"}
+        </p>
+
+        <p className="leading-tight">
+            <span className="font-medium text-gray-700">Phone:</span>{" "}
+            {teacher.phone || "N/A"}
+        </p>
+    </div>
+
+</div>
 
                                 {/* Preserved QR Code */}
                                 <div className="flex flex-col items-center justify-center bg-gray-50 p-1 rounded border border-gray-200 flex-shrink-0">
@@ -205,7 +218,7 @@ const TeacherIDCards = () => {
                             {/* Card Footer */}
                             <div className="bg-gray-100 px-3 py-1 flex justify-between items-center text-[7.5px] text-gray-500 border-t border-gray-200">
                                 <span className="truncate max-w-[60%]">{schoolAddress}</span>
-                                <span className="font-semibold text-gray-700">Code: {schoolId}</span>
+                             
                             </div>
                         </div>
                     );

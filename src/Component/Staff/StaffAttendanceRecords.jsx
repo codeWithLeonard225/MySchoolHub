@@ -167,9 +167,9 @@ const StaffAttendanceRecords = () => {
                                 <th className="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider">
                                     Status
                                 </th>
-                                {/* <th className="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider">
                                     Actions
-                                </th> */}
+                                </th>
                             </tr>
                         </thead>
                         <tbody className="bg-white divide-y divide-gray-200">
@@ -272,14 +272,14 @@ const StaffAttendanceRecords = () => {
                                                     </span>
                                                 )}
                                             </td>
-                                            {/* <td className="px-4 py-3 text-sm text-center">
+                                            <td className="px-4 py-3 text-sm text-center">
                                                 <button
                                                     onClick={() => handleDeleteRecord(record.id, record.teacherName)}
                                                     className="text-red-600 hover:text-red-900 font-medium text-xs bg-red-50 hover:bg-red-100 border border-red-200 px-2.5 py-1 rounded transition"
                                                 >
                                                     Delete
                                                 </button>
-                                            </td> */}
+                                            </td>
                                         </tr>
                                     );
                                 })

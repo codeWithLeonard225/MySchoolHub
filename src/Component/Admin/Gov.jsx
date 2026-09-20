@@ -68,7 +68,7 @@ import StaffAttendanceScanner from "../Staff/StaffAttendanceScannerModelSecondar
 import StaffAttendanceRecords from "../Staff/StaffAttendanceRecords";
 import StaffPayroll from "../Staff/StaffPayroll";
 import PupilIDCardScan from "../PupilsPage/PupilIDCardScan";
-import PupilAttendanceScanner from "../PupilsPage/PupilAttendanceScanner";
+import PupilAttendanceScanner from "../PupilsPage/PupilAttendanceScannerModelSenior";
 import PupilAttendanceLogs from "../PupilsPage/PupilAttendanceLogs";
 
 

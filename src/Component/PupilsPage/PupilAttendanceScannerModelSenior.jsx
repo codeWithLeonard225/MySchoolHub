@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef } from "react";
-import { Html5QrcodeScanner } from "html5-qrcode";
+// import { Html5QrcodeScanner } from "html5-qrcode";
+import { Html5Qrcode } from "html5-qrcode";
 import {
     collection,
     query,
@@ -129,24 +130,17 @@ const [selectedClass, setSelectedClass] = useState("");
     }, [currentSchoolId]);
 
     // Initialize HTML5 QR Code Scanner Lifecycle
-    useEffect(() => {
-        let scanner = null;
+   // Initialize HTML5 QR Code Scanner Lifecycle
+useEffect(() => {
+    let html5QrCode = null;
 
-        if (activeTab === "scanner") {
-            scanner = new Html5QrcodeScanner(
-                "reader",
-                { fps: 10, qrbox: { width: 250, height: 250 } },
-                false
-            );
+    if (activeTab === "scanner") {
+        html5QrCode = new Html5Qrcode("reader");
 
-            scanner.render(onScanSuccess, onScanFailure);
-        }
+        // Pass facingMode constraint directly to select the back camera automatically
+        const cameraConfig = { facingMode: "environment" };
 
-        function onScanFailure(error) {
-            // Quietly ignore frame decode errors
-        }
-
-        async function onScanSuccess(decodedText) {
+        const qrCodeSuccessCallback = async (decodedText) => {
             if (processing) return;
 
             try {
@@ -163,28 +157,50 @@ const [selectedClass, setSelectedClass] = useState("");
                 }
 
                 setProcessing(true);
-                if (scanner) scanner.pause(true);
+                
+                // Pause scanning while processing
+                if (html5QrCode.getState() === 2) { // 2 = SCANNING
+                    html5QrCode.pause(true);
+                }
 
                 await handleAttendanceLogging(parsedData.studentID, scanModeRef.current);
 
                 setTimeout(() => {
                     setProcessing(false);
-                    if (scanner) scanner.resume();
+                    if (html5QrCode.getState() === 3) { // 3 = PAUSED
+                        html5QrCode.resume();
+                    }
                 }, 3000);
             } catch (err) {
                 console.error("Scanning error:", err);
                 toast.error("Failed to process QR Code.");
                 setProcessing(false);
-                if (scanner) scanner.resume();
-            }
-        }
-
-        return () => {
-            if (scanner) {
-                scanner.clear().catch((err) => console.error("Scanner clear failed", err));
+                if (html5QrCode.getState() === 3) {
+                    html5QrCode.resume();
+                }
             }
         };
-    }, [activeTab]);
+
+        const config = { fps: 10, qrbox: { width: 250, height: 250 } };
+
+        html5QrCode
+            .start(cameraConfig, config, qrCodeSuccessCallback, () => {
+                // Quietly ignore frame decode errors
+            })
+            .catch((err) => {
+                console.error("Unable to start scanning:", err);
+            });
+    }
+
+    return () => {
+        if (html5QrCode && html5QrCode.isScanning) {
+            html5QrCode
+                .stop()
+                .then(() => html5QrCode.clear())
+                .catch((err) => console.error("Failed to stop scanner:", err));
+        }
+    };
+}, [activeTab]);
     
 
     const academicYears = [
@@ -324,11 +340,10 @@ const filteredPupils = pupilsList
         const totalMinutes = hours * 60 + minutes;
 
         // Attendance time limits
-        const ATTENDANCE_START = 6 * 60 + 30;   // 6:30 AM
-        const PRESENT_END = 9 * 60 + 30;        // 9:30 AM
-        const LATE_END = 10 * 60 + 30;           // 10:30 AM
-        const ABSENT_END = 12 * 60 + 55;         // 12:55 PM
-
+        const ATTENDANCE_START = 12 * 60;   // 12:00 PM
+        const PRESENT_END = 14 * 60 + 30;        // 2:30 PM
+        const LATE_END = 15 * 60 + 30;           // 3:30 PM
+        const ABSENT_END = 17 * 60 + 55;         // 5:55 PM
         // Before 6:30 AM
         if (totalMinutes < ATTENDANCE_START) {
             return {

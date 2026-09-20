@@ -1407,7 +1407,7 @@ const filteredPupils = pupilsList
 
 
                         {/* Student Dropdown Select */}
-                       ```jsx
+                       
 {/* ========================================== */}
 {/* ACADEMIC YEAR FILTER */}
 {/* ========================================== */}

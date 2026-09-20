@@ -18,9 +18,9 @@ import { useAuth } from "../Security/AuthContext";
 import { collection, query, where, onSnapshot } from "firebase/firestore";
 import { db } from "../../../firebase";
 import FormMasterGradeSheet from "./FormMaster/FormMasterGradeSheet";
-import GradeSheet from "./FormMaster/GradeSheet";
+import ClassList from "./FormMaster/ClassList";
 import TermResult from "./FormMaster/TermResult";
-import YearlyResult from "./FormMaster/YearlyResult";
+import PupilAttendanceLogs from "./FormMaster/PupilAttendanceLogs";
 import ReportCard from "./FormMaster/ReportCard";
 
 
@@ -67,21 +67,17 @@ const getNavItems = (teacherInfo) => {
       label: `Form Class: ${teacherInfo.assignClass || "N/A"}`,
       icon: <MdLibraryBooks />,
       children: [
+        { key: "ClassList", label: "Class List" },
         // { key: "FormMasterGradeSheet", label: "Submitted Grades" },
-        // { key: "GradeSheet", label: "GradeSheet" },
         { key: "TermResult", label: "Term Sheet" },
-        { key: "YearlyResult", label: "Yearly Result" },
         { key: "ReportCard", label: "Report Card" },
         { key: "PupilAttendanceScanner", label: " Pupil Scan " },
+        { key: "PupilAttendanceLogs", label: "Pupil Attendance" },
       ],
     });
     
 
-    baseItems.push({
-      key: "pupilAttendance",
-      label: "Pupil Attendance",
-      icon: <MdMenuBook />,
-    });
+
 
   }
 
@@ -245,8 +241,8 @@ function TeachersDashboard() {
 
       case "FormMasterGradeSheet":
         return <FormMasterGradeSheet />;
-      case "GradeSheet":
-        return <GradeSheet />;
+      case "ClassList":
+        return <ClassList />;
 
       case "TermResult":
         return <TermResult />;
@@ -258,8 +254,8 @@ function TeachersDashboard() {
       case "ReportCard":
         return <ReportCard />;
 
-      case "YearlyResult":
-        return <YearlyResult />;
+      case "PupilAttendanceLogs":
+        return <PupilAttendanceLogs />;
 
       case "LogoutPage":
         return <LogoutPage />;

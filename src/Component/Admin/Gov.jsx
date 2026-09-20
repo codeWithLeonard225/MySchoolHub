@@ -151,8 +151,8 @@ const NAV_ITEMS = [
     label: "Qr code Attendance-Staff",
     icon: <MdBarChart />,
     children: [
-      { key: "TeacherIDCards", label: "Teacher IDCards", icon: <MdPerson /> },
-      { key: "StaffIDCardBack", label: "Teacher IDCards Back", icon: <MdPerson /> },
+      // { key: "TeacherIDCards", label: "Teacher IDCards", icon: <MdPerson /> },
+      // { key: "StaffIDCardBack", label: "Teacher IDCards Back", icon: <MdPerson /> },
       { key: "StaffAttendanceScanner", label: "Staff Attendance Scanner", icon: <MdPerson /> },
       { key: "StaffPayroll", label: "Staff Payroll", icon: <MdPerson /> },
       { key: "StaffAttendanceRecords", label: "Staff Attendance Records", icon: <MdPerson /> },

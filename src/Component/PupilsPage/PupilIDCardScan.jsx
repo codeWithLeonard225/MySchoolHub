@@ -229,7 +229,7 @@ const PupilIDCard = () => {
                                 <div style={{ flex: 1, overflow: "hidden", lineHeight: "1.1" }}>
                                     <div style={{ 
                                         fontWeight: "bold", 
-                                        fontSize: "9.5px", 
+                                        fontSize: "10.5px", 
                                         color: "#ffd700", 
                                         textTransform: "uppercase", 
                                         wordBreak: "break-word",
@@ -241,14 +241,14 @@ const PupilIDCard = () => {
                                         {schoolName || "STUDENT ID CARD"}
                                     </div>
                                     {schoolAddress && (
-                                        <div style={{ fontSize: "6.5px", color: "#fff59d", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                                        <div style={{ fontSize: "10.5px", color: "#fff59d", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                                             {schoolAddress}
                                         </div>
                                     )}
                                 </div>
-                                <span style={{ fontSize: "8.5px", fontWeight: "600", color: "#ffd700", whiteSpace: "nowrap", flexShrink: 0 }}>
+                                {/* <span style={{ fontSize: "8.5px", fontWeight: "600", color: "#ffd700", whiteSpace: "nowrap", flexShrink: 0 }}>
                                     {pupil.academicYear || ""}
-                                </span>
+                                </span> */}
                             </div>
 
                             {/* Card Body */}
@@ -256,14 +256,14 @@ const PupilIDCard = () => {
                                 <img 
                                     src={pupil.userPhotoUrl || "https://via.placeholder.com/80"} 
                                     alt={pupil.studentName} 
-                                    style={{ width: "60px", height: "60px", borderRadius: "5px", objectFit: "cover", border: "1px solid #800000", flexShrink: 0 }}
+                                    style={{ width: "100px", height: "100px", borderRadius: "5px", objectFit: "cover", border: "1px solid #800000", flexShrink: 0 }}
                                 />
                                 <div style={{ fontSize: "10px", lineHeight: "1.3", flex: 1, overflow: "hidden", color: "#4a0000" }}>
-                                    <div style={{ fontWeight: "bold", fontSize: "11px", color: "#800000", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                                    <div style={{ fontWeight: "bold", fontSize: "15px", color: "#800000", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                                         {pupil.studentName}
                                     </div>
-                                    <div><strong>ID:</strong> {pupil.studentID}</div>
-                                    <div><strong>Class:</strong> {formatClassName(pupil.class)}</div>
+                                    <div style={{fontSize: "15px"}}><strong>ID:</strong> {pupil.studentID}</div>
+                                    <div style={{fontSize:"15px"}}><strong>Class:</strong> {formatClassName(pupil.class)}</div>
                                 </div>
                             </div>
 
@@ -298,9 +298,9 @@ const PupilIDCard = () => {
                                 minHeight: "36px",
                                 paddingRight: "60px" // Reserves right padding so text won't overlap the QR code
                             }}>
-                                <div style={{ fontSize: "9px", color: "#ffd700", lineHeight: "1.1", overflow: "hidden" }}>
+                                <div style={{ fontSize: "10px", color: "#ffd700", lineHeight: "1.1", overflow: "hidden" }}>
                                     {schoolMotto && <div style={{ fontStyle: "italic", fontWeight: "500", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>"{schoolMotto}"</div>}
-                                    {schoolContact && <div style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>Tel: {schoolContact}</div>}
+                                    {schoolContact && <div style={{ whiteSpace: "nowrap", overflow: "hidden",fontWeight: "500", textOverflow: "ellipsis" }}>Tel: {schoolContact}</div>}
                                     {!schoolMotto && !schoolContact && <div>Official School Pass</div>}
                                 </div>
                             </div>

@@ -384,7 +384,7 @@ const PupilIDCardBack = () => {
                 position: "relative",
                 overflow: "hidden",
                 // backgroundColor: "#FFF8D6",
-                backgroundColor: "#fff",
+                backgroundColor: "white",
                 display: "flex",
                 flexDirection: "column",
                 justifyContent: "space-between",

@@ -24,6 +24,7 @@ import Testing from "./Testing";
 import FeeReceipt from "../FeeReceipt.jsx/FeeReceipt";
 import FeesCostPage from "../FeeReceipt.jsx/FeesCostPage";
 import FeesDashboard from "../Dashboard/FeesDsahboard";
+import AttendanceDashboard from "../Dashboard/AttendanceDashboard";
 import SubjectPage from "../SubjectPage/SubjectPage";
 import TeacherAssignmentPage from "../TeacherAssignment/TeacherAssignmentPage";
 import TeacherRegistration from "../Voters/TeacherRegistration";
@@ -70,11 +71,24 @@ import StaffPayroll from "../Staff/StaffPayroll";
 import PupilIDCardScan from "../PupilsPage/PupilIDCardScan";
 import PupilAttendanceScanner from "../PupilsPage/PupilAttendanceScannerModelSenior";
 import PupilAttendanceLogs from "../PupilsPage/PupilAttendanceLogs";
+import PupilIDCardBack from "../PupilsPage/PupilIDCardBack";
+import ManualAttendance from "../PupilsPage/ManualAttendanceFormMaster";
+import PupilPhotoManager from "../Voters/PupilPhotoManager";
+import PupilPhotoEditor from "../Voters/PupilPhotoEditor";
+import TeacherPhotoEditor from "../Voters/TeacherPhotoEditor";
+import TeacherPhotoManager from "../Voters/TeacherPhotoManager";
 
 
 
 // --- Navigation Items ---
 const NAV_ITEMS = [
+     {
+    key: "AttendanceDashboard",
+    label: "Attendance Dashboard",
+    icon: <MdWarning />, // 📖
+  },
+  
+  
   {
     key: "forms",
     label: "Registeration",
@@ -124,17 +138,6 @@ const NAV_ITEMS = [
 
     ],
   },
-  // {
-  //   key: "idcards",
-  //   label: "Pupils ID Cards",
-  //   icon: <MdBarChart />,
-  //   children: [
-  //     { key: "ModelSchoolIdCard", label: "ModelSchoolIdCard", icon: <MdPerson /> },
-  //     { key: "IDCardPage", label: "IDCardPage", icon: <MdPerson /> },
-  //     { key: "IDCardBackSection", label: "IDCardBackSection", icon: <MdPerson /> },
-  //     { key: "StudentIDCardData", label: "StudentIDCardData", icon: <MdPerson /> },
-  //   ],
-  // },
 
    {
     key: "qrcode-Pupil",
@@ -142,6 +145,8 @@ const NAV_ITEMS = [
     icon: <MdBarChart />,
     children: [
       // { key: "PupilIDCardScan", label: "Pupil Card Scan", icon: <MdPerson /> },
+      // { key: "PupilIDCardBack", label: "Pupil Card Back", icon: <MdPerson /> },
+      { key: "ManualAttendance", label: "Manual Attendance", icon: <MdPerson /> },
       { key: "PupilAttendanceScanner", label: "Attendance Scanner", icon: <MdPerson /> },
       { key: "PupilAttendanceLogs", label: "Pupil Attendance Logs", icon: <MdPerson /> },
     ],
@@ -167,18 +172,6 @@ const NAV_ITEMS = [
   //   icon: <MdWarning />, // 📖
   // },
 
-
-  // {
-  //   key: "staffAttendance",
-  //   label: "Staff  Record",
-  //   icon: <MdBarChart />,
-  //   children: [
-  //     { key: "staffAttendance", label: "Staff Attendance", icon: <MdPerson /> },
-  //     { key: "GeneralStaffAttendanceReport", label: "Staff Attendance Report", icon: <MdPerson /> },
-
-
-  //   ],
-  // },
 
   {
     key: "timetable",
@@ -320,6 +313,14 @@ function Gov() {
       case "PupilIDCardScan": return <PupilIDCardScan />;
       case "PupilAttendanceScanner": return <PupilAttendanceScanner />;
       case "PupilAttendanceLogs": return <PupilAttendanceLogs />;
+      case "PupilIDCardBack": return <PupilIDCardBack />;
+      case "AttendanceDashboard": return <AttendanceDashboard />;
+      case "ManualAttendance": return <ManualAttendance />;
+      case "TeacherPhotoManager": return <TeacherPhotoManager />;
+      case "TeacherPhotoEditor": return <TeacherPhotoEditor />;
+        case "PupilPhotoManager": return <PupilPhotoManager />;
+      case "PupilPhotoEditor": return <PupilPhotoEditor />;
+
 
 
 

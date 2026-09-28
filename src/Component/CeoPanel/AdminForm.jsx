@@ -406,6 +406,12 @@ const AdminForm = () => {
                             <option value="SupervisorJssTwo">Supervisor JSS 2</option>
                             <option value="SupervisorJssThree">Supervisor JSS 3</option>
                             <option value="General">General</option>
+                            <option value="GMSSprefert1">GMSSprefert1</option>
+                            <option value="GMSSprefert2">GMSSprefert2</option>
+                            <option value="GMSSprefert3">GMSSprefert3</option>
+                            <option value="GMSSprefert4">GMSSprefert4</option>
+                            <option value="GMSSprefert5">GMSSprefert5</option>
+                          
                         </select>
                     </div>
                     {/* ✅ UPDATED: Role is now a text input */}

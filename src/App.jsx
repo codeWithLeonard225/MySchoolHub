@@ -26,6 +26,11 @@ import SupervisorJssOneDashboard from "./Component/Dashboard/SupervisorJssOneDas
 import SupervisorJssTwoDashboard from "./Component/Dashboard/SupervisorJssTwoDashboard";
 import SupervisorJssThreeDashboard from "./Component/Dashboard/SupervisorJssThreeDashboard";
 import StaffAttendanceJss from "./Component/Dashboard/StaffAttendanceJss";
+import GMSSprefert1 from "./Component/Dashboard/GMSSprefert1";
+import GMSSprefert2 from "./Component/Dashboard/GMSSprefert2";
+import GMSSprefert3 from "./Component/Dashboard/GMSSprefert3";
+import GMSSprefert4 from "./Component/Dashboard/GMSSprefert4";
+import GMSSprefert5 from "./Component/Dashboard/GMSSprefert5";
 
 
 
@@ -185,6 +190,46 @@ function App() {
             element={
               <ProtectedRoute role="admin">
                 <PrintableStudentForm />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/GMSSprefert1"
+            element={
+              <ProtectedRoute role="admin">
+                <GMSSprefert1 />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/GMSSprefert2"
+            element={
+              <ProtectedRoute role="admin">
+                <GMSSprefert2 />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/GMSSprefert3"
+            element={
+              <ProtectedRoute role="admin">
+                <GMSSprefert3 />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/GMSSprefert4"
+            element={
+              <ProtectedRoute role="admin">
+                <GMSSprefert4 />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/GMSSprefert5"
+            element={
+              <ProtectedRoute role="admin">
+                <GMSSprefert5 />
               </ProtectedRoute>
             }
           />

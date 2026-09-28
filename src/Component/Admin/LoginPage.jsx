@@ -53,7 +53,12 @@ const LoginPage = () => {
       case "SupervisorJssThree": return "/SupervisorJssThreeDashboard";
       case "SupervisorFour": return "/StaffAttDashboard";
       case "SupervisorFive": return "/StaffAttDashboard";
-      default: return "/admin";
+      case "GMSSprefert1": return "/GMSSprefert1";
+      case "GMSSprefert2": return "/GMSSprefert2";
+      case "GMSSprefert3": return "/GMSSprefert3";
+      case "GMSSprefert4": return "/GMSSprefert4";
+      case "GMSSprefert5": return "/GMSSprefert5";
+      default: return "/";
     }
   };
 

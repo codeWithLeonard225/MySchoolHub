@@ -69,12 +69,24 @@ import StaffPayroll from "../Staff/StaffPayroll";
 import PupilIDCardScan from "../PupilsPage/PupilIDCardScanModelJunior";
 import PupilAttendanceScanner from "../PupilsPage/PupilAttendanceScannerModelJunior";
 import PupilAttendanceLogs from "../PupilsPage/PupilAttendanceLogs";
-import PupilIDCardBack from "../PupilsPage/PupilIDCardBack";
+import PupilIDCardBack from "../PupilsPage/PupilIDCardScanModelJunior";
+import ManualAttendance from "../PupilsPage/ManualAttendanceFormMaster";
+import PupilPhotoManager from "../Voters/PupilPhotoManager";
+import PupilPhotoEditor from "../Voters/PupilPhotoEditor";
+import TeacherPhotoEditor from "../Voters/TeacherPhotoEditor";
+import TeacherPhotoManager from "../Voters/TeacherPhotoManager";
+import AttendanceDashboard from "../Dashboard/AttendanceDashboard";
 
 
 
 // --- Navigation Items ---
 const NAV_ITEMS = [
+      {
+      key: "AttendanceDashboard",
+      label: "Attendance Dashboard",
+      icon: <MdWarning />, // 📖
+    },
+  
   {
     key: "forms",
     label: "Registeration",
@@ -124,17 +136,18 @@ const NAV_ITEMS = [
 
     ],
   },
-  // {
-  //   key: "idcards",
-  //   label: "Pupils ID Cards",
-  //   icon: <MdBarChart />,
-  //   children: [
-  //     { key: "ModelSchoolIdCard", label: "ModelSchoolIdCard", icon: <MdPerson /> },
-  //     { key: "IDCardPage", label: "IDCardPage", icon: <MdPerson /> },
-  //     { key: "IDCardBackSection", label: "IDCardBackSection", icon: <MdPerson /> },
-  //     { key: "StudentIDCardData", label: "StudentIDCardData", icon: <MdPerson /> },
-  //   ],
-  // },
+
+    {
+    key: "editPhotos",
+    label: "Edit id card photos",
+    icon: <MdBarChart />,
+    children: [
+      { key: "TeacherPhotoManager", label: "Teacher Zoom & Crop", icon: <MdPerson /> },
+      { key: "TeacherPhotoEditor", label: "Remove Bg", icon: <MdPerson /> },
+      { key: "PupilPhotoManager", label: "Pupil Zoom & Crop", icon: <MdPerson /> },
+      { key: "PupilPhotoEditor", label: "Remove Bg pupil", icon: <MdPerson /> },
+    ],
+  },
 
    {
     key: "qrcode-Pupil",
@@ -144,6 +157,7 @@ const NAV_ITEMS = [
       // { key: "PupilIDCardScan", label: "Pupil Card Scan", icon: <MdPerson /> },
       // { key: "PupilIDCardBack", label: "Pupil Card Back", icon: <MdPerson /> },
       { key: "PupilAttendanceScanner", label: "Attendance Scanner", icon: <MdPerson /> },
+      { key: "ManualAttendance", label: "Manual Attendance", icon: <MdPerson /> },
       { key: "PupilAttendanceLogs", label: "Pupil Attendance Logs", icon: <MdPerson /> },
     ],
   },
@@ -152,7 +166,7 @@ const NAV_ITEMS = [
     label: "Qr code Attendance-Staff",
     icon: <MdBarChart />,
     children: [
-      // { key: "TeacherIDCards", label: "Teacher IDCards", icon: <MdPerson /> },
+      { key: "TeacherIDCards", label: "Teacher IDCards", icon: <MdPerson /> },
       { key: "StaffAttendanceScanner", label: "Staff Attendance Scanner", icon: <MdPerson /> },
       { key: "StaffPayroll", label: "Staff Payroll", icon: <MdPerson /> },
       { key: "StaffAttendanceRecords", label: "Staff Attendance Records", icon: <MdPerson /> },
@@ -160,25 +174,6 @@ const NAV_ITEMS = [
   },
 
 
-
-  // {
-  //   key: "pupilAttendance",
-  //   label: "Pupil Attendance",
-  //   icon: <MdWarning />, // 📖
-  // },
-
-
-  // {
-  //   key: "staffAttendance",
-  //   label: "Staff  Record",
-  //   icon: <MdBarChart />,
-  //   children: [
-  //     { key: "staffAttendance", label: "Staff Attendance", icon: <MdPerson /> },
-  //     { key: "GeneralStaffAttendanceReport", label: "Staff Attendance Report", icon: <MdPerson /> },
-
-
-  //   ],
-  // },
 
   {
     key: "timetable",
@@ -320,6 +315,13 @@ function Gov() {
       case "PupilIDCardBack": return <PupilIDCardBack />;
       case "PupilAttendanceScanner": return <PupilAttendanceScanner />;
       case "PupilAttendanceLogs": return <PupilAttendanceLogs />;
+      case "ManualAttendance": return <ManualAttendance />;
+      case "TeacherPhotoManager": return <TeacherPhotoManager />;
+      case "TeacherPhotoEditor": return <TeacherPhotoEditor />;
+        case "PupilPhotoManager": return <PupilPhotoManager />;
+      case "PupilPhotoEditor": return <PupilPhotoEditor />;
+      case "AttendanceDashboard": return <AttendanceDashboard />;
+
 
 
 

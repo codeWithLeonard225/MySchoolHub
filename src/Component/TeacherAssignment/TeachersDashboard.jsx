@@ -10,7 +10,7 @@ import TeacherTimetableReport from "./TeacherTimetableReport";
 import TeacherTimetableAtt from "./TeacherTimetableAtt";
 import StaffAttendanceReport from "./StaffAttendanceReport";
 import LogoutPage from "../Admin/LogoutPage"
-import PupilAttendanceScanner from "../PupilsPage/PupilAttendanceScannerModelJunior";
+import PupilAttendanceScanner from "../PupilsPage/PupilAttendanceScannerModelSenior";
 
 
 
@@ -71,7 +71,7 @@ const getNavItems = (teacherInfo) => {
         // { key: "FormMasterGradeSheet", label: "Submitted Grades" },
         { key: "TermResult", label: "Term Sheet" },
         { key: "ReportCard", label: "Report Card" },
-        { key: "PupilAttendanceScanner", label: " Pupil Scan " },
+        // { key: "PupilAttendanceScanner", label: " Pupil Scan " },
         { key: "PupilAttendanceLogs", label: "Pupil Attendance" },
       ],
     });

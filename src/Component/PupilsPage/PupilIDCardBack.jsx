@@ -395,11 +395,11 @@ const PupilIDCardBack = () => {
               }}
             >
               <img
-                src="/images/modelJuniorSign.png"
+                src="/images/modelSenior.png"
                 alt="ID Card Background"
                 style={{
                   position: "absolute",
-                  top: "10px",
+                  top: "40px",
                   left: 0,
                   width: "100%",
                   height: "100%",
@@ -418,8 +418,8 @@ const PupilIDCardBack = () => {
                   alignItems: "center",
                   justifyContent: "center",
                   gap: "6px",
-                  paddingBottom: "4px",
-                  borderBottom: "2px solid #38BDF8",
+                  paddingBottom: "10px", // 👈 CHANGE THIS (was "4px")
+                  marginTop: "4px",     // 👈 ADD THIS to fine-tune top positioning
                 }}
               >
                 {schoolLogoUrl && (
@@ -453,9 +453,9 @@ const PupilIDCardBack = () => {
                   flex: 1,
                   display: "flex",
                   flexDirection: "column",
-                  justifyContent: "center",
+                  justifyContent: "flex-start",
                   alignItems: "center",
-                  padding: "5px 12px",
+                  padding: "6px 12px 2px",
                   position: "relative",
                   zIndex: 1,
                 }}
@@ -514,7 +514,8 @@ const PupilIDCardBack = () => {
                   width: "100%",
                   borderTop: "1px solid #ddd",
                   paddingTop: "1px",
-                  fontSize: "7px",
+                  marginBottom: "20px",
+                  fontSize: "10px",
                   color: "#555",
                   lineHeight: "1.3",
                   position: "relative",

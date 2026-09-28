@@ -58,6 +58,7 @@ const LoginPage = () => {
       case "GMSSprefert3": return "/GMSSprefert3";
       case "GMSSprefert4": return "/GMSSprefert4";
       case "GMSSprefert5": return "/GMSSprefert5";
+      case "GMSSextra": return "/GMSSextra";
       default: return "/";
     }
   };

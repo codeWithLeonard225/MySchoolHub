@@ -31,6 +31,7 @@ import GMSSprefert2 from "./Component/Dashboard/GMSSprefert2";
 import GMSSprefert3 from "./Component/Dashboard/GMSSprefert3";
 import GMSSprefert4 from "./Component/Dashboard/GMSSprefert4";
 import GMSSprefert5 from "./Component/Dashboard/GMSSprefert5";
+import GMSSextra from "./Component/Dashboard/GMSSextra";
 
 
 
@@ -230,6 +231,14 @@ function App() {
             element={
               <ProtectedRoute role="admin">
                 <GMSSprefert5 />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/GMSSextra"
+            element={
+              <ProtectedRoute role="admin">
+                <GMSSextra />
               </ProtectedRoute>
             }
           />

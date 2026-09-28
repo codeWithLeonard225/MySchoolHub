@@ -23,7 +23,7 @@ const PupilAttendanceLogs = () => {
   const [availableClasses, setAvailableClasses] = useState([]);
 
   const [availableAcademicYears, setAvailableAcademicYears] = useState([]);
-const [selectedAcademicYear, setSelectedAcademicYear] = useState("");
+  const [selectedAcademicYear, setSelectedAcademicYear] = useState("");
 
   const [selectedDate, setSelectedDate] = useState(
     new Date().toISOString().slice(0, 10)
@@ -131,89 +131,89 @@ const [selectedAcademicYear, setSelectedAcademicYear] = useState("");
   // We DO NOT load all pupils into allPupils anymore.
   // ==========================================================
   // ==========================================================
-// 1. LOAD CLASS NAMES AND ACADEMIC YEARS
-// ==========================================================
+  // 1. LOAD CLASS NAMES AND ACADEMIC YEARS
+  // ==========================================================
 
-useEffect(() => {
-  if (!currentSchoolId) return;
+  useEffect(() => {
+    if (!currentSchoolId) return;
 
-  const pupilsQuery = query(
-    collection(db, "PupilsReg"),
-    where("schoolId", "==", currentSchoolId)
-  );
+    const pupilsQuery = query(
+      collection(db, "PupilsReg"),
+      where("schoolId", "==", currentSchoolId)
+    );
 
-  const unsubscribe = onSnapshot(
-    pupilsQuery,
-    (snapshot) => {
-      const classes = Array.from(
-        new Set(
-          snapshot.docs
-            .map((doc) => {
-              const data = doc.data();
+    const unsubscribe = onSnapshot(
+      pupilsQuery,
+      (snapshot) => {
+        const classes = Array.from(
+          new Set(
+            snapshot.docs
+              .map((doc) => {
+                const data = doc.data();
 
-              return (
-                data.class ||
-                data.className ||
-                ""
-              );
-            })
-            .filter(Boolean)
-        )
-      ).sort();
+                return (
+                  data.class ||
+                  data.className ||
+                  ""
+                );
+              })
+              .filter(Boolean)
+          )
+        ).sort();
 
-      const academicYears = Array.from(
-        new Set(
-          snapshot.docs
-            .map((doc) => {
-              const data = doc.data();
+        const academicYears = Array.from(
+          new Set(
+            snapshot.docs
+              .map((doc) => {
+                const data = doc.data();
 
-              return (
-                data.academicYear ||
-                data.academic_year ||
-                ""
-              );
-            })
-            .filter(Boolean)
-        )
-      ).sort();
+                return (
+                  data.academicYear ||
+                  data.academic_year ||
+                  ""
+                );
+              })
+              .filter(Boolean)
+          )
+        ).sort();
 
-      setAvailableClasses(classes);
-      setAvailableAcademicYears(academicYears);
+        setAvailableClasses(classes);
+        setAvailableAcademicYears(academicYears);
 
-      // Clear class if it no longer exists
-      setFilterClass((currentClass) => {
-        if (
-          currentClass &&
-          !classes.includes(currentClass)
-        ) {
-          return "";
-        }
+        // Clear class if it no longer exists
+        setFilterClass((currentClass) => {
+          if (
+            currentClass &&
+            !classes.includes(currentClass)
+          ) {
+            return "";
+          }
 
-        return currentClass;
-      });
+          return currentClass;
+        });
 
-      // Clear academic year if it no longer exists
-      setSelectedAcademicYear((currentYear) => {
-        if (
-          currentYear &&
-          !academicYears.includes(currentYear)
-        ) {
-          return "";
-        }
+        // Clear academic year if it no longer exists
+        setSelectedAcademicYear((currentYear) => {
+          if (
+            currentYear &&
+            !academicYears.includes(currentYear)
+          ) {
+            return "";
+          }
 
-        return currentYear;
-      });
-    },
-    (error) => {
-      console.error(
-        "Error fetching classes and academic years:",
-        error
-      );
-    }
-  );
+          return currentYear;
+        });
+      },
+      (error) => {
+        console.error(
+          "Error fetching classes and academic years:",
+          error
+        );
+      }
+    );
 
-  return () => unsubscribe();
-}, [currentSchoolId]);
+    return () => unsubscribe();
+  }, [currentSchoolId]);
 
   // ==========================================================
   // 2. LOAD ONLY PUPILS FROM SELECTED CLASS
@@ -224,52 +224,52 @@ useEffect(() => {
   // We DO NOT load every pupil into memory.
   // ==========================================================
   // ==========================================================
-// 2. LOAD ONLY PUPILS FROM SELECTED CLASS + ACADEMIC YEAR
-// ==========================================================
+  // 2. LOAD ONLY PUPILS FROM SELECTED CLASS + ACADEMIC YEAR
+  // ==========================================================
 
-useEffect(() => {
-  setClassPupils([]);
+  useEffect(() => {
+    setClassPupils([]);
 
-  // Do nothing until class and academic year are selected
-  if (
-    !currentSchoolId ||
-    !filterClass ||
-    !selectedAcademicYear
-  ) {
-    return;
-  }
-
-  const pupilsQuery = query(
-    collection(db, "PupilsReg"),
-    where("schoolId", "==", currentSchoolId),
-    where("class", "==", filterClass),
-    where("academicYear", "==", selectedAcademicYear)
-  );
-
-  const unsubscribe = onSnapshot(
-    pupilsQuery,
-    (snapshot) => {
-      const pupils = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-
-      setClassPupils(pupils);
-    },
-    (error) => {
-      console.error(
-        "Error fetching pupils for selected class and academic year:",
-        error
-      );
+    // Do nothing until class and academic year are selected
+    if (
+      !currentSchoolId ||
+      !filterClass ||
+      !selectedAcademicYear
+    ) {
+      return;
     }
-  );
 
-  return () => unsubscribe();
-}, [
-  currentSchoolId,
-  filterClass,
-  selectedAcademicYear,
-]);
+    const pupilsQuery = query(
+      collection(db, "PupilsReg"),
+      where("schoolId", "==", currentSchoolId),
+      where("class", "==", filterClass),
+      where("academicYear", "==", selectedAcademicYear)
+    );
+
+    const unsubscribe = onSnapshot(
+      pupilsQuery,
+      (snapshot) => {
+        const pupils = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+
+        setClassPupils(pupils);
+      },
+      (error) => {
+        console.error(
+          "Error fetching pupils for selected class and academic year:",
+          error
+        );
+      }
+    );
+
+    return () => unsubscribe();
+  }, [
+    currentSchoolId,
+    filterClass,
+    selectedAcademicYear,
+  ]);
 
   // ==========================================================
   // 3. FETCH ATTENDANCE LOGS
@@ -389,9 +389,9 @@ useEffect(() => {
 
     if (
       clockOutInMinutes >=
-        windowStartMinutes &&
+      windowStartMinutes &&
       clockOutInMinutes <
-        CLOSING_TIME_MINUTES
+      CLOSING_TIME_MINUTES
     ) {
       return "Closing Window (Within 30m of Close)";
     }
@@ -593,169 +593,169 @@ useEffect(() => {
   //
   // Automatic absences are NOT saved to Firestore.
   // ==========================================================
- // ==========================================================
-// 8. BUILD DISPLAY ATTENDANCE
-//
-// TOTAL PUPILS comes from:
-//    PupilsReg → schoolId + class + academicYear
-//
-// ATTENDANCE comes from:
-//    AttendanceLogs → schoolId + class + selectedDate
-//
-// If attendance has started for the selected class/date,
-// pupils without an attendance record are displayed as Absent.
-//
-// Automatic absences are NOT saved to Firestore.
-// ==========================================================
+  // ==========================================================
+  // 8. BUILD DISPLAY ATTENDANCE
+  //
+  // TOTAL PUPILS comes from:
+  //    PupilsReg → schoolId + class + academicYear
+  //
+  // ATTENDANCE comes from:
+  //    AttendanceLogs → schoolId + class + selectedDate
+  //
+  // If attendance has started for the selected class/date,
+  // pupils without an attendance record are displayed as Absent.
+  //
+  // Automatic absences are NOT saved to Firestore.
+  // ==========================================================
 
-const getDisplayAttendance = () => {
-  // Require both class and academic year
-  if (
-    !filterClass ||
-    !selectedAcademicYear
-  ) {
-    return [];
-  }
-
-  // ========================================================
-  // CREATE MAP OF EXISTING ATTENDANCE
-  // ========================================================
-
-  const attendanceMap = new Map();
-
-  logs.forEach((log) => {
-    const studentId =
-      log.studentID ||
-      log.pupilID ||
-      log.studentId;
-
-    if (studentId) {
-      attendanceMap.set(
-        String(studentId),
-        log
-      );
-    }
-  });
-
-  // ========================================================
-  // IMPORTANT:
-  // If there are NO attendance records for this date,
-  // don't automatically display everyone as absent.
-  // ========================================================
-
-  if (logs.length === 0) {
-    return [];
-  }
-
-  // ========================================================
-  // BUILD DISPLAY FROM SELECTED ACADEMIC YEAR PUPILS
-  // ========================================================
-
-  return classPupils.map((pupil) => {
-    const studentID =
-      pupil.studentID ||
-      pupil.pupilID ||
-      pupil.studentId ||
-      pupil.id ||
-      "";
-
-    const existingRecord =
-      attendanceMap.get(
-        String(studentID)
-      );
-
-    // ======================================================
-    // REAL ATTENDANCE RECORD
-    // ======================================================
-
-    if (existingRecord) {
-      return {
-        ...existingRecord,
-        isAutomaticallyAbsent: false,
-      };
+  const getDisplayAttendance = () => {
+    // Require both class and academic year
+    if (
+      !filterClass ||
+      !selectedAcademicYear
+    ) {
+      return [];
     }
 
-    // ======================================================
-    // AUTOMATIC ABSENCE
-    // ======================================================
+    // ========================================================
+    // CREATE MAP OF EXISTING ATTENDANCE
+    // ========================================================
 
-    return {
-      id: `absent-${pupil.id}`,
+    const attendanceMap = new Map();
 
-      studentID:
+    logs.forEach((log) => {
+      const studentId =
+        log.studentID ||
+        log.pupilID ||
+        log.studentId;
+
+      if (studentId) {
+        attendanceMap.set(
+          String(studentId),
+          log
+        );
+      }
+    });
+
+    // ========================================================
+    // IMPORTANT:
+    // If there are NO attendance records for this date,
+    // don't automatically display everyone as absent.
+    // ========================================================
+
+    if (logs.length === 0) {
+      return [];
+    }
+
+    // ========================================================
+    // BUILD DISPLAY FROM SELECTED ACADEMIC YEAR PUPILS
+    // ========================================================
+
+    return classPupils.map((pupil) => {
+      const studentID =
         pupil.studentID ||
         pupil.pupilID ||
         pupil.studentId ||
         pupil.id ||
-        "---",
+        "";
 
-      studentName:
-        pupil.studentName ||
-        pupil.pupilName ||
-        pupil.name ||
-        "Unnamed Pupil",
+      const existingRecord =
+        attendanceMap.get(
+          String(studentID)
+        );
 
-      class:
-        pupil.class ||
-        pupil.className ||
-        filterClass,
+      // ======================================================
+      // REAL ATTENDANCE RECORD
+      // ======================================================
 
-      academicYear:
-        pupil.academicYear ||
-        selectedAcademicYear,
+      if (existingRecord) {
+        return {
+          ...existingRecord,
+          isAutomaticallyAbsent: false,
+        };
+      }
 
-      userPhotoUrl:
-        pupil.userPhotoUrl ||
-        pupil.photoUrl ||
-        pupil.photo ||
-        "",
+      // ======================================================
+      // AUTOMATIC ABSENCE
+      // ======================================================
 
-      date: selectedDate,
+      return {
+        id: `absent-${pupil.id}`,
 
-      clockInTime: null,
-      clockOutTime: null,
+        studentID:
+          pupil.studentID ||
+          pupil.pupilID ||
+          pupil.studentId ||
+          pupil.id ||
+          "---",
 
-      status: "Absent",
+        studentName:
+          pupil.studentName ||
+          pupil.pupilName ||
+          pupil.name ||
+          "Unnamed Pupil",
 
-      note: "",
+        class:
+          pupil.class ||
+          pupil.className ||
+          filterClass,
 
-      isAutomaticallyAbsent: true,
+        academicYear:
+          pupil.academicYear ||
+          selectedAcademicYear,
 
-      isManual: false,
-    };
-  });
-};
+        userPhotoUrl:
+          pupil.userPhotoUrl ||
+          pupil.photoUrl ||
+          pupil.photo ||
+          "",
 
-const displayAttendance =
-  getDisplayAttendance();
+        date: selectedDate,
 
-const filteredLogs =
-  displayAttendance;
-    // ==========================================================
-// ATTENDANCE SUMMARY
-// ==========================================================
-const totalPupils = classPupils.length;
+        clockInTime: null,
+        clockOutTime: null,
 
-const totalPresent = filteredLogs.filter(
-  (log) =>
-    String(log.status || "")
-      .trim()
-      .toLowerCase() === "present"
-).length;
+        status: "Absent",
 
-const totalLate = filteredLogs.filter(
-  (log) =>
-    String(log.status || "")
-      .trim()
-      .toLowerCase() === "late"
-).length;
+        note: "",
 
-const totalAbsent = filteredLogs.filter(
-  (log) =>
-    String(log.status || "")
-      .trim()
-      .toLowerCase() === "absent"
-).length;
+        isAutomaticallyAbsent: true,
+
+        isManual: false,
+      };
+    });
+  };
+
+  const displayAttendance =
+    getDisplayAttendance();
+
+  const filteredLogs =
+    displayAttendance;
+  // ==========================================================
+  // ATTENDANCE SUMMARY
+  // ==========================================================
+  const totalPupils = classPupils.length;
+
+  const totalPresent = filteredLogs.filter(
+    (log) =>
+      String(log.status || "")
+        .trim()
+        .toLowerCase() === "present"
+  ).length;
+
+  const totalLate = filteredLogs.filter(
+    (log) =>
+      String(log.status || "")
+        .trim()
+        .toLowerCase() === "late"
+  ).length;
+
+  const totalAbsent = filteredLogs.filter(
+    (log) =>
+      String(log.status || "")
+        .trim()
+        .toLowerCase() === "absent"
+  ).length;
 
   // ==========================================================
   // STATUS STYLE
@@ -764,9 +764,9 @@ const totalAbsent = filteredLogs.filter(
     status
   ) => {
     switch (
-      String(status || "")
-        .trim()
-        .toLowerCase()
+    String(status || "")
+      .trim()
+      .toLowerCase()
     ) {
       case "present":
         return {
@@ -853,7 +853,7 @@ const totalAbsent = filteredLogs.filter(
         }}
       >
         {/* DATE */}
-        
+
 
         <div>
           <label
@@ -933,234 +933,234 @@ const totalAbsent = filteredLogs.filter(
 
         {/* ACADEMIC YEAR */}
 
-<div>
-  <label
-    style={{
-      marginRight: "8px",
-      fontWeight: "600",
-      fontSize: "14px",
-    }}
-  >
-    Academic Year:
-  </label>
+        <div>
+          <label
+            style={{
+              marginRight: "8px",
+              fontWeight: "600",
+              fontSize: "14px",
+            }}
+          >
+            Academic Year:
+          </label>
 
-  <select
-    value={selectedAcademicYear}
-    onChange={(e) =>
-      setSelectedAcademicYear(e.target.value)
-    }
-    style={{
-      padding: "8px 12px",
-      borderRadius: "6px",
-      border: "1px solid #d1d5db",
-      fontSize: "14px",
-      backgroundColor: "#fff",
-      minWidth: "180px",
-    }}
-  >
-    <option value="">
-      -- Select Academic Year --
-    </option>
+          <select
+            value={selectedAcademicYear}
+            onChange={(e) =>
+              setSelectedAcademicYear(e.target.value)
+            }
+            style={{
+              padding: "8px 12px",
+              borderRadius: "6px",
+              border: "1px solid #d1d5db",
+              fontSize: "14px",
+              backgroundColor: "#fff",
+              minWidth: "180px",
+            }}
+          >
+            <option value="">
+              -- Select Academic Year --
+            </option>
 
-    {availableAcademicYears.map((year) => (
-      <option
-        key={year}
-        value={year}
-      >
-        {year}
-      </option>
-    ))}
-  </select>
-</div>
+            {availableAcademicYears.map((year) => (
+              <option
+                key={year}
+                value={year}
+              >
+                {year}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
 
       {/* ====================================================
     ATTENDANCE SUMMARY
 ==================================================== */}
 
-{filterClass && (
-  <div
-    style={{
-      display: "grid",
-      gridTemplateColumns:
-        "repeat(auto-fit, minmax(180px, 1fr))",
-      gap: "14px",
-      marginBottom: "20px",
-    }}
-  >
-    {/* TOTAL PUPILS */}
-    <div
-      style={{
-        backgroundColor: "#ffffff",
-        border: "1px solid #e5e7eb",
-        borderRadius: "10px",
-        padding: "18px",
-        boxShadow:
-          "0 1px 3px rgba(0,0,0,0.05)",
-      }}
-    >
-      <div
-        style={{
-          fontSize: "13px",
-          color: "#6b7280",
-          fontWeight: "600",
-          marginBottom: "8px",
-        }}
-      >
-        TOTAL PUPILS
-      </div>
+      {filterClass && (
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns:
+              "repeat(auto-fit, minmax(180px, 1fr))",
+            gap: "14px",
+            marginBottom: "20px",
+          }}
+        >
+          {/* TOTAL PUPILS */}
+          <div
+            style={{
+              backgroundColor: "#ffffff",
+              border: "1px solid #e5e7eb",
+              borderRadius: "10px",
+              padding: "18px",
+              boxShadow:
+                "0 1px 3px rgba(0,0,0,0.05)",
+            }}
+          >
+            <div
+              style={{
+                fontSize: "13px",
+                color: "#6b7280",
+                fontWeight: "600",
+                marginBottom: "8px",
+              }}
+            >
+              TOTAL PUPILS
+            </div>
 
-      <div
-        style={{
-          fontSize: "28px",
-          fontWeight: "bold",
-          color: "#111827",
-        }}
-      >
-        {totalPupils}
-      </div>
+            <div
+              style={{
+                fontSize: "28px",
+                fontWeight: "bold",
+                color: "#111827",
+              }}
+            >
+              {totalPupils}
+            </div>
 
-      <div
-        style={{
-          fontSize: "12px",
-          color: "#6b7280",
-          marginTop: "4px",
-        }}
-      >
-        {filterClass}
-      </div>
-    </div>
+            <div
+              style={{
+                fontSize: "12px",
+                color: "#6b7280",
+                marginTop: "4px",
+              }}
+            >
+              {filterClass}
+            </div>
+          </div>
 
-    {/* PRESENT */}
-    <div
-      style={{
-        backgroundColor: "#ecfdf5",
-        border: "1px solid #a7f3d0",
-        borderRadius: "10px",
-        padding: "18px",
-      }}
-    >
-      <div
-        style={{
-          fontSize: "13px",
-          color: "#047857",
-          fontWeight: "600",
-          marginBottom: "8px",
-        }}
-      >
-        PRESENT
-      </div>
+          {/* PRESENT */}
+          <div
+            style={{
+              backgroundColor: "#ecfdf5",
+              border: "1px solid #a7f3d0",
+              borderRadius: "10px",
+              padding: "18px",
+            }}
+          >
+            <div
+              style={{
+                fontSize: "13px",
+                color: "#047857",
+                fontWeight: "600",
+                marginBottom: "8px",
+              }}
+            >
+              PRESENT
+            </div>
 
-      <div
-        style={{
-          fontSize: "28px",
-          fontWeight: "bold",
-          color: "#065f46",
-        }}
-      >
-        {totalPresent}
-      </div>
+            <div
+              style={{
+                fontSize: "28px",
+                fontWeight: "bold",
+                color: "#065f46",
+              }}
+            >
+              {totalPresent}
+            </div>
 
-      <div
-        style={{
-          fontSize: "12px",
-          color: "#047857",
-          marginTop: "4px",
-        }}
-      >
-        Present pupils
-      </div>
-    </div>
+            <div
+              style={{
+                fontSize: "12px",
+                color: "#047857",
+                marginTop: "4px",
+              }}
+            >
+              Present pupils
+            </div>
+          </div>
 
-    {/* LATE */}
-    <div
-      style={{
-        backgroundColor: "#fffbeb",
-        border: "1px solid #fde68a",
-        borderRadius: "10px",
-        padding: "18px",
-      }}
-    >
-      <div
-        style={{
-          fontSize: "13px",
-          color: "#b45309",
-          fontWeight: "600",
-          marginBottom: "8px",
-        }}
-      >
-        LATE
-      </div>
+          {/* LATE */}
+          <div
+            style={{
+              backgroundColor: "#fffbeb",
+              border: "1px solid #fde68a",
+              borderRadius: "10px",
+              padding: "18px",
+            }}
+          >
+            <div
+              style={{
+                fontSize: "13px",
+                color: "#b45309",
+                fontWeight: "600",
+                marginBottom: "8px",
+              }}
+            >
+              LATE
+            </div>
 
-      <div
-        style={{
-          fontSize: "28px",
-          fontWeight: "bold",
-          color: "#92400e",
-        }}
-      >
-        {totalLate}
-      </div>
+            <div
+              style={{
+                fontSize: "28px",
+                fontWeight: "bold",
+                color: "#92400e",
+              }}
+            >
+              {totalLate}
+            </div>
 
-      <div
-        style={{
-          fontSize: "12px",
-          color: "#b45309",
-          marginTop: "4px",
-        }}
-      >
-        Late pupils
-      </div>
-    </div>
+            <div
+              style={{
+                fontSize: "12px",
+                color: "#b45309",
+                marginTop: "4px",
+              }}
+            >
+              Late pupils
+            </div>
+          </div>
 
-    {/* ABSENT */}
-    <div
-      style={{
-        backgroundColor: "#fef2f2",
-        border: "1px solid #fecaca",
-        borderRadius: "10px",
-        padding: "18px",
-      }}
-    >
-      <div
-        style={{
-          fontSize: "13px",
-          color: "#dc2626",
-          fontWeight: "600",
-          marginBottom: "8px",
-        }}
-      >
-        ABSENT
-      </div>
+          {/* ABSENT */}
+          <div
+            style={{
+              backgroundColor: "#fef2f2",
+              border: "1px solid #fecaca",
+              borderRadius: "10px",
+              padding: "18px",
+            }}
+          >
+            <div
+              style={{
+                fontSize: "13px",
+                color: "#dc2626",
+                fontWeight: "600",
+                marginBottom: "8px",
+              }}
+            >
+              ABSENT
+            </div>
 
-      <div
-        style={{
-          fontSize: "28px",
-          fontWeight: "bold",
-          color: "#991b1b",
-        }}
-      >
-        {totalAbsent}
-      </div>
+            <div
+              style={{
+                fontSize: "28px",
+                fontWeight: "bold",
+                color: "#991b1b",
+              }}
+            >
+              {totalAbsent}
+            </div>
 
-      <div
-        style={{
-          fontSize: "12px",
-          color: "#dc2626",
-          marginTop: "4px",
-        }}
-      >
-        Absent pupils
-      </div>
-    </div>
-  </div>
-)}
+            <div
+              style={{
+                fontSize: "12px",
+                color: "#dc2626",
+                marginTop: "4px",
+              }}
+            >
+              Absent pupils
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ====================================================
           NO CLASS SELECTED
       ==================================================== */}
 
-      {filterClass && selectedAcademicYear &&(
+      {filterClass && selectedAcademicYear && (
         <div
           style={{
             marginBottom: "16px",
@@ -1300,8 +1300,8 @@ const totalAbsent = filteredLogs.filter(
                   {!filterClass
                     ? "Select a class to view attendance."
                     : logs.length === 0
-                    ? "No attendance logs found for the selected class and date."
-                    : "No attendance records found."}
+                      ? "No attendance logs found for the selected class and date."
+                      : "No attendance records found."}
                 </td>
               </tr>
             ) : (
@@ -1329,217 +1329,142 @@ const totalAbsent = filteredLogs.filter(
                     <tr
                       key={log.id}
                       style={{
-                        borderBottom:
-                          "1px solid #e5e7eb",
-                        backgroundColor:
-                          isAutomaticallyAbsent
-                            ? "#fff7f7"
-                            : "transparent",
+                        borderBottom: "1px solid #e5e7eb",
+                        backgroundColor: isAutomaticallyAbsent ? "#fff7f7" : "transparent",
                       }}
                     >
                       {/* STUDENT */}
-
                       <td
                         style={{
                           padding: "12px",
                           display: "flex",
-                          alignItems:
-                            "center",
+                          alignItems: "center",
                           gap: "10px",
                         }}
                       >
                         <img
-                          src={
-                            log.userPhotoUrl ||
-                            "https://via.placeholder.com/40"
-                          }
-                          alt={
-                            log.studentName
-                          }
+                          src={log.userPhotoUrl || "https://via.placeholder.com/40"}
+                          alt={log.studentName}
                           style={{
                             width: "36px",
                             height: "36px",
-                            borderRadius:
-                              "50%",
-                            objectFit:
-                              "cover",
+                            borderRadius: "50%",
+                            objectFit: "cover",
                           }}
                         />
 
                         <div>
                           <span
                             style={{
-                              fontWeight:
-                                "600",
-                              color:
-                                "#111827",
+                              fontWeight: "600",
+                              color: "#111827",
                             }}
                           >
-                            {log.studentName ||
-                              "—"}
+                            {log.studentName || "—"}
                           </span>
 
                           {isAutomaticallyAbsent && (
                             <div
                               style={{
-                                marginTop:
-                                  "3px",
-                                display:
-                                  "inline-block",
-                                fontSize:
-                                  "10px",
-                                padding:
-                                  "2px 6px",
-                                borderRadius:
-                                  "4px",
-                                backgroundColor:
-                                  "#fee2e2",
-                                color:
-                                  "#991b1b",
-                                border:
-                                  "1px solid #fecaca",
-                                fontWeight:
-                                  "600",
+                                marginTop: "3px",
+                                display: "inline-block",
+                                fontSize: "10px",
+                                padding: "2px 6px",
+                                borderRadius: "4px",
+                                backgroundColor: "#fee2e2",
+                                color: "#991b1b",
+                                border: "1px solid #fecaca",
+                                fontWeight: "600",
                               }}
                             >
-                              Automatically
-                              marked absent
+                              Automatically marked absent
                             </div>
                           )}
                         </div>
                       </td>
 
                       {/* STUDENT ID */}
-
                       <td
                         style={{
                           padding: "12px",
-                          fontFamily:
-                            "monospace",
-                          color:
-                            "#4b5563",
+                          fontFamily: "monospace",
+                          color: "#4b5563",
                         }}
                       >
-                        {log.studentID ||
-                          "—"}
+                        {log.studentID || "—"}
                       </td>
 
                       {/* CLASS */}
-
-                      <td
-                        style={{
-                          padding: "12px",
-                        }}
-                      >
+                      <td style={{ padding: "12px" }}>
                         {studentClass}
                       </td>
 
                       {/* STATUS */}
-
-                      <td
-                        style={{
-                          padding: "12px",
-                        }}
-                      >
+                      <td style={{ padding: "12px" }}>
                         <span
                           style={{
-                            padding:
-                              "4px 8px",
-                            borderRadius:
-                              "12px",
-                            fontSize:
-                              "12px",
-                            fontWeight:
-                              "bold",
-                            ...getStatusStyle(
-                              log.status
-                            ),
+                            padding: "4px 8px",
+                            borderRadius: "12px",
+                            fontSize: "12px",
+                            fontWeight: "bold",
+                            ...getStatusStyle(log.status),
                           }}
                         >
-                          {log.status ||
-                            "N/A"}
+                          {log.status || "N/A"}
                         </span>
                       </td>
 
                       {/* CLOCK IN */}
-
                       <td
                         style={{
                           padding: "12px",
-                          color:
-                            "#047857",
-                          fontWeight:
-                            "600",
+                          color: "#047857",
+                          fontWeight: "600",
                         }}
                       >
-                        {log.clockInTime
-                          ? `📥 ${log.clockInTime}`
-                          : "—"}
+                        {log.clockInTime ? `📥 ${log.clockInTime}` : "—"}
                       </td>
 
                       {/* CLOCK OUT */}
-
                       <td
                         style={{
                           padding: "12px",
-                          color:
-                            "#1d4ed8",
-                          fontWeight:
-                            "600",
+                          color: "#1d4ed8",
+                          fontWeight: "600",
                         }}
                       >
                         {log.clockOutTime ? (
                           <div>
                             <span>
-                              📤{" "}
-                              {
-                                log.clockOutTime
-                              }
+                              📤 {log.clockOutTime}
                             </span>
 
-                            {departureTiming ===
-                              "Closing Window (Within 30m of Close)" && (
+                            {departureTiming === "Closing Window (Within 30m of Close)" && (
                               <div
                                 style={{
-                                  fontSize:
-                                    "10px",
-                                  color:
-                                    "#d97706",
-                                  marginTop:
-                                    "2px",
+                                  fontSize: "10px",
+                                  color: "#d97706",
+                                  marginTop: "2px",
                                 }}
                               >
-                                ⏱️ Closing
-                                Window
+                                ⏱️ Closing Window
                               </div>
                             )}
 
                             {log.clockOutByName && (
                               <div
                                 style={{
-                                  fontSize:
-                                    "10px",
-                                  color:
-                                    "#6b7280",
-                                  marginTop:
-                                    "3px",
-                                  fontWeight:
-                                    "normal",
+                                  fontSize: "10px",
+                                  color: "#6b7280",
+                                  marginTop: "3px",
+                                  fontWeight: "normal",
                                 }}
                               >
-                                By:{" "}
-                                {
-                                  log.clockOutByName
-                                }
+                                By: {log.clockOutByName}
 
                                 {log.clockOutByRole && (
                                   <>
-                                    {" "}
-                                    (
-                                    {formatRole(
-                                      log.clockOutByRole
-                                    )}
-                                    )
+                                    {" "}({formatRole(log.clockOutByRole)})
                                   </>
                                 )}
                               </div>
@@ -1548,70 +1473,50 @@ const totalAbsent = filteredLogs.filter(
                         ) : (
                           <span
                             style={{
-                              color:
-                                "#9ca3af",
-                              fontStyle:
-                                "italic",
-                              fontWeight:
-                                "normal",
+                              color: "#9ca3af",
+                              fontStyle: "italic",
+                              fontWeight: "normal",
                             }}
                           >
-                            {isAutomaticallyAbsent
-                              ? "—"
-                              : "Still On Campus"}
+                            {isAutomaticallyAbsent ? "—" : "Still On Campus"}
                           </span>
                         )}
                       </td>
 
                       {/* RECORDED BY */}
-
                       <td
                         style={{
                           padding: "12px",
-                          minWidth:
-                            "150px",
+                          minWidth: "150px",
                         }}
                       >
                         {log.loggedByName ? (
                           <div>
                             <div
                               style={{
-                                fontWeight:
-                                  "600",
-                                color:
-                                  "#111827",
+                                fontWeight: "600",
+                                color: "#111827",
                               }}
                             >
-                              👤{" "}
-                              {
-                                log.loggedByName
-                              }
+                              👤 {log.loggedByName}
                             </div>
 
                             <div
                               style={{
-                                fontSize:
-                                  "11px",
-                                color:
-                                  "#6b7280",
-                                marginTop:
-                                  "2px",
+                                fontSize: "11px",
+                                color: "#6b7280",
+                                marginTop: "2px",
                               }}
                             >
-                              {formatRole(
-                                log.loggedByRole
-                              )}
+                              {formatRole(log.loggedByRole)}
                             </div>
                           </div>
                         ) : (
                           <span
                             style={{
-                              color:
-                                "#9ca3af",
-                              fontSize:
-                                "12px",
-                              fontStyle:
-                                "italic",
+                              color: "#9ca3af",
+                              fontSize: "12px",
+                              fontStyle: "italic",
                             }}
                           >
                             Not recorded
@@ -1620,38 +1525,29 @@ const totalAbsent = filteredLogs.filter(
                       </td>
 
                       {/* NOTES */}
-
                       <td
                         style={{
                           padding: "12px",
-                          color:
-                            "#6b7280",
-                          fontSize:
-                            "13px",
+                          color: "#6b7280",
+                          fontSize: "13px",
                         }}
                       >
-                        {log.note ||
-                          "—"}
+                        {log.note || "—"}
                       </td>
 
                       {/* ACTIONS */}
-
                       <td
                         style={{
                           padding: "12px",
-                          textAlign:
-                            "center",
+                          textAlign: "center",
                         }}
                       >
                         {isAutomaticallyAbsent ? (
                           <span
                             style={{
-                              fontSize:
-                                "11px",
-                              color:
-                                "#9f1239",
-                              fontStyle:
-                                "italic",
+                              fontSize: "11px",
+                              color: "#9f1239",
+                              fontStyle: "italic",
                             }}
                           >
                             No record
@@ -1659,142 +1555,74 @@ const totalAbsent = filteredLogs.filter(
                         ) : isEditing ? (
                           <div
                             style={{
-                              display:
-                                "flex",
-                              flexDirection:
-                                "column",
+                              display: "flex",
+                              flexDirection: "column",
                               gap: "6px",
-                              alignItems:
-                                "center",
+                              alignItems: "center",
                             }}
                           >
                             <select
-                              value={
-                                editStatus
-                              }
-                              onChange={(
-                                e
-                              ) =>
-                                setEditStatus(
-                                  e.target
-                                    .value
-                                )
-                              }
+                              value={editStatus}
+                              onChange={(e) => setEditStatus(e.target.value)}
                               style={{
-                                padding:
-                                  "4px 8px",
-                                fontSize:
-                                  "12px",
-                                borderRadius:
-                                  "4px",
-                                border:
-                                  "1px solid #ccc",
+                                padding: "4px 8px",
+                                fontSize: "12px",
+                                borderRadius: "4px",
+                                border: "1px solid #ccc",
                               }}
                             >
-                              <option value="Present">
-                                Present
-                              </option>
-
-                              <option value="Late">
-                                Late
-                              </option>
-
-                              <option value="Excuse">
-                                Excuse
-                              </option>
-
-                              <option value="Leave">
-                                Leave
-                              </option>
-
-                              <option value="Absent">
-                                Absent
-                              </option>
+                              <option value="Present">Present</option>
+                              <option value="Late">Late</option>
+                              <option value="Excuse">Excuse</option>
+                              <option value="Leave">Leave</option>
+                              <option value="Absent">Absent</option>
                             </select>
 
                             <input
                               type="text"
                               placeholder="Add reason note..."
-                              value={
-                                editNote
-                              }
-                              onChange={(
-                                e
-                              ) =>
-                                setEditNote(
-                                  e.target
-                                    .value
-                                )
-                              }
+                              value={editNote}
+                              onChange={(e) => setEditNote(e.target.value)}
                               style={{
-                                padding:
-                                  "4px 8px",
-                                fontSize:
-                                  "11px",
-                                borderRadius:
-                                  "4px",
-                                border:
-                                  "1px solid #ccc",
+                                padding: "4px 8px",
+                                fontSize: "11px",
+                                borderRadius: "4px",
+                                border: "1px solid #ccc",
                               }}
                             />
 
                             <div
                               style={{
-                                display:
-                                  "flex",
+                                display: "flex",
                                 gap: "4px",
                               }}
                             >
                               <button
-                                onClick={() =>
-                                  handleSaveStatusOverride(
-                                    log.id
-                                  )
-                                }
-                                disabled={
-                                  actionLoading
-                                }
+                                onClick={() => handleSaveStatusOverride(log.id)}
+                                disabled={actionLoading}
                                 style={{
-                                  padding:
-                                    "4px 8px",
-                                  backgroundColor:
-                                    "#16a34a",
-                                  color:
-                                    "#fff",
-                                  border:
-                                    "none",
-                                  borderRadius:
-                                    "4px",
-                                  fontSize:
-                                    "11px",
-                                  cursor:
-                                    "pointer",
+                                  padding: "4px 8px",
+                                  backgroundColor: "#16a34a",
+                                  color: "#fff",
+                                  border: "none",
+                                  borderRadius: "4px",
+                                  fontSize: "11px",
+                                  cursor: "pointer",
                                 }}
                               >
                                 Save
                               </button>
 
                               <button
-                                onClick={() =>
-                                  setEditingLogId(
-                                    null
-                                  )
-                                }
+                                onClick={() => setEditingLogId(null)}
                                 style={{
-                                  padding:
-                                    "4px 8px",
-                                  backgroundColor:
-                                    "#9ca3af",
-                                  color:
-                                    "#fff",
-                                  border:
-                                    "none",
-                                  borderRadius:
-                                    "4px",
-                                  fontSize:
-                                    "11px",
-                                  cursor:
-                                    "pointer",
+                                  padding: "4px 8px",
+                                  backgroundColor: "#9ca3af",
+                                  color: "#fff",
+                                  border: "none",
+                                  borderRadius: "4px",
+                                  fontSize: "11px",
+                                  cursor: "pointer",
                                 }}
                               >
                                 Cancel
@@ -1804,95 +1632,59 @@ const totalAbsent = filteredLogs.filter(
                         ) : (
                           <div
                             style={{
-                              display:
-                                "flex",
-                              justifyContent:
-                                "center",
+                              display: "flex",
+                              justifyContent: "center",
                               gap: "6px",
-                              flexWrap:
-                                "wrap",
+                              flexWrap: "wrap",
                             }}
                           >
                             {/* QUICK CLOCK */}
-
                             {!log.clockOutTime && (
                               <button
-                                onClick={() =>
-                                  handleQuickClockAction(
-                                    log
-                                  )
-                                }
-                                disabled={
-                                  actionLoading
-                                }
+                                onClick={() => handleQuickClockAction(log)}
+                                disabled={actionLoading}
                                 title={
                                   !log.clockInTime
                                     ? "Force Clock In"
                                     : "Force Clock Out"
                                 }
                                 style={{
-                                  padding:
-                                    "5px 10px",
-                                  backgroundColor:
-                                    !log.clockInTime
-                                      ? "#059669"
-                                      : "#2563eb",
-                                  color:
-                                    "#fff",
-                                  border:
-                                    "none",
-                                  borderRadius:
-                                    "6px",
-                                  fontSize:
-                                    "12px",
-                                  fontWeight:
-                                    "600",
-                                  cursor:
-                                    "pointer",
+                                  padding: "5px 10px",
+                                  backgroundColor: !log.clockInTime
+                                    ? "#059669"
+                                    : "#2563eb",
+                                  color: "#fff",
+                                  border: "none",
+                                  borderRadius: "6px",
+                                  fontSize: "12px",
+                                  fontWeight: "600",
+                                  cursor: "pointer",
                                 }}
                               >
-                                {!log.clockInTime
-                                  ? "📥 Clock In"
-                                  : "📤 Clock Out"}
+                                {!log.clockInTime ? "📥 Clock In" : "📤 Clock Out"}
                               </button>
                             )}
 
                             {/* DELETE */}
-
-                            
                             <button
                               onClick={() =>
-                                handleDeleteLog(
-                                  log.id,
-                                  log.studentName
-                                )
+                                handleDeleteLog(log.id, log.studentName)
                               }
-                              disabled={
-                                actionLoading
-                              }
+                              disabled={actionLoading}
                               title="Delete Record"
                               style={{
-                                padding:
-                                  "5px 10px",
-                                backgroundColor:
-                                  "#dc2626",
-                                color:
-                                  "#fff",
-                                border:
-                                  "none",
-                                borderRadius:
-                                  "6px",
-                                fontSize:
-                                  "12px",
-                                fontWeight:
-                                  "600",
-                                cursor:
-                                  "pointer",
+                                padding: "5px 10px",
+                                backgroundColor: "#dc2626",
+                                color: "#fff",
+                                border: "none",
+                                borderRadius: "6px",
+                                fontSize: "12px",
+                                fontWeight: "600",
+                                cursor: "pointer",
                               }}
                             >
                               🗑️
                             </button>
-                           
                           </div>
                         )}
                       </td>

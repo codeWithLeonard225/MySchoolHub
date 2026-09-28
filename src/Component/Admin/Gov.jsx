@@ -70,7 +70,7 @@ import StaffAttendanceRecords from "../Staff/StaffAttendanceRecords";
 import StaffPayroll from "../Staff/StaffPayroll";
 import PupilIDCardScan from "../PupilsPage/PupilIDCardScan";
 import PupilAttendanceScanner from "../PupilsPage/PupilAttendanceScannerModelSenior";
-import PupilAttendanceLogs from "../PupilsPage/PupilAttendanceLogs";
+import PupilAttendanceLogs from "../PupilsPage/PupilAttendanceLogsAdmin";
 import PupilIDCardBack from "../PupilsPage/PupilIDCardBack";
 import ManualAttendance from "../PupilsPage/ManualAttendanceFormMasterGMSS";
 import PupilPhotoManager from "../Voters/PupilPhotoManager";

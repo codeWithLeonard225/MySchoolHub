@@ -72,7 +72,7 @@ import PupilIDCardScan from "../PupilsPage/PupilIDCardScan";
 import PupilAttendanceScanner from "../PupilsPage/PupilAttendanceScannerModelSenior";
 import PupilAttendanceLogs from "../PupilsPage/PupilAttendanceLogs";
 import PupilIDCardBack from "../PupilsPage/PupilIDCardBack";
-import ManualAttendance from "../PupilsPage/ManualAttendanceFormMaster";
+import ManualAttendance from "../PupilsPage/ManualAttendanceFormMasterGMSS";
 import PupilPhotoManager from "../Voters/PupilPhotoManager";
 import PupilPhotoEditor from "../Voters/PupilPhotoEditor";
 import TeacherPhotoEditor from "../Voters/TeacherPhotoEditor";

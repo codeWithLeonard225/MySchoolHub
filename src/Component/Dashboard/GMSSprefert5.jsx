@@ -20,7 +20,7 @@ import {
     MdRemoveCircle,
 } from "react-icons/md";
 // import JSS1periodAtt from "../TeacherAssignment/JSS1periodAtt";
-import ManualAttendance from "../PupilsPage/ManualAttendance"
+import ManualAttendance from "../PupilsPage/ManualAttendanceGMSS"
 import PupilAttendanceScannerModelSenior from "../PupilsPage/PupilAttendanceScannerModelSenior"
 
 

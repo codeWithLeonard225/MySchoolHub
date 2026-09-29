@@ -127,8 +127,8 @@ const ManualAttendance = () => {
         const totalMinutes = hours * 60 + minutes;
 
       const ATTENDANCE_START = 11 * 60;       // 11:00 PM
-const PRESENT_END = 14 * 60 + 30;       // 2:30 PM
-const LATE_END = 15 * 60 + 30;          // 3:30 PM
+const PRESENT_END = 14 * 60 + 40;       // 2:40 PM
+const LATE_END = 15 * 60 + 40;          // 3:40 PM
 const ABSENT_END = 17 * 60 + 55;        // 5:55 PM
 
         if (totalMinutes < ATTENDANCE_START) {

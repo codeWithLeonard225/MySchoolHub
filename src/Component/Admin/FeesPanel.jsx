@@ -24,6 +24,8 @@ import ClassRegistration from "./ClassRegistration";
 import FeeReceipt from "../FeeReceipt.jsx/FeeReceipt";
 import FeesCostPage from "../FeeReceipt.jsx/FeesCostPage";
 import FeesDashboard from "../Dashboard/FeesDsahboard";
+import GradeADashboard from "../PupilsPage/GradeADashboard";
+import ResultDashboard from "../PupilsPage/ResultDashboard";
 import SubjectPage from "../SubjectPage/SubjectPage";
 import TeacherAssignmentPage from "../TeacherAssignment/TeacherAssignmentPage";
 import TeacherRegistration from "../Voters/TeacherRegistration";
@@ -71,6 +73,19 @@ import PupilAttendanceLogs from "../PupilsPage/PupilAttendanceLogs";
 
 // --- Navigation Items ---
 const NAV_ITEMS = [
+
+       {
+      key: "GradeADashboard",
+      label: "Grade A Pupils",
+      icon: <MdWarning />, // 📖
+    },
+     {
+      key: "ResultDashboard",
+      label: "Results Dashboard",
+      icon: <MdWarning />, // 📖
+    },
+
+
   {
     key: "forms",
     label: "Registeration",
@@ -272,6 +287,8 @@ function FeesPanel() {
   const renderContent = () => {
     switch (activeTab) {
       case "dashboard": return <RegDashboard />;
+         case "GradeADashboard": return <GradeADashboard />;
+      case "ResultDashboard": return <ResultDashboard />;
       case "Form": return <Registration />;
       case "class": return <ClassRegistration />;
       case "classList": return <StudentFilterPage />;

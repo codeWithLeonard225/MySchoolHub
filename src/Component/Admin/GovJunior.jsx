@@ -24,6 +24,8 @@ import Testing from "./Testing";
 import FeeReceipt from "../FeeReceipt.jsx/FeeReceipt";
 import FeesCostPage from "../FeeReceipt.jsx/FeesCostPage";
 import FeesDashboard from "../Dashboard/FeesDsahboard";
+import GradeADashboard from "../PupilsPage/GradeADashboard";
+import ResultDashboard from "../PupilsPage/ResultDashboard";
 import SubjectPage from "../SubjectPage/SubjectPage";
 import TeacherAssignmentPage from "../TeacherAssignment/TeacherAssignmentPage";
 import TeacherRegistration from "../Voters/TeacherRegistration";
@@ -84,6 +86,17 @@ const NAV_ITEMS = [
       {
       key: "AttendanceDashboard",
       label: "Attendance Dashboard",
+      icon: <MdWarning />, // 📖
+    },
+
+         {
+      key: "GradeADashboard",
+      label: "Grade A Pupils",
+      icon: <MdWarning />, // 📖
+    },
+     {
+      key: "ResultDashboard",
+      label: "Results Dashboard",
       icon: <MdWarning />, // 📖
     },
   
@@ -267,6 +280,8 @@ function Gov() {
   const renderContent = () => {
     switch (activeTab) {
       case "dashboard": return <RegDashboard />;
+         case "GradeADashboard": return <GradeADashboard />;
+      case "ResultDashboard": return <ResultDashboard />;
       case "Form": return <Registration />;
       case "WASCEForm": return <WASCEForm />;
       case "SchoolRegistration": return <SchoolRegistration />;

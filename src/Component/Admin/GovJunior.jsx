@@ -78,6 +78,8 @@ import PupilPhotoEditor from "../Voters/PupilPhotoEditor";
 import TeacherPhotoEditor from "../Voters/TeacherPhotoEditor";
 import TeacherPhotoManager from "../Voters/TeacherPhotoManager";
 import AttendanceDashboard from "../Dashboard/AttendanceDashboard";
+import StaffAttendanceReport from "../Staff/StaffAttendanceReport";
+import AttendanceReport from "../Dashboard/AttendanceReports";
 
 
 
@@ -88,12 +90,21 @@ const NAV_ITEMS = [
       label: "Attendance Dashboard",
       icon: <MdWarning />, // 📖
     },
+       {
+        key: "attendanceReport",
+        label: "Attendance Report",
+        icon: <MdEdit />,
+        children: [
+          { key: "AttendanceReport", label: " Pupils Attendance", icon: <MdPerson /> },
+          { key: "StaffAttendanceReport", label: " Staff Attendance", icon: <MdPerson /> },
+        ],
+      },
 
-         {
-      key: "GradeADashboard",
-      label: "Grade A Pupils",
-      icon: <MdWarning />, // 📖
-    },
+    //      {
+    //   key: "GradeADashboard",
+    //   label: "Grade A Pupils",
+    //   icon: <MdWarning />, // 📖
+    // },
      {
       key: "ResultDashboard",
       label: "Results Dashboard",
@@ -280,6 +291,8 @@ function Gov() {
   const renderContent = () => {
     switch (activeTab) {
       case "dashboard": return <RegDashboard />;
+          case "AttendanceReport": return <AttendanceReport />;
+        case "StaffAttendanceReport": return <StaffAttendanceReport />;
          case "GradeADashboard": return <GradeADashboard />;
       case "ResultDashboard": return <ResultDashboard />;
       case "Form": return <Registration />;

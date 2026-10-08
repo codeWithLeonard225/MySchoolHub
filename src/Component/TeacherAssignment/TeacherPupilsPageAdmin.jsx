@@ -227,63 +227,107 @@ const GradesAuditPage = () => {
         return currentGrades[pupilID]?.grade || "";
     };
 
-    // --- 6️⃣ Admin action (update/add/delete) ---
-    const handleAdminAction = async (pupilID) => {
-        setSubmitting(true);
-        const gradeData = currentGrades[pupilID];
-        const newGradeValue = updatedGrades[pupilID];
+// --- 6️⃣ Admin action (update/add/delete) ---
+const handleAdminAction = async (pupilID) => {
+    setSubmitting(true);
 
-        try {
-            if (gradeData && newGradeValue === null) {
-                if (!window.confirm(`Delete grade for ${pupilID}?`)) { setSubmitting(false); return; }
-                await deleteDoc(doc(schooldb, "PupilGrades", gradeData.docId));
-                alert(`Grade for ${pupilID} deleted`);
-            } else if (typeof newGradeValue === 'number' && !isNaN(newGradeValue)) {
-                if (gradeData) {
-                    if (!window.confirm(`Update grade for ${pupilID}?`)) { setSubmitting(false); return; }
-                    await setDoc(doc(schooldb, "PupilGrades", gradeData.docId), {
-                        grade: newGradeValue,
-                        lastModifiedByAdmin: serverTimestamp(),
-                    }, { merge: true });
-                    alert(`Grade for ${pupilID} updated`);
-                } else {
-                    if (!window.confirm(`Add new grade for ${pupilID}?`)) { setSubmitting(false); return; }
-                    const docRef = doc(collection(schooldb, "PupilGrades"));
-                    await setDoc(docRef, {
-                        pupilID,
-                        className: selectedClass,
-                        subject: selectedSubject,
-                        teacher: "Admin Override",
-                        grade: newGradeValue,
-                        test: selectedTest,
-                        academicYear,
-                        schoolId,
-                        timestamp: serverTimestamp(),
-                        lastModifiedByAdmin: serverTimestamp(),
-                    });
-                    alert(`New grade for ${pupilID} added`);
-                }
-            } else {
-                alert("No valid change detected");
-                setSubmitting(false); 
+    const gradeData = currentGrades[pupilID];
+    const newGradeValue = updatedGrades[pupilID];
+
+    // Find the pupil from the pupils already loaded from PupilsReg
+    const pupil = pupils.find((p) => p.studentID === pupilID);
+
+    try {
+        if (gradeData && newGradeValue === null) {
+            if (!window.confirm(`Delete grade for ${pupilID}?`)) {
+                setSubmitting(false);
                 return;
             }
 
-            // Refresh grades
-            await fetchGrades();
-        } catch (err) {
-            console.error(err);
-            alert("Error performing action");
-        } finally {
+            await deleteDoc(
+                doc(schooldb, "PupilGrades", gradeData.docId)
+            );
+
+            alert(`Grade for ${pupilID} deleted`);
+
+        } else if (
+            typeof newGradeValue === "number" &&
+            !isNaN(newGradeValue)
+        ) {
+            if (gradeData) {
+                if (!window.confirm(`Update grade for ${pupilID}?`)) {
+                    setSubmitting(false);
+                    return;
+                }
+
+                await setDoc(
+                    doc(schooldb, "PupilGrades", gradeData.docId),
+                    {
+                        grade: newGradeValue,
+                        pupilName: pupil?.studentName || "",
+                        lastModifiedByAdmin: serverTimestamp(),
+                    },
+                    { merge: true }
+                );
+
+                alert(`Grade for ${pupilID} updated`);
+
+            } else {
+                if (!window.confirm(`Add new grade for ${pupilID}?`)) {
+                    setSubmitting(false);
+                    return;
+                }
+
+                const docRef = doc(
+                    collection(schooldb, "PupilGrades")
+                );
+
+                await setDoc(docRef, {
+                    pupilID,
+                    pupilName: pupil?.studentName || "",
+                    className: selectedClass,
+                    subject: selectedSubject,
+                    teacher: "Admin Override",
+                    grade: newGradeValue,
+                    test: selectedTest,
+                    academicYear,
+                    schoolId,
+                    timestamp: serverTimestamp(),
+                    lastModifiedByAdmin: serverTimestamp(),
+                });
+
+                alert(`New grade for ${pupilID} added`);
+            }
+
+        } else {
+            alert("No valid change detected");
             setSubmitting(false);
-            setUpdatedGrades(prev => {
-                const newState = { ...prev };
-                delete newState[pupilID];
-                gradesStore.setItem("pendingUpdates", newState).catch(err => console.error(err));
-                return newState;
-            });
+            return;
         }
-    };
+
+        // Refresh grades
+        await fetchGrades();
+
+    } catch (err) {
+        console.error(err);
+        alert("Error performing action");
+
+    } finally {
+        setSubmitting(false);
+
+        setUpdatedGrades((prev) => {
+            const newState = { ...prev };
+            delete newState[pupilID];
+
+            gradesStore
+                .setItem("pendingUpdates", newState)
+                .catch((err) => console.error(err));
+
+            return newState;
+        });
+    }
+};
+
 
     // --- 7️⃣ Download PDF ---
     const handleDownloadPDF = () => {

@@ -26,7 +26,6 @@ import FeesCostPage from "../FeeReceipt.jsx/FeesCostPage";
 import FeesDashboard from "../Dashboard/FeesDsahboard";
 import GradeADashboard from "../PupilsPage/GradeADashboard";
 import ResultDashboard from "../PupilsPage/ResultDashboard";
-import AttendanceDashboard from "../Dashboard/AttendanceDashboard";
 import SubjectPage from "../SubjectPage/SubjectPage";
 import TeacherAssignmentPage from "../TeacherAssignment/TeacherAssignmentPage";
 import TeacherRegistration from "../Voters/TeacherRegistration";
@@ -70,6 +69,9 @@ import StaffIDCardBack from "../Staff/StaffIDCardBack";
 import StaffAttendanceScanner from "../Staff/StaffAttendanceScannerModelSecondary";
 import StaffAttendanceRecords from "../Staff/StaffAttendanceRecords";
 import StaffPayroll from "../Staff/StaffPayroll";
+import StaffAttendanceReport from "../Staff/StaffAttendanceReport";
+import AttendanceReport from "../Dashboard/AttendanceReports";
+import AttendanceDashboard from "../Dashboard/AttendanceDashboard";
 import PupilIDCardScan from "../PupilsPage/PupilIDCardScan";
 import PupilAttendanceScanner from "../PupilsPage/PupilAttendanceScannerModelSenior";
 import PupilAttendanceLogs from "../PupilsPage/PupilAttendanceLogsAdmin";
@@ -89,12 +91,21 @@ const NAV_ITEMS = [
     label: "Attendance Dashboard",
     icon: <MdWarning />, // 📖
   },
+   {
+    key: "attendanceReport",
+    label: "Attendance Report",
+    icon: <MdEdit />,
+    children: [
+      { key: "AttendanceReport", label: " Pupils Attendance", icon: <MdPerson /> },
+      { key: "StaffAttendanceReport", label: " Staff Attendance", icon: <MdPerson /> },
+    ],
+  },
 
-       {
-      key: "GradeADashboard",
-      label: "Grade A Pupils",
-      icon: <MdWarning />, // 📖
-    },
+    //    {
+    //   key: "GradeADashboard",
+    //   label: "Grade A Pupils",
+    //   icon: <MdWarning />, // 📖
+    // },
      {
       key: "ResultDashboard",
       label: "Results Dashboard",
@@ -139,7 +150,7 @@ const NAV_ITEMS = [
     children: [
       // { key: "GradeSheetPage", label: "Test Grade Sheet", icon: <MdPerson /> },
       { key: "TeacherPupilsPageAdmin", label: "TeacherPupilsGrade", icon: <MdPerson /> },
-      { key: "BulkDeleteGradesPage", label: "BulkDeleteGradesPage", icon: <MdPerson /> },
+      // { key: "BulkDeleteGradesPage", label: "BulkDeleteGradesPage", icon: <MdPerson /> },
       { key: "SubGradeMatrixPage", label: "Sub Grade Sheet", icon: <MdPerson /> },
       { key: "ClassFullTermMatrixPage", label: "Term Grade Sheet", icon: <MdPerson /> },
       { key: "ReportCardTermly", label: "ReportCard Termly", icon: <MdPerson /> },
@@ -278,6 +289,9 @@ function Gov() {
   const renderContent = () => {
     switch (activeTab) {
       case "dashboard": return <RegDashboard />;
+      case "AttendanceDashboard": return <AttendanceDashboard />;
+      case "AttendanceReport": return <AttendanceReport />;
+        case "StaffAttendanceReport": return <StaffAttendanceReport />;
          case "GradeADashboard": return <GradeADashboard />;
       case "ResultDashboard": return <ResultDashboard />;
       case "Form": return <Registration />;
@@ -325,11 +339,11 @@ function Gov() {
       case "StaffAttendanceScanner": return <StaffAttendanceScanner />;
       case "StaffPayroll": return <StaffPayroll />;
       case "StaffAttendanceRecords": return <StaffAttendanceRecords />;
+    
       case "PupilIDCardScan": return <PupilIDCardScan />;
       case "PupilAttendanceScanner": return <PupilAttendanceScanner />;
       case "PupilAttendanceLogs": return <PupilAttendanceLogs />;
       case "PupilIDCardBack": return <PupilIDCardBack />;
-      case "AttendanceDashboard": return <AttendanceDashboard />;
       case "ManualAttendance": return <ManualAttendance />;
       case "TeacherPhotoManager": return <TeacherPhotoManager />;
       case "TeacherPhotoEditor": return <TeacherPhotoEditor />;

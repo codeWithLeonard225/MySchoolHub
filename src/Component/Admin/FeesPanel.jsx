@@ -67,6 +67,8 @@ import StaffAttendanceRecords from "../Staff/StaffAttendanceRecords";
 import PupilIDCardScan from "../PupilsPage/PupilIDCardScan";
 import PupilAttendanceScanner from "../PupilsPage/PupilAttendanceScanner";
 import PupilAttendanceLogs from "../PupilsPage/PupilAttendanceLogs";
+import StaffAttendanceReport from "../Staff/StaffAttendanceReport";
+import AttendanceReport from "../Dashboard/AttendanceReports";
 
 
 
@@ -79,6 +81,15 @@ const NAV_ITEMS = [
       label: "Grade A Pupils",
       icon: <MdWarning />, // 📖
     },
+       {
+        key: "attendanceReport",
+        label: "Attendance Report",
+        icon: <MdEdit />,
+        children: [
+          { key: "AttendanceReport", label: " Pupils Attendance", icon: <MdPerson /> },
+          { key: "StaffAttendanceReport", label: " Staff Attendance", icon: <MdPerson /> },
+        ],
+      },
      {
       key: "ResultDashboard",
       label: "Results Dashboard",
@@ -155,18 +166,7 @@ const NAV_ITEMS = [
 
     ],
   },
-  {
-    key: "idcards",
-    label: "Pupils ID Cards",
-    icon: <MdBarChart />,
-    children: [
-      { key: "PupilIDCard", label: "PupilIDCard", icon: <MdPerson /> },
-      { key: "IDCardPage", label: "IDCardPage", icon: <MdPerson /> },
 
-      // { key: "Testing", label: "Testing", icon: <MdPerson /> },
-
-    ],
-  },
   {
     key: "qrcode-Pupil",
     label: "Qr code Attendance-Pupil",
@@ -186,17 +186,6 @@ const NAV_ITEMS = [
       { key: "StaffAttendanceScanner", label: "Staff Attendance Scanner", icon: <MdPerson /> },
       { key: "StaffAttendanceRecords", label: "Staff Attendance Records", icon: <MdPerson /> },
     ],
-  },
-
-  {
-    key: "pupilAttendance",
-    label: "Pupil Attendance",
-    icon: <MdWarning />, // 📖
-  },
-  {
-    key: "staffAttendance",
-    label: "Staff Attendance",
-    icon: <MdWarning />, // 📖
   },
   {
     key: "timetable",
@@ -287,6 +276,8 @@ function FeesPanel() {
   const renderContent = () => {
     switch (activeTab) {
       case "dashboard": return <RegDashboard />;
+          case "AttendanceReport": return <AttendanceReport />;
+        case "StaffAttendanceReport": return <StaffAttendanceReport />;
          case "GradeADashboard": return <GradeADashboard />;
       case "ResultDashboard": return <ResultDashboard />;
       case "Form": return <Registration />;

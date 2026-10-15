@@ -71,7 +71,7 @@ import StaffPayroll from "../Staff/StaffPayroll";
 import PupilIDCardScan from "../PupilsPage/PupilIDCardScanModelJunior";
 import PupilAttendanceScanner from "../PupilsPage/PupilAttendanceScannerModelJunior";
 import PupilAttendanceLogs from "../PupilsPage/PupilAttendanceLogsAdmin";
-import PupilIDCardBack from "../PupilsPage/PupilIDCardScanModelJunior";
+import PupilIDCardBack from "../PupilsPage/PupilIDCardBackModelJunior";
 import ManualAttendance from "../PupilsPage/ManualAttendanceFormMasterGMJS";
 import PupilPhotoManager from "../Voters/PupilPhotoManager";
 import PupilPhotoEditor from "../Voters/PupilPhotoEditor";
@@ -161,25 +161,25 @@ const NAV_ITEMS = [
     ],
   },
 
-    {
-    key: "editPhotos",
-    label: "Edit id card photos",
-    icon: <MdBarChart />,
-    children: [
-      { key: "TeacherPhotoManager", label: "Teacher Zoom & Crop", icon: <MdPerson /> },
-      { key: "TeacherPhotoEditor", label: "Remove Bg", icon: <MdPerson /> },
-      { key: "PupilPhotoManager", label: "Pupil Zoom & Crop", icon: <MdPerson /> },
-      { key: "PupilPhotoEditor", label: "Remove Bg pupil", icon: <MdPerson /> },
-    ],
-  },
+  //   {
+  //   key: "editPhotos",
+  //   label: "Edit id card photos",
+  //   icon: <MdBarChart />,
+  //   children: [
+  //     { key: "TeacherPhotoManager", label: "Teacher Zoom & Crop", icon: <MdPerson /> },
+  //     { key: "TeacherPhotoEditor", label: "Remove Bg", icon: <MdPerson /> },
+  //     { key: "PupilPhotoManager", label: "Pupil Zoom & Crop", icon: <MdPerson /> },
+  //     { key: "PupilPhotoEditor", label: "Remove Bg pupil", icon: <MdPerson /> },
+  //   ],
+  // },
 
    {
     key: "qrcode-Pupil",
     label: "Qr code Attendance-Pupil",
     icon: <MdBarChart />,
     children: [
-      // { key: "PupilIDCardScan", label: "Pupil Card Scan", icon: <MdPerson /> },
-      // { key: "PupilIDCardBack", label: "Pupil Card Back", icon: <MdPerson /> },
+      { key: "PupilIDCardScan", label: "Pupil Card Scan", icon: <MdPerson /> },
+      { key: "PupilIDCardBack", label: "Pupil Card Back", icon: <MdPerson /> },
       { key: "PupilAttendanceScanner", label: "Attendance Scanner", icon: <MdPerson /> },
       { key: "ManualAttendance", label: "Manual Attendance", icon: <MdPerson /> },
       { key: "PupilAttendanceLogs", label: "Pupil Attendance Logs", icon: <MdPerson /> },

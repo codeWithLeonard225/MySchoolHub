@@ -4,8 +4,8 @@ import React, { useState } from "react";
 import { toast } from "react-toastify";
 import imageCompression from "browser-image-compression";
 
-const CLOUD_NAME = "dxcrlpike";
-const UPLOAD_PRESET = "LeoTechSl Projects";
+const CLOUD_NAME = "dyt1xzrcv";  // leonardskargbo@gmail.com
+const UPLOAD_PRESET = "firstTime";
 
 const MAX_FILE_SIZE_MB = 5;
 

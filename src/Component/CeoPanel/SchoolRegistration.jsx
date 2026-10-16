@@ -13,8 +13,8 @@ import { v4 as uuidv4 } from "uuid";
 import CloudinaryImageUploader from "../CaptureCamera/CloudinaryImageUploader";
 import CameraCapture from "../CaptureCamera/CameraCapture";
 
-const CLOUD_NAME = "doucdnzij";
-const UPLOAD_PRESET = "Nardone";
+const CLOUD_NAME = "dyt1xzrcv";  // leonardskargbo@gmail.com
+const UPLOAD_PRESET = "firstTime";
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
 
 const SchoolRegistration = () => {

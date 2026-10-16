@@ -1,8 +1,11 @@
 import React, { useState, useEffect, useMemo } from "react";
-import CameraCapture from "../CaptureCamera/CameraCapture";
-import CloudinaryImageUploader from "../CaptureCamera/CloudinaryImageUploader";
+import CameraCapture from "../CaptureCameraYahweh/CameraCapture";
+import CloudinaryImageUploader from "../CaptureCameraYahweh/CloudinaryImageUploader";
 import { toast } from "react-toastify";
 import { db } from "../../../firebase";
+import { pupilLoginFetch } from "../Database/PupilLogin";
+
+
 import {
     collection,
     addDoc,
@@ -11,7 +14,8 @@ import {
     updateDoc,
     query,
     onSnapshot,
-    where
+    where,
+    setDoc,
 } from "firebase/firestore";
 import { v4 as uuidv4 } from "uuid";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -20,8 +24,8 @@ import { useAuth } from "../Security/AuthContext";
 import localforage from "localforage";
 
 // Cloudinary config
-const CLOUD_NAME = "dxcrlpike";
-const UPLOAD_PRESET = "LeoTechSl Projects";
+const CLOUD_NAME = "dyt1xzrcv";  // leonardskargbo@gmail.com
+const UPLOAD_PRESET = "firstTime";
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
 
 // Define your admin password. For a real app, this should be in an environment variable.
@@ -61,14 +65,22 @@ const Registration = () => {
         id: null,
         studentID: uuidv4().slice(0, 8),
         studentName: "",
+        registrationFormNo: "",
+        majorIllness: "",
+        minorIllness: "",
+        previousSchool: "",
         dob: "",
         age: "",
         gender: "",
+        // NEW
+        religion: "",
+        tribe: "",
         addressLine1: "",
         addressLine2: "",
         parentName: "",
         parentPhone: "",
         class: "",
+        feesCategory: "Continue", // NEW FIELD
         academicYear: "",
         registrationDate: new Date().toISOString().slice(0, 10),
         registeredBy: "",
@@ -143,7 +155,7 @@ const Registration = () => {
             }
 
             // 2. Set up Firestore Listener for real-time updates
-            const collectionRef = collection(db, "PupilsReg");
+            const collectionRef = collection(pupilLoginFetch, "PupilsReg");
 
             // This query FILTERS the data by schoolId on the Firestore server
             const q = query(collectionRef, where("schoolId", "==", currentSchoolId));
@@ -257,7 +269,6 @@ const Registration = () => {
     const handleClassFilterChange = (className) => {
         setCurrentFilter(prev => ({ ...prev, class: className }));
     };
-
     const handleAcademicYearFilterChange = (academicYear) => {
         setCurrentFilter(prev => ({
             ...prev,
@@ -294,7 +305,6 @@ const Registration = () => {
                 user => user.academicYear === currentFilter.academicYear
             );
         }
-
         // 3. Filter by Search Term
         if (lowerCaseSearchTerm.trim() !== "") {
             filtered = filtered.filter(user => {
@@ -327,103 +337,8 @@ const Registration = () => {
         return newId;
     };
 
-    useEffect(() => {
-        if (!formData.id) {
-            setFormData((prev) => ({ ...prev, studentID: generateUniqueId() }));
-        }
-    }, [users, formData.id]);
+   
 
-
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        // ✅ Custom validation
-        if (!formData.studentName.trim()) {
-            toast.error("Student name is required.");
-            return;
-        }
-        if (!formData.class.trim()) {
-            toast.error("Class is required.");
-            return;
-        }
-        if (!formData.academicYear.trim()) {
-            toast.error("Academic year is required.");
-            return;
-        }
-        if (!formData.pupilType.trim()) {
-            toast.error("Pupil type is required.");
-            return;
-        }
-
-
-        setIsSubmitting(true);
-        try {
-            const studentData = {
-                studentID: formData.studentID,
-                studentName: formData.studentName.toUpperCase().trim(),
-                dob: formData.dob,
-                age: formData.age,
-                gender: formData.gender,
-                addressLine1: formData.addressLine1,
-                addressLine2: formData.addressLine2,
-                parentName: formData.parentName,
-                parentPhone: formData.parentPhone,
-                class: formData.class,
-                academicYear: formData.academicYear,
-                registrationDate: formData.registrationDate,
-                registeredBy: formData.registeredBy,
-                userPhotoUrl: formData.userPhoto,
-                userPublicId: formData.userPublicId,
-                pupilType: formData.pupilType, // ✅ NEW FIELD
-                schoolId: formData.schoolId,
-            };
-
-            if (formData.id) {
-                const userRef = doc(db, "PupilsReg", formData.id);
-                await updateDoc(userRef, studentData);
-                toast.success("Student updated successfully!");
-            } else {
-                const uniqueId = generateUniqueId();
-                await addDoc(collection(db, "PupilsReg"), {
-                    ...studentData,
-                    studentID: uniqueId,
-                    timestamp: new Date(),
-                });
-                toast.success("Student registered successfully!");
-            }
-
-            // Reset form data after submission
-            setFormData({
-                id: null,
-                studentID: generateUniqueId(),
-                studentName: "",
-                dob: "",
-                age: "",
-                gender: "",
-                addressLine1: "",
-                addressLine2: "",
-                parentName: "",
-                parentPhone: "",
-                class: "",
-                academicYear: "",
-                // Set pupilType to the first available option, or empty if none are fetched
-                pupilType: accessTypeOptions.length > 0 ? accessTypeOptions[0] : "",
-                registrationDate: new Date().toISOString().slice(0, 10),
-                registeredBy: user?.data?.adminID || user?.data?.teacherID || "",
-                userPhoto: null,
-                userPublicId: null,
-                schoolId: currentSchoolId, // Use the current consolidated schoolId
-            });
-            // Reset state that controls the default setting
-            setHasSetDefaultType(false);
-            // Clear original academic info state on form reset
-            setOriginalAcademicInfo(null);
-        } catch (err) {
-            console.error(err);
-            toast.error(`Failed to ${formData.id ? "update" : "register"} student.`);
-        } finally {
-            setIsSubmitting(false);
-        }
-    };
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
@@ -431,30 +346,32 @@ const Registration = () => {
     };
 
     const handleUploadSuccess = (url, publicId) => {
-    console.log("PUPIL PHOTO URL:", url);
-    console.log("PUPIL PHOTO PUBLIC ID:", publicId);
+        console.log("PUPIL PHOTO URL:", url);
+        console.log("PUPIL PHOTO PUBLIC ID:", publicId);
 
-    if (!url) {
-        console.error("No Cloudinary URL received.");
-        toast.error("Photo uploaded but no image URL was returned.");
-        return;
-    }
+        if (!url) {
+            console.error("No Cloudinary URL received.");
+            toast.error("Photo uploaded but no image URL was returned.");
+            return;
+        }
 
-    setFormData((prev) => ({
-        ...prev,
-        userPhoto: url,
-        userPublicId: publicId,
-    }));
+        setFormData((prev) => ({
+            ...prev,
+            userPhoto: url,
+            userPublicId: publicId,
+        }));
 
-    toast.success("Pupil photo uploaded successfully!");
-};
+        toast.success("Pupil photo uploaded successfully!");
+    };
 
     const handleCameraCapture = async (base64Data) => {
         setIsUploading(true);
         setUploadProgress(0);
+
         try {
             const res = await fetch(base64Data);
             const blob = await res.blob();
+
             if (blob.size > MAX_FILE_SIZE) {
                 toast.error("Image is too large. Max size is 5MB.");
                 setIsUploading(false);
@@ -462,6 +379,7 @@ const Registration = () => {
             }
 
             const xhr = new XMLHttpRequest();
+
             xhr.upload.addEventListener("progress", (e) => {
                 if (e.lengthComputable) {
                     setUploadProgress(Math.round((e.loaded * 100) / e.total));
@@ -481,13 +399,16 @@ const Registration = () => {
                 }
             };
 
+           const folderName = `SchoolAppPupils/${formData.schoolId || "UnknownSchool"}/${formData.class || "UnassignedClass"}/${formData.studentID || "UnknownPupil"}`;
+
             const formDataObj = new FormData();
             formDataObj.append("file", blob);
             formDataObj.append("upload_preset", UPLOAD_PRESET);
-            formDataObj.append("folder", "SchoolAppPupils/Uploads");
+            formDataObj.append("folder", folderName);
 
             xhr.open("POST", `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`);
             xhr.send(formDataObj);
+
         } catch (err) {
             console.error("Camera upload failed:", err);
             toast.error("Failed to upload image from camera.");
@@ -496,6 +417,152 @@ const Registration = () => {
         }
     };
 
+
+
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+
+        // -------------------------
+        // VALIDATION
+        // -------------------------
+        if (!formData.studentName.trim()) return toast.error("Student name is required.");
+        if (!formData.class.trim()) return toast.error("Class is required.");
+        if (!formData.academicYear.trim()) return toast.error("Academic year is required.");
+        if (!formData.pupilType.trim()) return toast.error("Pupil type is required.");
+        if (!formData.feesCategory.trim()) return toast.error("Fees category is required.");
+
+        setIsSubmitting(true);
+
+        try {
+            // -------------------------
+            // PREPARE STUDENT DATA
+            // -------------------------
+            const studentData = {
+                studentID: formData.studentID,
+                studentName: formData.studentName.toUpperCase().trim(),
+                registrationFormNo: formData.registrationFormNo.trim(),
+                majorIllness: formData.majorIllness.trim(),
+                minorIllness: formData.minorIllness.trim(),
+                previousSchool: formData.previousSchool.trim(),
+                dob: formData.dob,
+                age: formData.age,
+                gender: formData.gender,
+                // NEW
+                religion: formData.religion,
+                tribe: formData.tribe,
+                addressLine1: formData.addressLine1,
+                addressLine2: formData.addressLine2,
+                parentName: formData.parentName,
+                parentPhone: formData.parentPhone,
+                class: formData.class,
+                feesCategory: formData.feesCategory,
+                academicYear: formData.academicYear,
+                registrationDate: formData.registrationDate,
+                registeredBy: formData.registeredBy,
+                userPhotoUrl: formData.userPhoto,
+                userPublicId: formData.userPublicId,
+                pupilType: formData.pupilType,
+                schoolId: formData.schoolId,
+            };
+
+            // -------------------------
+            // IF UPDATING EXISTING STUDENT
+            // -------------------------
+            if (formData.id) {
+                const mainRef = doc(db, "PupilsReg", formData.id);
+                const loginRef = doc(pupilLoginFetch, "PupilsReg", formData.id);
+
+                await updateDoc(mainRef, studentData);
+                await updateDoc(loginRef, studentData);
+
+                toast.success("Student updated successfully!");
+            }
+
+            // -------------------------
+            // IF CREATING NEW STUDENT
+            // -------------------------
+            else {
+    // Keep the same ID used when uploading the pupil's photo.
+    const finalData = {
+        ...studentData,
+        timestamp: new Date(),
+    };
+
+    // 1. Create in MAIN database
+    const docRef = await addDoc(
+        collection(db, "PupilsReg"),
+        finalData
+    );
+
+    // 2. Mirror in LOGIN database
+    await setDoc(
+        doc(pupilLoginFetch, "PupilsReg", docRef.id),
+        finalData
+    );
+
+    toast.success("Student registered successfully!");
+}
+
+            // -------------------------
+            // RESET FORM
+            // -------------------------
+            setFormData({
+                id: null,
+                studentID: generateUniqueId(),
+                registrationFormNo: "",
+                studentName: "",
+                majorIllness: "",
+                minorIllness: "",
+                previousSchool: "",
+                dob: "",
+                age: "",
+                gender: "",
+                religion: "",
+                tribe: "",
+                addressLine1: "",
+                addressLine2: "",
+                parentName: "",
+                parentPhone: "",
+                class: "",
+                academicYear: "",
+                pupilType: accessTypeOptions.length > 0 ? accessTypeOptions[0] : "",
+                registrationDate: new Date().toISOString().slice(0, 10),
+                registeredBy: user?.data?.adminID || user?.data?.teacherID || "",
+                userPhoto: null,
+                userPublicId: null,
+                feesCategory: "",
+                schoolId: currentSchoolId,
+            });
+
+            setHasSetDefaultType(false);
+            setOriginalAcademicInfo(null);
+
+        } catch (err) {
+            console.error(err);
+            toast.error(`Failed to ${formData.id ? "update" : "register"} student.`);
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    const handleDelete = async (id, studentName) => {
+        const password = window.prompt("Enter the password to delete this user:");
+        if (password === ADMIN_PASSWORD) {
+            if (window.confirm(`Are you sure you want to delete student: ${studentName}?`)) {
+                try {
+                    await deleteDoc(doc(db, "PupilsReg", id));
+                    await deleteDoc(doc(pupilLoginFetch, "PupilsReg", id));
+                    toast.success("Student deleted successfully!");
+                } catch (err) {
+                    console.error("Failed to delete user:", err);
+                    toast.error("Failed to delete user.");
+                }
+            }
+        } else if (password !== null) {
+            toast.error("Incorrect password.");
+        }
+    };
 
 
     const handleUpdate = (user) => {
@@ -510,9 +577,15 @@ const Registration = () => {
         setFormData({
             id: user.id,
             studentID: user.studentID,
+            registrationFormNo: user.registrationFormNo || "",
             studentName: user.studentName,
+            majorIllness: user.majorIllness || "",
+            minorIllness: user.minorIllness || "",
+            previousSchool: user.previousSchool || "",
             dob: user.dob || "",
             age: user.age || "",
+            religion: user.religion || "",
+            tribe: user.tribe || "",
             gender: user.gender || "",
             addressLine1: user.addressLine1 || "",
             addressLine2: user.addressLine2 || "",
@@ -525,27 +598,13 @@ const Registration = () => {
             userPhoto: user.userPhotoUrl,
             userPublicId: user.userPublicId,
             schoolId: user.schoolId || "",
+            feesCategory: user.feesCategory || "",
             pupilType: user.pupilType || "", // ✅ Added pupilType
         });
         toast.info(`Editing student: ${user.studentName}`);
     };
 
-    const handleDelete = async (id, studentName) => {
-        const password = window.prompt("Enter the password to delete this user:");
-        if (password === ADMIN_PASSWORD) {
-            if (window.confirm(`Are you sure you want to delete student: ${studentName}?`)) {
-                try {
-                    await deleteDoc(doc(db, "PupilsReg", id));
-                    toast.success("Student deleted successfully!");
-                } catch (err) {
-                    console.error("Failed to delete user:", err);
-                    toast.error("Failed to delete user.");
-                }
-            }
-        } else if (password !== null) {
-            toast.error("Incorrect password.");
-        }
-    };
+
 
     // ⭐ NEW FUNCTION: Handle Navigation for Print Form ⭐
     const handlePrint = (user) => {
@@ -586,6 +645,24 @@ const Registration = () => {
                             className="w-full p-2 mb-4 border rounded-lg bg-gray-100"
                         />
                     </div>
+
+                    <div className="flex-1">
+                        <label className="block mb-2 font-medium text-sm">
+                            Registration Form No
+                        </label>
+
+                        <input
+                            type="text"
+                            name="registrationFormNo"
+                            value={formData.registrationFormNo}
+                            onChange={handleInputChange}
+                            placeholder="Enter Registration Form No"
+                            className="w-full p-2 mb-4 border rounded-lg"
+
+                        />
+                    </div>
+
+
                     <div className="flex-1">
                         <label className="block mb-2 font-medium text-sm">Student Name</label>
                         <input
@@ -632,6 +709,59 @@ const Registration = () => {
                             <option value="Other">Other</option>
                         </select>
                     </div>
+
+                </div>
+
+                <div className="flex flex-col md:flex-row md:space-x-4">
+
+                    <div className="flex-1">
+                        <label className="block mb-2 font-medium text-sm">
+                            Religion
+                        </label>
+
+                        <select
+                            name="religion"
+                            value={formData.religion}
+                            onChange={handleInputChange}
+                            className="w-full p-2 mb-4 border rounded-lg"
+                        >
+                            <option value="">Select Religion</option>
+                            <option value="Christianity">Christianity</option>
+                            <option value="Islam">Islam</option>
+                            <option value="Traditional">Traditional</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+
+                    <div className="flex-1">
+                        <label className="block mb-2 font-medium text-sm">
+                            Tribe
+                        </label>
+
+                        <select
+                            name="tribe"
+                            value={formData.tribe}
+                            onChange={handleInputChange}
+                            className="w-full p-2 mb-4 border rounded-lg"
+                        >
+                            <option value="">Select Tribe</option>
+                            <option value="Mende">Mende</option>
+                            <option value="Temne">Temne</option>
+                            <option value="Limba">Limba</option>
+                            <option value="Fullah">Fullah</option>
+                            <option value="Loko">Loko</option>
+                            <option value="Mandingo">Mandingo</option>
+                            <option value="Kono">Kono</option>
+                            <option value="Susu">Susu</option>
+                            <option value="Sherbro">Sherbro</option>
+                            <option value="Kissi">Kissi</option>
+                            <option value="Yalunka">Yalunka</option>
+                            <option value="Koranko">Koranko</option>
+                            <option value="Krio">Krio</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+
                 </div>
 
                 {/* --- ADDRESS INFORMATION --- */}
@@ -687,6 +817,59 @@ const Registration = () => {
                     </div>
                 </div>
 
+                <h3 className="text-lg font-semibold mt-4 mb-2 border-t pt-4">
+                    Medical & Previous School Information
+                </h3>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                    <div>
+                        <label className="block mb-2 font-medium text-sm">
+                            Major Illness (if any)
+                        </label>
+
+                        <input
+                            type="text"
+                            name="majorIllness"
+                            value={formData.majorIllness}
+                            onChange={handleInputChange}
+                            placeholder="e.g. Asthma, Diabetes"
+                            className="w-full p-2 border rounded-lg"
+                        />
+                    </div>
+
+                    <div>
+                        <label className="block mb-2 font-medium text-sm">
+                            Minor Illness (if any)
+                        </label>
+
+                        <input
+                            type="text"
+                            name="minorIllness"
+                            value={formData.minorIllness}
+                            onChange={handleInputChange}
+                            placeholder="e.g. Frequent headaches"
+                            className="w-full p-2 border rounded-lg"
+                        />
+                    </div>
+
+                    <div className="md:col-span-2">
+                        <label className="block mb-2 font-medium text-sm">
+                            Previous School
+                        </label>
+
+                        <input
+                            type="text"
+                            name="previousSchool"
+                            value={formData.previousSchool}
+                            onChange={handleInputChange}
+                            placeholder="Enter previous school name"
+                            className="w-full p-2 border rounded-lg"
+                        />
+                    </div>
+
+                </div>
+
                 {/* --- ACADEMIC & SYSTEM INFO --- */}
                 <h3 className="text-lg font-semibold mt-4 mb-2 border-t pt-4">Academic & System Info</h3>
                 <div className="flex flex-col md:flex-row md:space-x-4">
@@ -707,11 +890,30 @@ const Registration = () => {
                         )}
                     </div>
                     <div className="flex-1">
+                        <label className="block mb-2 font-medium text-sm">
+                            Fees Category
+                        </label>
+
+                        <select
+                            name="feesCategory"
+                            value={formData.feesCategory}
+                            onChange={handleInputChange}
+                            className="w-full p-2 border rounded-lg"
+                            required
+                        >
+                            <option value="">Select Category</option>
+                            <option value="New">New</option>
+                            <option value="Continue">Continue</option>
+                            <option value="Scholarship">Scholarship</option>
+                        </select>
+                    </div>
+                    <div className="flex-1">
                         <label className="block mb-2 font-medium text-sm">Academic Year</label>
                         <select name="academicYear" value={formData.academicYear} onChange={handleInputChange} className="w-full p-2 border rounded-lg" required >
                             <option value="">Select Year</option>
                             <option value="2025/2026">2025/2026</option>
                             <option value="2026/2027">2026/2027</option>
+                            <option value="2027/2028">2027/2028</option>
                         </select>
                         {/* Display Previous Year */}
                         {formData.id && originalAcademicInfo && (
@@ -764,31 +966,32 @@ const Registration = () => {
                     <label className="mb-2 font-medium text-sm">Student Photo</label>
                     <div className="border-4 border-dashed w-36 h-48 flex items-center justify-center bg-white/30 mb-2">
                         {formData.userPhoto ? (
-    <img
-        src={formData.userPhoto}
-        alt="Student"
-        className="w-full h-full object-cover"
-        onLoad={() => {
-            console.log(
-                "PUPIL PHOTO DISPLAYED:",
-                formData.userPhoto
-            );
-        }}
-        onError={() => {
-            console.error(
-                "PUPIL PHOTO FAILED TO DISPLAY:",
-                formData.userPhoto
-            );
-        }}
-    />
-) : (
-    <span className="text-gray-500 text-sm text-center">
-        2-inch Photo
-    </span>
-)}
+                            <img
+                                src={formData.userPhoto}
+                                alt="Student"
+                                className="w-full h-full object-cover"
+                                onLoad={() => {
+                                    console.log(
+                                        "PUPIL PHOTO DISPLAYED:",
+                                        formData.userPhoto
+                                    );
+                                }}
+                                onError={() => {
+                                    console.error(
+                                        "PUPIL PHOTO FAILED TO DISPLAY:",
+                                        formData.userPhoto
+                                    );
+                                }}
+                            />
+                        ) : (
+                            <span className="text-gray-500 text-sm text-center">
+                                2-inch Photo
+                            </span>
+                        )}
                     </div>
+
                     <CloudinaryImageUploader
-                        folder="SchoolAppPupils/Uploads"
+                        folder={`SchoolAppPupils/${formData.schoolId || "UnknownSchool"}/${formData.class || "UnassignedClass"}/${formData.studentID || "UnknownPupil"}`}
                         onUploadSuccess={handleUploadSuccess}
                         onUploadStart={() => {
                             setIsUploading(true);
@@ -799,6 +1002,7 @@ const Registration = () => {
                             setIsUploading(false);
                         }}
                     />
+
                     <button type="button" onClick={() => setShowCamera(true)} className="w-full sm:w-auto bg-green-600 text-white py-2 px-6 rounded-md text-sm font-semibold mt-2" disabled={isUploading}>
                         Use Camera
                     </button>
@@ -835,6 +1039,7 @@ const Registration = () => {
 
                     {/* Date and Class Filters */}
                     <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-3">
+
                         <div className="flex-1">
                             <label className="block mb-1 text-xs font-medium text-gray-700">Filter by Date</label>
                             <select
@@ -859,7 +1064,6 @@ const Registration = () => {
                                 ))}
                             </select>
                         </div>
-
                         <div className="flex-1">
                             <label className="block mb-1 text-xs font-medium text-gray-700">
                                 Filter by Academic Year
@@ -897,6 +1101,7 @@ const Registration = () => {
                                 <th scope="col" className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
                                 <th scope="col" className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
                                 <th scope="col" className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">Class</th>
+                                <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fees Type</th>
                                 <th scope="col" className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell">AcademicYear</th>
                                 <th scope="col" className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Photo</th>
 
@@ -908,9 +1113,16 @@ const Registration = () => {
                             {/* Loop over the filteredUsers array */}
                             {filteredUsers.map((user) => (
                                 <tr key={user.id}>
-                                    <td className="px-3 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{user.studentID}</td>
+                                    <td className="px-3 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                        {user.registrationFormNo && user.registrationFormNo.trim() !== ""
+                                            ? user.registrationFormNo
+                                            : user.studentID}
+                                    </td>
                                     <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-500">{user.studentName}</td>
                                     <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-500 hidden md:table-cell">{user.class}</td>
+                                    <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-500">
+                                        {user.feesCategory}
+                                    </td>
                                     <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-500 hidden md:table-cell">{user.academicYear}</td>
 
                                     <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-500">

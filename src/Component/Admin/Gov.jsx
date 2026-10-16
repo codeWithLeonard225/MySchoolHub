@@ -124,7 +124,7 @@ const NAV_ITEMS = [
       { key: "WASCEForm", label: "Wasce Entering", icon: <MdPerson /> },
       { key: "ClassPromotion", label: " ClassPromotion", icon: <MdPerson /> },
       { key: "AdminForm", label: " AdminForm", icon: <MdPerson /> },
-      // { key: "SchoolRegistration", label: "SchoolRegistration", icon: <MdPerson /> },
+      { key: "SchoolRegistration", label: "SchoolRegistration", icon: <MdPerson /> },
     ],
   },
 

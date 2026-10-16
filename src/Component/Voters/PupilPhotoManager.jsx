@@ -10,7 +10,7 @@ import Cropper from "react-easy-crop";
 import { toast } from "react-toastify";
 
 import { db } from "../../../firebase";
-
+import { pupilLoginFetch } from "../Database/PupilLogin";
 
 import {
     collection,
@@ -30,8 +30,8 @@ import localforage from "localforage";
 // CLOUDINARY CONFIGURATION
 // ========================================================
 
-const CLOUD_NAME = "dxcrlpike";
-const UPLOAD_PRESET = "LeoTechSl Projects";
+const CLOUD_NAME = "dyt1xzrcv";  // leonardskargbo@gmail.com
+const UPLOAD_PRESET = "firstTime";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 
@@ -265,7 +265,11 @@ const PupilPhotoManager = () => {
             // ------------------------------------------------
 
             try {
-              
+                const collectionRef =
+                    collection(
+                        pupilLoginFetch,
+                        "PupilsReg"
+                    );
 
                 const q = query(
                     collectionRef,
@@ -720,16 +724,21 @@ const PupilPhotoManager = () => {
                 );
 
                 // SAME STRUCTURE AS YOUR REGISTRATION
-                const folderName =
-                    `SchoolAppPupils/${
-                        currentSchoolId ||
-                        "UnknownSchool"
-                    }`;
+             
+const schoolId =
+    selectedPupil.schoolId || currentSchoolId;
 
-                uploadData.append(
-                    "folder",
-                    folderName
-                );
+const className =
+    selectedPupil.class || "UnassignedClass";
+
+const pupilId =
+    selectedPupil.studentID || selectedPupil.id;
+
+const folderName =
+    `SchoolAppPupils/${schoolId}/${className}/${pupilId}`;
+
+uploadData.append("folder", folderName);
+
 
                 // ----------------------------------------
                 // 3. CLOUDINARY UPLOAD
@@ -797,10 +806,19 @@ const PupilPhotoManager = () => {
                     photoData
                 );
 
-            
+                // ----------------------------------------
+                // 6. UPDATE LOGIN DATABASE
+                // ----------------------------------------
+
+                const loginRef =
+                    doc(
+                        pupilLoginFetch,
+                        "PupilsReg",
+                        selectedPupil.id
+                    );
 
                 await updateDoc(
-               
+                    loginRef,
                     photoData
                 );
 

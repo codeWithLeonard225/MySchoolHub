@@ -19,8 +19,8 @@ import { useLocation } from "react-router-dom";
 import localforage from "localforage"; // ⬅️ Import localforage for caching
 
 // Cloudinary config
-const CLOUD_NAME = "dxcrlpike"; // Cloudinary Cloud Name
-const UPLOAD_PRESET = "LeoTechSl Projects"; // Cloudinary Upload Preset
+const CLOUD_NAME = "dyt1xzrcv";  // leonardskargbo@gmail.com
+const UPLOAD_PRESET = "firstTime";
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
 const ADMIN_PASSWORD = "1234";
 

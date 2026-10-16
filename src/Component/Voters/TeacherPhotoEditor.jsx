@@ -20,8 +20,8 @@ import CameraCapture from "../CaptureCamera/CameraCapture";
 // CLOUDINARY CONFIG
 // ======================================================
 
-const CLOUD_NAME = "dxcrlpike";
-const UPLOAD_PRESET = "LeoTech Sl Projects";
+const CLOUD_NAME = "dyt1xzrcv";  // leonardskargbo@gmail.com
+const UPLOAD_PRESET = "firstTime";
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
 
 // ======================================================

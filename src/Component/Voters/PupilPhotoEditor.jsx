@@ -13,7 +13,7 @@ import {
 } from "firebase/firestore";
 
 import { db } from "../../../firebase";
-import { pupilLoginFetch } from "../Database/PupilLogin";
+
 import CameraCapture from "../CaptureCamera/CameraCapture";
 
 // ======================================================
@@ -281,11 +281,10 @@ const PupilPhotoEditor = () => {
 
         setLoadingPupils(true);
 
-        const pupilsRef =
-            collection(
-                pupilLoginFetch,
-                "PupilsReg"
-            );
+        const pupilsRef = collection(
+            db,
+            "PupilsReg"
+        );
 
         const q = query(
             pupilsRef,
@@ -711,61 +710,61 @@ const PupilPhotoEditor = () => {
     // UPLOAD TO CLOUDINARY
     // ==================================================
 
-   
-const uploadToCloudinary = async (blob) => {
-    if (!blob) {
-        throw new Error("No image available for upload.");
-    }
 
-    if (blob.size > MAX_FILE_SIZE) {
-        throw new Error("Image is larger than 5MB.");
-    }
-
-    if (!selectedPupil?.studentID) {
-        throw new Error("Pupil Student ID is missing.");
-    }
-
-    if (!schoolId || schoolId === "N/A") {
-        throw new Error("School ID is missing.");
-    }
-
-    const className = selectedPupil.class || "Unassigned";
-
-    const folder = [
-        "SchoolAppPupils",
-        schoolId,
-        className,
-        selectedPupil.studentID,
-    ].join("/");
-
-    const formData = new FormData();
-
-    formData.append("file", blob, "pupil-photo.jpg");
-    formData.append("upload_preset", UPLOAD_PRESET);
-    formData.append("folder", folder);
-
-    setUploadProgress(10);
-
-    const response = await fetch(
-        `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`,
-        {
-            method: "POST",
-            body: formData,
+    const uploadToCloudinary = async (blob) => {
+        if (!blob) {
+            throw new Error("No image available for upload.");
         }
-    );
 
-    const result = await response.json();
+        if (blob.size > MAX_FILE_SIZE) {
+            throw new Error("Image is larger than 5MB.");
+        }
 
-    if (!response.ok) {
-        throw new Error(
-            result?.error?.message || "Cloudinary upload failed."
+        if (!selectedPupil?.studentID) {
+            throw new Error("Pupil Student ID is missing.");
+        }
+
+        if (!schoolId || schoolId === "N/A") {
+            throw new Error("School ID is missing.");
+        }
+
+        const className = selectedPupil.class || "Unassigned";
+
+        const folder = [
+            "SchoolAppPupils",
+            schoolId,
+            className,
+            selectedPupil.studentID,
+        ].join("/");
+
+        const formData = new FormData();
+
+        formData.append("file", blob, "pupil-photo.jpg");
+        formData.append("upload_preset", UPLOAD_PRESET);
+        formData.append("folder", folder);
+
+        setUploadProgress(10);
+
+        const response = await fetch(
+            `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`,
+            {
+                method: "POST",
+                body: formData,
+            }
         );
-    }
 
-    setUploadProgress(100);
+        const result = await response.json();
 
-    return result;
-};
+        if (!response.ok) {
+            throw new Error(
+                result?.error?.message || "Cloudinary upload failed."
+            );
+        }
+
+        setUploadProgress(100);
+
+        return result;
+    };
 
 
     // ==================================================
@@ -837,7 +836,7 @@ const uploadToCloudinary = async (blob) => {
 
                 toast.error(
                     error.message ||
-                        "Failed to upload photo."
+                    "Failed to upload photo."
                 );
 
             } finally {
@@ -923,8 +922,7 @@ const uploadToCloudinary = async (blob) => {
                 } catch {
 
                     console.log(
-                        `Waiting for AI... ${
-                            attempt + 1
+                        `Waiting for AI... ${attempt + 1
                         }/${attempts}`
                     );
 
@@ -1008,7 +1006,7 @@ const uploadToCloudinary = async (blob) => {
 
                     toast.error(
                         error.message ||
-                            "Failed to upload photo before background removal."
+                        "Failed to upload photo before background removal."
                     );
 
                     return;
@@ -1108,7 +1106,7 @@ const uploadToCloudinary = async (blob) => {
 
                 toast.error(
                     error.message ||
-                        "Failed to remove background."
+                    "Failed to remove background."
                 );
 
             } finally {
@@ -1158,12 +1156,43 @@ const uploadToCloudinary = async (blob) => {
                 // Main database
                 // --------------------------------------
 
-                const mainRef =
-                    doc(
-                        db,
-                        "PupilsReg",
-                        selectedPupil.id
-                    );
+                // --------------------------------------
+                // MAIN DATABASE ONLY
+                // --------------------------------------
+
+                const pupilRef = doc(
+                    db,
+                    "PupilsReg",
+                    selectedPupil.id
+                );
+
+                // --------------------------------------
+                // PUBLIC ID
+                // --------------------------------------
+
+                const finalPublicId =
+                    uploadedPublicId ||
+                    selectedPupil.userPublicId ||
+                    null;
+
+                // --------------------------------------
+                // PHOTO DATA
+                // --------------------------------------
+
+                const photoData = {
+                    userPhotoUrl: finalPhotoUrl,
+                    userPublicId: finalPublicId,
+                    photoUpdatedAt: new Date(),
+                };
+
+                // --------------------------------------
+                // UPDATE PUPIL PHOTO
+                // --------------------------------------
+
+                await updateDoc(
+                    pupilRef,
+                    photoData
+                );
 
                 // --------------------------------------
                 // Login database
@@ -1176,29 +1205,7 @@ const uploadToCloudinary = async (blob) => {
                         selectedPupil.id
                     );
 
-                // --------------------------------------
-                // Public ID
-                // --------------------------------------
 
-                const finalPublicId =
-                    uploadedPublicId ||
-                    selectedPupil.userPublicId ||
-                    null;
-
-                const photoData = {
-                    userPhotoUrl:
-                        finalPhotoUrl,
-
-                    userPublicId:
-                        finalPublicId,
-
-                    photoUpdatedAt:
-                        new Date(),
-                };
-
-                // --------------------------------------
-                // UPDATE BOTH DATABASES
-                // --------------------------------------
 
                 await updateDoc(
                     mainRef,
@@ -1237,7 +1244,7 @@ const uploadToCloudinary = async (blob) => {
                         prev.map(
                             (pupil) =>
                                 pupil.id ===
-                                selectedPupil.id
+                                    selectedPupil.id
                                     ? updatedPupil
                                     : pupil
                         )
@@ -1314,7 +1321,7 @@ const uploadToCloudinary = async (blob) => {
 
                 toast.error(
                     error.message ||
-                        "Failed to save pupil photo."
+                    "Failed to save pupil photo."
                 );
 
             } finally {
@@ -1350,7 +1357,7 @@ const uploadToCloudinary = async (blob) => {
             if (
                 croppedPreview &&
                 croppedPreview !==
-                    selectedPupil.userPhotoUrl
+                selectedPupil.userPhotoUrl
             ) {
 
                 revokeBlobUrl(
@@ -1428,7 +1435,7 @@ const uploadToCloudinary = async (blob) => {
             if (
                 croppedPreview &&
                 croppedPreview !==
-                    selectedPupil?.userPhotoUrl
+                selectedPupil?.userPhotoUrl
             ) {
 
                 revokeBlobUrl(
@@ -1586,8 +1593,8 @@ const uploadToCloudinary = async (blob) => {
                             {loadingPupils
                                 ? "Loading pupils..."
                                 : filteredPupils.length === 0
-                                ? "No pupils found"
-                                : "Select Pupil"}
+                                    ? "No pupils found"
+                                    : "Select Pupil"}
 
                         </option>
 

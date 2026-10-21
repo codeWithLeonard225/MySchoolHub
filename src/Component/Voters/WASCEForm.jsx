@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { toast } from "react-toastify";
 import { db } from "../../../firebase";
-import CameraCapture from "../CaptureCamera/CameraCapture";// ADDED query and where here
+import CameraCapture from "../CaptureCamera/CameraCaptureWasce";// ADDED query and where here
 import { collection, addDoc, onSnapshot, doc, deleteDoc, updateDoc, query, where } from "firebase/firestore";
 import { v4 as uuidv4 } from "uuid";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -11,8 +11,10 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
 
-const CLOUD_NAME = "dxcrlpike";
-const UPLOAD_PRESET = "LeoTechSl Projects";
+const CLOUD_NAME = "dyt1xzrcv";  // leonardskargbo@gmail.com
+const UPLOAD_PRESET = "firstTime";
+const WASSCE_PUPIL_FOLDER = "WASSCE/PupilPhotos";
+const WASSCE_BECE_FOLDER = "WASSCE/BECEResults";
 
 const FACULTY_SUBJECTS = {
     Art: ["Mathematics", "English", "Health Science", "Literature", "Geography", "CRS", "History", "MIL", "Politics & Governance"],
@@ -141,41 +143,64 @@ const WasceReg = () => {
         }
     };
 
+
     const handleCameraCapture = async (base64Image) => {
+        const target = cameraTarget;
+
+        const photoField =
+            target === "pupil" ? "pupilPhoto" : "beceResultPhoto";
+
+        const cloudinaryFolder =
+            target === "pupil"
+                ? WASSCE_PUPIL_FOLDER
+                : WASSCE_BECE_FOLDER;
+
         try {
-            setUploadingField(cameraTarget);
+            setUploadingField(target);
+            setUploadProgress(0);
 
-            const res = await fetch(base64Image);
-            const blob = await res.blob();
+            // Convert the captured image into a Blob
+            const response = await fetch(base64Image);
+            const blob = await response.blob();
 
-            const formDataObj = new FormData();
-            formDataObj.append("file", blob);
-            formDataObj.append("upload_preset", UPLOAD_PRESET);
+            const uploadFormData = new FormData();
+            uploadFormData.append("file", blob, `${target}-${Date.now()}.jpg`);
+            uploadFormData.append("upload_preset", UPLOAD_PRESET);
+            uploadFormData.append("folder", cloudinaryFolder);
 
-            const uploadRes = await fetch(
+            // Upload to the appropriate WASSCE folder
+            const uploadResponse = await fetch(
                 `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`,
                 {
                     method: "POST",
-                    body: formDataObj,
+                    body: uploadFormData,
                 }
             );
 
-            const data = await uploadRes.json();
+            const data = await uploadResponse.json();
 
+            if (!uploadResponse.ok || !data.secure_url) {
+                throw new Error(
+                    data.error?.message || "Cloudinary upload failed."
+                );
+            }
+
+            // Save the uploaded image URL in the form
             setFormData((prev) => ({
                 ...prev,
-                [cameraTarget === "pupil" ? "pupilPhoto" : "beceResultPhoto"]: data.secure_url,
+                [photoField]: data.secure_url,
             }));
 
-            toast.success("Captured & Uploaded!");
-        } catch (err) {
-            console.error(err);
-            toast.error("Camera upload failed");
+            toast.success("Photo uploaded to WASSCE successfully!");
+        } catch (error) {
+            console.error("WASSCE camera upload error:", error);
+            toast.error(error.message || "Camera upload failed.");
         } finally {
             setUploadingField(null);
             setShowCamera(false);
         }
     };
+
 
 
 
@@ -214,8 +239,14 @@ const WasceReg = () => {
 
             // ✅ 3. UPLOAD TO CLOUDINARY
             const uploadData = new FormData();
+            const cloudinaryFolder =
+                fieldType === "pupil"
+                    ? WASSCE_PUPIL_FOLDER
+                    : WASSCE_BECE_FOLDER;
+
             uploadData.append("file", compressedFile);
             uploadData.append("upload_preset", UPLOAD_PRESET);
+            uploadData.append("folder", cloudinaryFolder);
 
             const res = await fetch(
                 `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`,
@@ -469,11 +500,11 @@ const WasceReg = () => {
         const doc = new jsPDF({ orientation: "landscape" });
 
         // 1. SORT ALPHABETICALLY BY NAME
-    const sortedStudents = [...students].sort((a, b) => {
-        const nameA = a.studentName?.toLowerCase() || "";
-        const nameB = b.studentName?.toLowerCase() || "";
-        return nameA.localeCompare(nameB);
-    });
+        const sortedStudents = [...students].sort((a, b) => {
+            const nameA = a.studentName?.toLowerCase() || "";
+            const nameB = b.studentName?.toLowerCase() || "";
+            return nameA.localeCompare(nameB);
+        });
 
         // 🖼 Helper to load image
         const loadImage = (url) =>
@@ -528,11 +559,11 @@ const WasceReg = () => {
 
         // 👥 TOTAL COUNT
         // 2. USE THE SORTED LIST FOR TOTAL COUNT
-    doc.setFontSize(10);
-    doc.setFont(undefined, "normal");
-    doc.text(`Total Students: ${sortedStudents.length}`, 20, y);
+        doc.setFontSize(10);
+        doc.setFont(undefined, "normal");
+        doc.text(`Total Students: ${sortedStudents.length}`, 20, y);
 
-    y += 5;
+        y += 5;
 
         y += 5;
 
@@ -548,23 +579,23 @@ const WasceReg = () => {
         };
 
         // 📊 TABLE DATA
-    // 3. MAP FROM sortedStudents INSTEAD OF students
-    const tableData = sortedStudents.map((stu, index) => {
-        const { surname, otherNames } = splitName(stu.studentName);
+        // 3. MAP FROM sortedStudents INSTEAD OF students
+        const tableData = sortedStudents.map((stu, index) => {
+            const { surname, otherNames } = splitName(stu.studentName);
 
-      return [
-    index + 1,
-    surname,
-    otherNames,
-    stu.gender || "",
-    formatDOB(stu.dob),
-    stu.beceYear || "",
-    stu.beceIndexNo || "",
-    stu.address || "",
-    stu.mobileNumber || "",
-    stu.previousSchool || ""
-];
-    });
+            return [
+                index + 1,
+                surname,
+                otherNames,
+                stu.gender || "",
+                formatDOB(stu.dob),
+                stu.beceYear || "",
+                stu.beceIndexNo || "",
+                stu.address || "",
+                stu.mobileNumber || "",
+                stu.previousSchool || ""
+            ];
+        });
 
         // 📋 HEADERS
         const headers = [[
@@ -595,42 +626,42 @@ const WasceReg = () => {
                 textColor: [255, 255, 255],
                 fontStyle: "bold"
             },
-           columnStyles: {
-    0: { cellWidth: 15 }, // No
-    1: { cellWidth: 35 }, // Surname
-    2: { cellWidth: 45 }, // Other Name
-    3: { cellWidth: 20 }, // Sex
-    4: { cellWidth: 28 }, // Date of Birth
-    5: { cellWidth: 25 }, // BECE Year
-    6: { cellWidth: 40 }, // Index Number
-    7: { cellWidth: 55 }, // Address
-    8: { cellWidth: 40 }, // Mobile
-    9: { cellWidth: 55 }  // Previous School
-}
+            columnStyles: {
+                0: { cellWidth: 15 }, // No
+                1: { cellWidth: 35 }, // Surname
+                2: { cellWidth: 45 }, // Other Name
+                3: { cellWidth: 20 }, // Sex
+                4: { cellWidth: 28 }, // Date of Birth
+                5: { cellWidth: 25 }, // BECE Year
+                6: { cellWidth: 40 }, // Index Number
+                7: { cellWidth: 55 }, // Address
+                8: { cellWidth: 40 }, // Mobile
+                9: { cellWidth: 55 }  // Previous School
+            }
         });
 
         // 💾 SAVE
         doc.save("WASSCE_General_Report.pdf");
     };
 
- const filteredStudents = students
-    .filter(s =>
-        s.studentName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        s.beceIndexNo?.includes(searchTerm)
-    )
-    .sort((a, b) => {
-        const nameA = a.studentName?.toLowerCase() || "";
-        const nameB = b.studentName?.toLowerCase() || "";
-        return nameA.localeCompare(nameB);
-    });
+    const filteredStudents = students
+        .filter(s =>
+            s.studentName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            s.beceIndexNo?.includes(searchTerm)
+        )
+        .sort((a, b) => {
+            const nameA = a.studentName?.toLowerCase() || "";
+            const nameB = b.studentName?.toLowerCase() || "";
+            return nameA.localeCompare(nameB);
+        });
 
     const formatDOB = (dateString) => {
-    if (!dateString) return "";
+        if (!dateString) return "";
 
-    const date = new Date(dateString);
+        const date = new Date(dateString);
 
-    return `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()}`;
-};
+        return `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()}`;
+    };
 
     return (
         <div className="min-h-screen bg-gray-50 p-4 md:p-8">

@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useMemo } from "react";
-import CameraCapture from "../CaptureCameraYahweh/CameraCapture";
-import CloudinaryImageUploader from "../CaptureCameraYahweh/CloudinaryImageUploader";
+import CameraCapture from "../CaptureCamera/CameraCapture";
+import CloudinaryImageUploader from "../CaptureCamera/CloudinaryImageUploader";
 import { toast } from "react-toastify";
 import { db } from "../../../firebase";
-import { pupilLoginFetch } from "../Database/PupilLogin";
+
 
 
 import {
@@ -155,7 +155,7 @@ const Registration = () => {
             }
 
             // 2. Set up Firestore Listener for real-time updates
-            const collectionRef = collection(pupilLoginFetch, "PupilsReg");
+            const collectionRef = collection(db, "PupilsReg");
 
             // This query FILTERS the data by schoolId on the Firestore server
             const q = query(collectionRef, where("schoolId", "==", currentSchoolId));
@@ -420,149 +420,156 @@ const Registration = () => {
 
 
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
+   
+const handleSubmit = async (e) => {
+    e.preventDefault();
 
-        // -------------------------
-        // VALIDATION
-        // -------------------------
-        if (!formData.studentName.trim()) return toast.error("Student name is required.");
-        if (!formData.class.trim()) return toast.error("Class is required.");
-        if (!formData.academicYear.trim()) return toast.error("Academic year is required.");
-        if (!formData.pupilType.trim()) return toast.error("Pupil type is required.");
-        if (!formData.feesCategory.trim()) return toast.error("Fees category is required.");
+    // VALIDATION
+    if (!formData.studentName.trim())
+        return toast.error("Student name is required.");
 
-        setIsSubmitting(true);
+    if (!formData.class.trim())
+        return toast.error("Class is required.");
 
-        try {
-            // -------------------------
-            // PREPARE STUDENT DATA
-            // -------------------------
-            const studentData = {
-                studentID: formData.studentID,
-                studentName: formData.studentName.toUpperCase().trim(),
-                registrationFormNo: formData.registrationFormNo.trim(),
-                majorIllness: formData.majorIllness.trim(),
-                minorIllness: formData.minorIllness.trim(),
-                previousSchool: formData.previousSchool.trim(),
-                dob: formData.dob,
-                age: formData.age,
-                gender: formData.gender,
-                // NEW
-                religion: formData.religion,
-                tribe: formData.tribe,
-                addressLine1: formData.addressLine1,
-                addressLine2: formData.addressLine2,
-                parentName: formData.parentName,
-                parentPhone: formData.parentPhone,
-                class: formData.class,
-                feesCategory: formData.feesCategory,
-                academicYear: formData.academicYear,
-                registrationDate: formData.registrationDate,
-                registeredBy: formData.registeredBy,
-                userPhotoUrl: formData.userPhoto,
-                userPublicId: formData.userPublicId,
-                pupilType: formData.pupilType,
-                schoolId: formData.schoolId,
+    if (!formData.academicYear.trim())
+        return toast.error("Academic year is required.");
+
+    if (!formData.pupilType.trim())
+        return toast.error("Pupil type is required.");
+
+    if (!formData.feesCategory.trim())
+        return toast.error("Fees category is required.");
+
+    setIsSubmitting(true);
+
+    try {
+        // PREPARE STUDENT DATA
+        const studentData = {
+            studentID: formData.studentID,
+            studentName: formData.studentName.toUpperCase().trim(),
+            registrationFormNo: formData.registrationFormNo.trim(),
+            majorIllness: formData.majorIllness.trim(),
+            minorIllness: formData.minorIllness.trim(),
+            previousSchool: formData.previousSchool.trim(),
+            dob: formData.dob,
+            age: formData.age,
+            gender: formData.gender,
+            religion: formData.religion,
+            tribe: formData.tribe,
+            addressLine1: formData.addressLine1,
+            addressLine2: formData.addressLine2,
+            parentName: formData.parentName,
+            parentPhone: formData.parentPhone,
+            class: formData.class,
+            feesCategory: formData.feesCategory,
+            academicYear: formData.academicYear,
+            registrationDate: formData.registrationDate,
+            registeredBy: formData.registeredBy,
+            userPhotoUrl: formData.userPhoto,
+            userPublicId: formData.userPublicId,
+            pupilType: formData.pupilType,
+            schoolId: formData.schoolId,
+        };
+
+        if (formData.id) {
+            // UPDATE EXISTING PUPIL
+            const pupilRef = doc(db, "PupilsReg", formData.id);
+
+            await updateDoc(pupilRef, studentData);
+
+            toast.success("Student updated successfully!");
+        } else {
+            // REGISTER NEW PUPIL
+            const finalData = {
+                ...studentData,
+                timestamp: new Date(),
             };
 
-            // -------------------------
-            // IF UPDATING EXISTING STUDENT
-            // -------------------------
-            if (formData.id) {
-                const mainRef = doc(db, "PupilsReg", formData.id);
-                const loginRef = doc(pupilLoginFetch, "PupilsReg", formData.id);
+            await addDoc(
+                collection(db, "PupilsReg"),
+                finalData
+            );
 
-                await updateDoc(mainRef, studentData);
-                await updateDoc(loginRef, studentData);
+            toast.success("Student registered successfully!");
+        }
 
-                toast.success("Student updated successfully!");
-            }
+        // RESET FORM
+        setFormData({
+            id: null,
+            studentID: generateUniqueId(),
+            registrationFormNo: "",
+            studentName: "",
+            majorIllness: "",
+            minorIllness: "",
+            previousSchool: "",
+            dob: "",
+            age: "",
+            gender: "",
+            religion: "",
+            tribe: "",
+            addressLine1: "",
+            addressLine2: "",
+            parentName: "",
+            parentPhone: "",
+            class: "",
+            academicYear: "",
+            pupilType: accessTypeOptions.length > 0
+                ? accessTypeOptions[0]
+                : "",
+            registrationDate: new Date().toISOString().slice(0, 10),
+            registeredBy:
+                user?.data?.adminID ||
+                user?.data?.teacherID ||
+                "",
+            userPhoto: null,
+            userPublicId: null,
+            feesCategory: "Continue",
+            schoolId: currentSchoolId,
+        });
 
-            // -------------------------
-            // IF CREATING NEW STUDENT
-            // -------------------------
-            else {
-    // Keep the same ID used when uploading the pupil's photo.
-    const finalData = {
-        ...studentData,
-        timestamp: new Date(),
-    };
+        setHasSetDefaultType(false);
+        setOriginalAcademicInfo(null);
 
-    // 1. Create in MAIN database
-    const docRef = await addDoc(
-        collection(db, "PupilsReg"),
-        finalData
+    } catch (err) {
+        console.error("Student registration/update failed:", err);
+
+        toast.error(
+            `Failed to ${formData.id ? "update" : "register"} student.`
+        );
+    } finally {
+        setIsSubmitting(false);
+    }
+};
+
+
+const handleDelete = async (id, studentName) => {
+    const password = window.prompt(
+        "Enter the password to delete this user:"
     );
 
-    // 2. Mirror in LOGIN database
-    await setDoc(
-        doc(pupilLoginFetch, "PupilsReg", docRef.id),
-        finalData
+    if (password === null) return;
+
+    if (password !== ADMIN_PASSWORD) {
+        toast.error("Incorrect password.");
+        return;
+    }
+
+    const confirmed = window.confirm(
+        `Are you sure you want to delete student: ${studentName}?`
     );
 
-    toast.success("Student registered successfully!");
-}
+    if (!confirmed) return;
 
-            // -------------------------
-            // RESET FORM
-            // -------------------------
-            setFormData({
-                id: null,
-                studentID: generateUniqueId(),
-                registrationFormNo: "",
-                studentName: "",
-                majorIllness: "",
-                minorIllness: "",
-                previousSchool: "",
-                dob: "",
-                age: "",
-                gender: "",
-                religion: "",
-                tribe: "",
-                addressLine1: "",
-                addressLine2: "",
-                parentName: "",
-                parentPhone: "",
-                class: "",
-                academicYear: "",
-                pupilType: accessTypeOptions.length > 0 ? accessTypeOptions[0] : "",
-                registrationDate: new Date().toISOString().slice(0, 10),
-                registeredBy: user?.data?.adminID || user?.data?.teacherID || "",
-                userPhoto: null,
-                userPublicId: null,
-                feesCategory: "",
-                schoolId: currentSchoolId,
-            });
+    try {
+        // Delete only from the main Firebase database
+        await deleteDoc(doc(db, "PupilsReg", id));
 
-            setHasSetDefaultType(false);
-            setOriginalAcademicInfo(null);
-
-        } catch (err) {
-            console.error(err);
-            toast.error(`Failed to ${formData.id ? "update" : "register"} student.`);
-        } finally {
-            setIsSubmitting(false);
-        }
-    };
-
-    const handleDelete = async (id, studentName) => {
-        const password = window.prompt("Enter the password to delete this user:");
-        if (password === ADMIN_PASSWORD) {
-            if (window.confirm(`Are you sure you want to delete student: ${studentName}?`)) {
-                try {
-                    await deleteDoc(doc(db, "PupilsReg", id));
-                    await deleteDoc(doc(pupilLoginFetch, "PupilsReg", id));
-                    toast.success("Student deleted successfully!");
-                } catch (err) {
-                    console.error("Failed to delete user:", err);
-                    toast.error("Failed to delete user.");
-                }
-            }
-        } else if (password !== null) {
-            toast.error("Incorrect password.");
-        }
-    };
+        toast.success("Student deleted successfully!");
+    } catch (err) {
+        console.error("Failed to delete student:", err);
+        toast.error("Failed to delete student.");
+    }
+};
 
 
     const handleUpdate = (user) => {

@@ -178,8 +178,8 @@ const NAV_ITEMS = [
     label: "Qr code Attendance-Pupil",
     icon: <MdBarChart />,
     children: [
-      { key: "PupilIDCardScan", label: "Pupil Card Scan", icon: <MdPerson /> },
-      { key: "PupilIDCardBack", label: "Pupil Card Back", icon: <MdPerson /> },
+      // { key: "PupilIDCardScan", label: "Pupil Card Scan", icon: <MdPerson /> },
+      // { key: "PupilIDCardBack", label: "Pupil Card Back", icon: <MdPerson /> },
       { key: "PupilAttendanceScanner", label: "Attendance Scanner", icon: <MdPerson /> },
       { key: "ManualAttendance", label: "Manual Attendance", icon: <MdPerson /> },
       { key: "PupilAttendanceLogs", label: "Pupil Attendance Logs", icon: <MdPerson /> },

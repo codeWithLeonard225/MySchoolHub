@@ -10,7 +10,7 @@ import Cropper from "react-easy-crop";
 import { toast } from "react-toastify";
 
 import { db } from "../../../firebase";
-import { pupilLoginFetch } from "../Database/PupilLogin";
+
 
 import {
     collection,
@@ -265,11 +265,10 @@ const PupilPhotoManager = () => {
             // ------------------------------------------------
 
             try {
-                const collectionRef =
-                    collection(
-                        pupilLoginFetch,
-                        "PupilsReg"
-                    );
+               const collectionRef = collection(
+    db,
+    "PupilsReg"
+);
 
                 const q = query(
                     collectionRef,
@@ -794,34 +793,20 @@ uploadData.append("folder", folderName);
                 // 5. UPDATE MAIN DATABASE
                 // ----------------------------------------
 
-                const mainRef =
-                    doc(
-                        db,
-                        "PupilsReg",
-                        selectedPupil.id
-                    );
+                // 5. UPDATE MAIN DATABASE
+const mainRef = doc(
+    db,
+    "PupilsReg",
+    selectedPupil.id
+);
 
-                await updateDoc(
-                    mainRef,
-                    photoData
-                );
+await updateDoc(mainRef, photoData);
 
                 // ----------------------------------------
                 // 6. UPDATE LOGIN DATABASE
                 // ----------------------------------------
 
-                const loginRef =
-                    doc(
-                        pupilLoginFetch,
-                        "PupilsReg",
-                        selectedPupil.id
-                    );
-
-                await updateDoc(
-                    loginRef,
-                    photoData
-                );
-
+                
                 // ----------------------------------------
                 // 7. UPDATE LOCAL STATE
                 // ----------------------------------------

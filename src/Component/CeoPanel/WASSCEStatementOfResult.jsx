@@ -254,6 +254,10 @@ electives: {
         grade: "",
         interpretation: "",
     },
+    ChristianReligiousStudies: {
+        grade: "",
+        interpretation: "",
+    },
 },
 
         subjectsListed: "",
@@ -896,6 +900,12 @@ electives: {
         Arts Subjects
     </p>
 
+    <SubjectInputRow
+        {...subjectRowProps}
+        subjectName="ChristianReligiousStudies"
+        section="electives"
+        subjectKey="ChristianReligiousStudies"
+    />
     <SubjectInputRow
         {...subjectRowProps}
         subjectName="Economics"

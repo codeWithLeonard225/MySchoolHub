@@ -54,7 +54,7 @@ export const handlePrintPreviewSlip = (result) => {
 }
                 .slip-content { width: 100%; }
                 .header { display: flex; align-items: center; border-bottom: 3px solid #000080; padding-bottom: 8px; margin-bottom: 10px; }
-                .logo-box { width: 100px; height: 100px; border: 2px solid #000080; display: flex; align-items: center; justify-content: center; background: #f0f4ff; margin-right: 15px; flex-shrink: 0; overflow: hidden; }
+                .logo-box { width: 90px; height: 90px; border: 2px solid #000080; display: flex; align-items: center; justify-content: center; background: #f0f4ff; margin-right: 15px; flex-shrink: 0; overflow: hidden; }
                 .logo-box img { width: 100%; height: 100%; object-fit: cover; }
                 .school-info h1 { font-size: 16px; font-weight: 900; color: #000080; margin: 0 0 2px 0; text-transform: uppercase; }
                 .school-info p.address { font-size: 16px; color: #333; margin: 2px 0; font-weight: 600; }
@@ -261,8 +261,8 @@ export const handlePrintPreviewSlip = (result) => {
                 <!-- Footer Signatures & Validation Notice -->
                 <div class="footer">
                     <div class="footer-row">
-                        <div>Sign of Principal: _________________________</div>
-                        <div>Sign of Proprietor: _________________________</div>
+                        <div style="margin-bottom: 100px;">Principal Signature: _________________________</div>
+                        <div style="margin-bottom: 100px;">Proprietor Signature: _________________________</div>
                     </div>
                     <div class="footer-row" style="align-items: flex-end; margin-bottom: 4px;">
                         <div>Date of Issue: _________________________</div>

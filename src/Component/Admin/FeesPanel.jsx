@@ -42,6 +42,8 @@ import StudentFilterPage from "../Voters/StudentFilterPage";
 import StudentIDCards from "../Voters/StudentIDCards";
 import NationalResultPage from "../CeoPanel/NationalResultPage";
 import BECEStatementOfResult from "../CeoPanel/BECEStatementOfResult";
+import WASSCEStatementOfResult from "../CeoPanel/WASSCEStatementOfResult";
+import TestimonialInputPage from "../CeoPanel/TestimonialInputPage";
 import TeacherAssignmentReport from "../TeacherAssignment/TeacherAssignmentReport";
 import TeacherPupilsPageAdmin from "../TeacherAssignment/TeacherPupilsPageAdmin";
 import ExamUploader from "../Admin/PastQuestionUpload";
@@ -162,6 +164,8 @@ const NAV_ITEMS = [
     children: [
       { key: "beceResult", label: "Bece Result Entering", icon: <MdPerson /> },
       { key: "beceReport", label: "Bece Result Report", icon: <MdPerson /> },
+      { key: "WASSCEStatementOfResult", label: "Wassce Result Report", icon: <MdPerson /> },
+      { key: "TestimonialInputPage", label: "Wassce Testimonial Report", icon: <MdPerson /> },
 
 
     ],
@@ -301,6 +305,8 @@ function FeesPanel() {
       case "AdminForm": return <AdminForm />;
       case "beceResult": return <NationalResultPage />;
       case "beceReport": return <BECEStatementOfResult />;
+      case "WASSCEStatementOfResult": return <WASSCEStatementOfResult />;
+      case "TestimonialInputPage": return <TestimonialInputPage />;
       case "TeacherAssignmentReport": return <TeacherAssignmentReport />;
       case "TeacherPupilsPageAdmin": return <TeacherPupilsPageAdmin />;
       case "PastQuestions": return <ExamUploader />;

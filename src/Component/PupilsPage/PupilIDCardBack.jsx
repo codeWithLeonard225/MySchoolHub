@@ -419,7 +419,7 @@ const PupilIDCardBack = () => {
                   justifyContent: "center",
                   gap: "6px",
                   paddingBottom: "10px", // 👈 CHANGE THIS (was "4px")
-                  marginTop: "4px",     // 👈 ADD THIS to fine-tune top positioning
+                  marginTop: "20px",     // 👈 ADD THIS to fine-tune top positioning
                 }}
               >
                 {schoolLogoUrl && (

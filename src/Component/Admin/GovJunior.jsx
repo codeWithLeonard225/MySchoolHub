@@ -80,6 +80,8 @@ import TeacherPhotoManager from "../Voters/TeacherPhotoManager";
 import AttendanceDashboard from "../Dashboard/AttendanceDashboard";
 import StaffAttendanceReport from "../Staff/StaffAttendanceReport";
 import AttendanceReport from "../Dashboard/AttendanceReports";
+import NationalResultPage from "../CeoPanel/NationalResultPage";
+import BECEStatementOfResult from "../CeoPanel/BECEStatementOfResult";
 
 
 
@@ -190,10 +192,23 @@ const NAV_ITEMS = [
     label: "Qr code Attendance-Staff",
     icon: <MdBarChart />,
     children: [
-      { key: "TeacherIDCards", label: "Teacher IDCards", icon: <MdPerson /> },
+      // { key: "TeacherIDCards", label: "Teacher IDCards", icon: <MdPerson /> },
       { key: "StaffAttendanceScanner", label: "Staff Attendance Scanner", icon: <MdPerson /> },
       { key: "StaffPayroll", label: "Staff Payroll", icon: <MdPerson /> },
       { key: "StaffAttendanceRecords", label: "Staff Attendance Records", icon: <MdPerson /> },
+    ],
+  },
+
+    {
+    key: "NationalResults",
+    label: "National Results",
+    icon: <MdBarChart />,
+    children: [
+      { key: "beceResult", label: "Bece Result Entering", icon: <MdPerson /> },
+      { key: "beceReport", label: "Bece Result Report", icon: <MdPerson /> },
+  
+
+
     ],
   },
 
@@ -349,6 +364,8 @@ function Gov() {
         case "PupilPhotoManager": return <PupilPhotoManager />;
       case "PupilPhotoEditor": return <PupilPhotoEditor />;
       case "AttendanceDashboard": return <AttendanceDashboard />;
+         case "beceResult": return <NationalResultPage />;
+      case "beceReport": return <BECEStatementOfResult />;
 
 
 

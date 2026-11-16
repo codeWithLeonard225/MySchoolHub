@@ -261,8 +261,8 @@ export const handlePrintPreviewSlip = (result) => {
                 <!-- Footer Signatures & Validation Notice -->
                 <div class="footer">
                     <div class="footer-row">
-                        <div style="margin-bottom: 100px;">Principal Signature: _________________________</div>
-                        <div style="margin-bottom: 100px;">Proprietor Signature: _________________________</div>
+                        <div style="margin-bottom:60px;">Principal Signature: _________________________</div>
+                        <div style="margin-bottom: 60px;">Proprietor Signature: _________________________</div>
                     </div>
                     <div class="footer-row" style="align-items: flex-end; margin-bottom: 4px;">
                         <div>Date of Issue: _________________________</div>

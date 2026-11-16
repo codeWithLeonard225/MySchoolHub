@@ -341,7 +341,7 @@ const TestimonialInputPage = () => {
                                 value={formData.formCompleted}
                                 onChange={handleInputChange}
                                 className="w-full p-2 border rounded-lg focus:ring-blue-500"
-                                placeholder="e.g. SSS 4"
+                                placeholder="e.g. SSS 3"
                             />
                         </div>
                         <div>

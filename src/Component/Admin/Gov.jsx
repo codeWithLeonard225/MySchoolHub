@@ -63,6 +63,8 @@ import BulkDeleteGradesPage from "../TeacherAssignment/BulkDeleteGradesPage";
 import YearlyGeneralReportCard from "../TeacherAssignment/YearlyGeneralReportCard";
 import StudentIDCardData from "../Voters/StudentIDCardData";
 import WASCEForm from "../Voters/WASCEForm";
+import WASSCEStatementOfResult from "../CeoPanel/WASSCEStatementOfResult";
+import TestimonialInputPage from "../CeoPanel/TestimonialInputPage";
 import ClassPromotion from "../Voters/ClassPromotion";
 import TeacherIDCards from "../Staff/TeacherIDCards";
 import StaffIDCardBack from "../Staff/StaffIDCardBack";
@@ -188,13 +190,18 @@ const NAV_ITEMS = [
     ],
   },
 
+  {
+    key: "NationalResults",
+    label: "National Results",
+    icon: <MdBarChart />,
+    children: [
+    
+      { key: "WASSCEStatementOfResult", label: "Wassce Result Report", icon: <MdPerson /> },
+      { key: "TestimonialInputPage", label: "Wassce Testimonial Report", icon: <MdPerson /> },
 
 
-  // {
-  //   key: "pupilAttendance",
-  //   label: "Pupil Attendance",
-  //   icon: <MdWarning />, // 📖
-  // },
+    ],
+  },
 
 
   {
@@ -349,6 +356,8 @@ function Gov() {
       case "TeacherPhotoEditor": return <TeacherPhotoEditor />;
         case "PupilPhotoManager": return <PupilPhotoManager />;
       case "PupilPhotoEditor": return <PupilPhotoEditor />;
+        case "WASSCEStatementOfResult": return <WASSCEStatementOfResult />;
+      case "TestimonialInputPage": return <TestimonialInputPage />;
 
 
 

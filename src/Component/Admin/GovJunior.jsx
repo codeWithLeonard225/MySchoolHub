@@ -82,6 +82,8 @@ import StaffAttendanceReport from "../Staff/StaffAttendanceReport";
 import AttendanceReport from "../Dashboard/AttendanceReports";
 import NationalResultPage from "../CeoPanel/NationalResultPage";
 import BECEStatementOfResult from "../CeoPanel/BECEStatementOfResult";
+import TestResultSheet from "../PupilsPage/TestResultSheetAdvance";
+import TestResultSheetAdvance from "../PupilsPage/TestResultSheetAdvance";
 
 
 
@@ -153,6 +155,8 @@ const NAV_ITEMS = [
       // { key: "BulkDeleteGradesPage", label: "BulkDeleteGradesPage", icon: <MdPerson /> },
       { key: "SubGradeMatrixPage", label: "Sub Grade Sheet", icon: <MdPerson /> },
       { key: "ClassFullTermMatrixPage", label: "Term Grade Sheet", icon: <MdPerson /> },
+        { key: "TestResultSheet", label: "TestResultSheet", icon: <MdPerson /> },
+        { key: "TestResultSheetAdvance", label: "TestResultSheetAdvance", icon: <MdPerson /> },
       { key: "ReportCardTermly", label: "ReportCard Termly", icon: <MdPerson /> },
       { key: "GeneralReportCard", label: "ReportCard Yearly", icon: <MdPerson /> },
       { key: "TermResult", label: "TermResult GradeSheet", icon: <MdPerson /> },
@@ -366,6 +370,8 @@ function Gov() {
       case "AttendanceDashboard": return <AttendanceDashboard />;
          case "beceResult": return <NationalResultPage />;
       case "beceReport": return <BECEStatementOfResult />;
+      case "TestResultSheet": return <TestResultSheet />;
+      case "TestResultSheetAdvance": return <TestResultSheetAdvance />;
 
 
 

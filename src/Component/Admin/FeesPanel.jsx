@@ -71,6 +71,9 @@ import PupilAttendanceScanner from "../PupilsPage/PupilAttendanceScanner";
 import PupilAttendanceLogs from "../PupilsPage/PupilAttendanceLogs";
 import StaffAttendanceReport from "../Staff/StaffAttendanceReport";
 import AttendanceReport from "../Dashboard/AttendanceReports";
+import BulkReg from "../Voters/BulkRegistration";
+import TestResultSheet from "../PupilsPage/TestResultSheetAdvance";
+import TestResultSheetAdvance from "../PupilsPage/TestResultSheetAdvance";
 
 
 
@@ -111,6 +114,7 @@ const NAV_ITEMS = [
       { key: "SchoolRegistration", label: " SchoolRegistration", icon: <MdPerson /> },
       { key: "ClassPromotion", label: " ClassPromotion", icon: <MdPerson /> },
       { key: "SubjectData", label: "SubjectData", icon: <MdPerson /> },
+      { key: "BulkReg", label: "BulkReg", icon: <MdPerson /> },
 
     ],
   },
@@ -149,6 +153,8 @@ const NAV_ITEMS = [
       { key: "TeacherPupilsPageAdmin", label: "TeacherPupilsGrade", icon: <MdPerson /> },
       { key: "SubGradeMatrixPage", label: "Sub Grade Sheet", icon: <MdPerson /> },
       { key: "ClassFullTermMatrixPage", label: "Term Grade Sheet", icon: <MdPerson /> },
+      { key: "TestResultSheet", label: "TestResultSheet", icon: <MdPerson /> },
+      { key: "TestResultSheetAdvance", label: "TestResultSheetAdvance", icon: <MdPerson /> },
       { key: "ReportCardTermly", label: "ReportCard Termly", icon: <MdPerson /> },
       { key: "GeneralReportCard", label: "ReportCard Yearly", icon: <MdPerson /> },
       { key: "TermResult", label: "TermResult GradeSheet", icon: <MdPerson /> },
@@ -331,6 +337,9 @@ function FeesPanel() {
       case "PupilIDCardScan": return <PupilIDCardScan />;
       case "PupilAttendanceScanner": return <PupilAttendanceScanner />;
       case "PupilAttendanceLogs": return <PupilAttendanceLogs />;
+      case "BulkReg": return <BulkReg />;
+      case "TestResultSheet": return <TestResultSheet />;
+      case "TestResultSheetAdvance": return <TestResultSheetAdvance />;
 
 
       default: return <Placeholder title={activeTab} />;

@@ -83,6 +83,8 @@ import PupilPhotoManager from "../Voters/PupilPhotoManager";
 import PupilPhotoEditor from "../Voters/PupilPhotoEditor";
 import TeacherPhotoEditor from "../Voters/TeacherPhotoEditor";
 import TeacherPhotoManager from "../Voters/TeacherPhotoManager";
+import TestResultSheet from "../PupilsPage/TestResultSheetAdvance";
+import TestResultSheetAdvance from "../PupilsPage/TestResultSheetAdvance";
 
 
 
@@ -155,6 +157,8 @@ const NAV_ITEMS = [
       // { key: "BulkDeleteGradesPage", label: "BulkDeleteGradesPage", icon: <MdPerson /> },
       { key: "SubGradeMatrixPage", label: "Sub Grade Sheet", icon: <MdPerson /> },
       { key: "ClassFullTermMatrixPage", label: "Term Grade Sheet", icon: <MdPerson /> },
+        { key: "TestResultSheet", label: "TestResultSheet", icon: <MdPerson /> },
+        { key: "TestResultSheetAdvance", label: "TestResultSheetAdvance", icon: <MdPerson /> },
       { key: "ReportCardTermly", label: "ReportCard Termly", icon: <MdPerson /> },
       { key: "GeneralReportCard", label: "ReportCard Yearly", icon: <MdPerson /> },
       { key: "TermResult", label: "TermResult GradeSheet", icon: <MdPerson /> },
@@ -170,8 +174,8 @@ const NAV_ITEMS = [
     label: "Qr code Attendance-Pupil",
     icon: <MdBarChart />,
     children: [
-      { key: "PupilIDCardScan", label: "Pupil Card Scan", icon: <MdPerson /> },
-      { key: "PupilIDCardBack", label: "Pupil Card Back", icon: <MdPerson /> },
+      // { key: "PupilIDCardScan", label: "Pupil Card Scan", icon: <MdPerson /> },
+      // { key: "PupilIDCardBack", label: "Pupil Card Back", icon: <MdPerson /> },
       { key: "ManualAttendance", label: "Manual Attendance", icon: <MdPerson /> },
       { key: "PupilAttendanceScanner", label: "Attendance Scanner", icon: <MdPerson /> },
       { key: "PupilAttendanceLogs", label: "Pupil Attendance Logs", icon: <MdPerson /> },
@@ -358,6 +362,8 @@ function Gov() {
       case "PupilPhotoEditor": return <PupilPhotoEditor />;
         case "WASSCEStatementOfResult": return <WASSCEStatementOfResult />;
       case "TestimonialInputPage": return <TestimonialInputPage />;
+       case "TestResultSheet": return <TestResultSheet />;
+       case "TestResultSheetAdvance": return <TestResultSheetAdvance />;
 
 
 
